@@ -1,0 +1,251 @@
+{
+    "metadata": {
+        "name": "Park_2019"
+    },
+    "d_lambda": 0.1,
+    "domains": {
+        "dend": [
+            "Leak",
+            "Na",
+            "Kv"
+        ],
+        "soma": [
+            "Leak",
+            "Na",
+            "Kv"
+        ],
+        "apic": [
+            "Leak",
+            "Na",
+            "Kv"
+        ],
+        "axon": [
+            "Leak",
+            "Na",
+            "Kv"
+        ]
+    },
+    "groups": [
+        {
+            "name": "all",
+            "domains": [
+                "dend",
+                "soma",
+                "apic",
+                "axon"
+            ]
+        },
+        {
+            "name": "dendritic",
+            "domains": [
+                "dend"
+            ]
+        },
+        {
+            "name": "somatic",
+            "domains": [
+                "soma"
+            ]
+        },
+        {
+            "name": "apical",
+            "domains": [
+                "apic"
+            ]
+        },
+        {
+            "name": "axonal",
+            "domains": [
+                "axon"
+            ]
+        }
+    ],
+    "params": {
+        "cm": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 1
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 2
+                }
+            }
+        },
+        "Ra": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 100
+                }
+            }
+        },
+        "gbar_Leak": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0001
+                }
+            }
+        },
+        "e_Leak": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": -79
+                }
+            }
+        },
+        "gbar_Na": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.03
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.05
+                }
+            }
+        },
+        "Rma_Na": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.182
+                }
+            }
+        },
+        "Rmb_Na": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.14
+                }
+            }
+        },
+        "v12m_Na": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": -30
+                }
+            }
+        },
+        "qm_Na": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 9.8
+                }
+            }
+        },
+        "Rhb_Na": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0091
+                }
+            }
+        },
+        "Rha_Na": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.024
+                }
+            }
+        },
+        "v12ha_Na": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": -45
+                }
+            }
+        },
+        "v12hb_Na": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": -70
+                }
+            }
+        },
+        "qh_Na": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 5
+                }
+            }
+        },
+        "v12hinf_Na": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": -60
+                }
+            }
+        },
+        "qhinf_Na": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 6.2
+                }
+            }
+        },
+        "ena": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 60
+                }
+            }
+        },
+        "gbar_Kv": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.003
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.005
+                }
+            }
+        },
+        "v12_Kv": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 25
+                }
+            }
+        },
+        "q_Kv": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 9
+                }
+            }
+        },
+        "ek": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": -80
+                }
+            }
+        }
+    }
+}
