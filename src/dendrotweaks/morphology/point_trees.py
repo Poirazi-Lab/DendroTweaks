@@ -1,0 +1,567 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from scipy.spatial.transform import Rotation
+
+from dendrotweaks.utils import timeit
+
+from dendrotweaks.morphology.trees import Node, Tree
+
+from dendrotweaks.utils import timeit
+
+ID_TO_DOMAIN = {
+    0: 'undefined',
+    1: 'soma',
+    2: 'axon',
+    3: 'dend',
+    31: 'basal',
+    4: 'apic',
+    41: 'trunk',
+    42: 'tuft',
+    43: 'oblique',
+    5: 'custom',
+    6: 'neurite',
+    7: 'glia',
+}
+
+DOMAIN_TO_ID = {
+    v: k for k, v in ID_TO_DOMAIN.items()
+}
+
+DOMAINS_TO_COLORS = {
+    'soma': '#E69F00',       
+    'apic': '#0072B2',       
+    'dend': '#019E73',       
+    'basal': '#31A354',      
+    'axon': '#F0E442',       
+    'trunk': '#56B4E9',
+    'tuft': '#A55194', #'#9467BD',
+    'oblique': '#8C564B',
+    'perisomatic': '#D55E00',
+    # 'custom': '#BDBD22',
+    'custom': '#D62728',
+    'custom2': '#E377C2',
+    'undefined': '#7F7F7F',
+}
+
+from contextlib import contextmanager
+import random
+
+
+class Point(Node):
+
+    def __init__(self, idx: str, type_idx: int, 
+                 x: float, y: float, z: float, r: float, 
+                 parent_idx: str) -> None:
+        super().__init__(idx, parent_idx)
+        self.type_idx = type_idx
+        self.x = x
+        self.y = y
+        self.z = z
+        self.r = r
+        self._section = None
+    
+    @property
+    def domain(self):
+        return ID_TO_DOMAIN.get(self.type_idx, f"custom_{int(self.type_idx)}")
+
+    @domain.setter
+    def domain(self, value):
+        self.type_idx = DOMAIN_TO_ID.get(value, 0)
+
+
+    @property
+    def distance_to_parent(self):
+        if self.parent:
+            return np.sqrt((self.x - self.parent.x)**2 + 
+                        (self.y - self.parent.y)**2 + 
+                        (self.z - self.parent.z)**2)
+        return 0
+
+
+    def path_distance(self, within_domain=False, ancestor=None):
+        """
+        Computes the distance from this node to an ancestor.
+        
+        Args:
+            within_domain (bool): If True, stops when domain changes.
+            ancestor (Node, optional): If provided, stops at this specific ancestor.
+            
+        Returns:
+            float: The accumulated distance.
+        """
+        distance = 0
+        node = self
+        
+        while node.parent:
+            if ancestor and node.parent == ancestor:
+                break  # Stop if we reach the specified ancestor
+
+            if within_domain and node.parent.domain != node.domain:
+                break  # Stop if domain changes
+            
+            distance += node.distance_to_parent
+            node = node.parent
+
+        return distance
+
+
+
+    @property
+    def df(self):
+        # put the required data in a pandas dataframe
+        return pd.DataFrame({'idx': [self.idx],
+                             'type_idx': [self.type_idx],
+                             'x': [self.x],
+                             'y': [self.y],
+                             'z': [self.z],
+                             'r': [self.r],
+                             'parent_idx': [self.parent_idx]})
+
+    def info(self):
+        info = (
+            f"Node {self.idx}:\n"
+            f"  Type: {ID_TO_DOMAIN.get(self.type_idx, 'unknown')}\n"
+            f"  Coordinates: ({self.x}, {self.y}, {self.z})\n"
+            f"  Radius: {self.r}\n"
+            f"  Parent: {self.parent_idx}\n"
+            f"  Children: {[child.idx for child in self.children]}\n"
+            f"  Siblings: {[sibling.idx for sibling in self.siblings]}\n"
+            f"  Section: {self._section.idx if self._section else 'None'}"
+        )
+        print(info)
+
+    def copy(self):
+        new_node = Point(self.idx, self.type_idx, self.x,
+                            self.y, self.z, self.r, self.parent_idx)
+        return new_node
+
+
+    def overlaps_with(self, other, **kwargs) -> bool:
+        return np.allclose(
+            [self.x, self.y, self.z], 
+            [other.x, other.y, other.z], 
+            **kwargs
+        )
+
+
+
+class PointTree(Tree):
+
+    def __init__(self, nodes: list[Point]) -> None:
+        super().__init__(nodes)
+        self._sections = []
+        self._is_extended = False
+
+    # PROPERTIES
+
+    @property
+    def points(self):
+        return self._nodes
+
+    @property
+    def is_sectioned(self):
+        return len(self._sections) > 0
+
+    @property
+    def soma_points(self):
+        return [pt for pt in self.points if pt.type_idx == 1]
+
+    @property
+    def soma_center(self):
+        return np.mean([[pt.x, pt.y, pt.z] 
+                        for pt in self.soma_points], axis=0)
+
+    @property
+    def apical_center(self):
+        apical_points = [pt for pt in self.points 
+                        if pt.type_idx == 4]
+        if len(apical_points) == 0:
+            return None
+        return np.mean([[pt.x, pt.y, pt.z] 
+                       for pt in apical_points], axis=0)
+
+    @property
+    def soma_notation(self):
+        if len(self.soma_points) == 1:
+            return '1PS'
+        elif len(self.soma_points) == 2:
+            return '2PS'
+        elif len(self.soma_points) == 3:
+            return '3PS'
+        else:
+            return 'contour'
+
+    @property
+    def df(self):
+        data = {
+            'idx': [node.idx for node in self._nodes],
+            'type_idx': [node.type_idx for node in self._nodes],
+            'x': [node.x for node in self._nodes],
+            'y': [node.y for node in self._nodes],
+            'z': [node.z for node in self._nodes],
+            'r': [node.r for node in self._nodes],
+            'parent_idx': [node.parent_idx for node in self._nodes],
+        }
+        return pd.DataFrame(data)
+
+
+
+    # SORTING METHODS
+
+    def _sort_children(self):
+        """
+        Iterate through all nodes in the tree and sort their children based on
+        the number of bifurcations (nodes with more than one child) in each child's
+        subtree. Nodes with fewer bifurcations in their subtrees are placed earlier in the list
+        of the node's children, ensuring that the shortest paths are traversed first.
+
+        Returns
+        -------
+            None
+        """
+        for node in self._nodes:
+            node.children = sorted(
+                node.children, 
+                key=lambda x: (x.type_idx, sum(1 for n in x.subtree if len(n.children) > 1)),
+                reverse=False
+            )
+
+    # STANDARDIZATION METHODS
+
+    def change_soma_notation(self, notation):
+        """
+        Convert the soma to 3PS notation.
+        """
+        if self.soma_notation == notation:
+            print(f'Soma is already in {notation} notation.')
+            return
+
+        if self.soma_notation == '1PS':
+
+            pt = self.soma_points[0]
+
+            pt_left = Point(
+                idx=2,
+                type_idx=1,
+                x=pt.x - pt.r,
+                y=pt.y,
+                z=pt.z,
+                r=pt.r,
+                parent_idx=pt.idx)
+
+            pt_right = Point(
+                idx=3,
+                type_idx=1,
+                x=pt.x + pt.r,
+                y=pt.y,
+                z=pt.z,
+                r=pt.r,
+                parent_idx=pt.idx)
+
+            self.add_subtree(pt_right, pt)
+            self.add_subtree(pt_left, pt)
+
+        elif self.soma_notation == '3PS':
+            raise NotImplementedError('Conversion from 1PS to 3PS notation is not implemented yet.')
+            
+        elif self.soma_notation =='contour':
+            # if soma has contour notation, take the average
+            # distance of the nodes from the center of the soma
+            # and use it as radius, create 3 new nodes
+            raise NotImplementedError('Conversion from contour is not implemented yet.')
+
+        print('Converted soma to 3PS notation.')
+
+    # GEOMETRICAL METHODS
+
+    def round_coordinates(self, decimals=8):
+        """
+        Round the coordinates of all nodes to the specified number of decimals.
+        """
+        for pt in self.points:
+            pt.x = round(pt.x, decimals)
+            pt.y = round(pt.y, decimals)
+            pt.z = round(pt.z, decimals)
+            pt.r = round(pt.r, decimals)
+
+    def shift_coordinates_to_soma_center(self):
+        """
+        Shift all coordinates so that the soma center is at the origin (0, 0, 0).
+        """
+        soma_x, soma_y, soma_z = self.soma_center
+        for pt in self.points:
+            pt.x = round(pt.x - soma_x, 8)
+            pt.y = round(pt.y - soma_y, 8)
+            pt.z = round(pt.z - soma_z, 8)
+
+    @timeit
+    def rotate(self, angle_deg, axis='Y'):
+        """Rotate the point cloud around the specified axis at the soma center using numpy."""
+
+        # Get the rotation center point
+        rotation_point = self.soma_center
+
+        # Define rotation matrix based on the specified axis
+        angle = np.radians(angle_deg)
+        if axis == 'X':
+            rotation_matrix = np.array([
+                [1, 0, 0],
+                [0, np.cos(angle), -np.sin(angle)],
+                [0, np.sin(angle), np.cos(angle)]
+            ])
+        elif axis == 'Y':
+            rotation_matrix = np.array([
+                [np.cos(angle), 0, np.sin(angle)],
+                [0, 1, 0],
+                [-np.sin(angle), 0, np.cos(angle)]
+            ])
+        elif axis == 'Z':
+            rotation_matrix = np.array([
+                [np.cos(angle), -np.sin(angle), 0],
+                [np.sin(angle), np.cos(angle), 0],
+                [0, 0, 1]
+            ])
+        else:
+            raise ValueError("Axis must be 'X', 'Y', or 'Z'")
+
+        # Subtract rotation point to translate the cloud to the origin
+        coords = np.array([[pt.x, pt.y, pt.z] for pt in self.points])
+        coords -= rotation_point
+
+        # Apply rotation
+        rotated_coords = np.dot(coords, rotation_matrix.T)
+
+        # Translate back to the original position
+        rotated_coords += rotation_point
+
+        # Update the coordinates of the points
+        for pt, (x, y, z) in zip(self._nodes, rotated_coords):
+            pt.x, pt.y, pt.z = x, y, z
+
+    def align_apical_dendrite(self, axis='Y', facing='up'):
+        soma_center = self.soma_center
+        apical_center = self.apical_center
+
+        if apical_center is None:
+            return
+
+        # Define the target vector based on the axis and facing
+        target_vector = {
+            'X': np.array([1, 0, 0]),
+            'Y': np.array([0, 1, 0]),
+            'Z': np.array([0, 0, 1])
+        }.get(axis.upper(), None)
+
+        if target_vector is None:
+            raise ValueError("Axis must be 'X', 'Y', or 'Z'")
+
+        if facing == 'down':
+            target_vector = -target_vector
+
+        # Calculate the current vector
+        current_vector = apical_center - soma_center
+
+        # Check if the apical dendrite is already aligned
+        if np.allclose(current_vector / np.linalg.norm(current_vector), target_vector):
+            print('Apical dendrite is already aligned.')
+            return
+
+        # Calculate the rotation vector and angle
+        rotation_vector = np.cross(current_vector, target_vector)
+        rotation_angle = np.arccos(np.dot(current_vector, target_vector) / np.linalg.norm(current_vector))
+
+        # Create the rotation matrix
+        rotation_matrix = Rotation.from_rotvec(rotation_angle * rotation_vector / np.linalg.norm(rotation_vector)).as_matrix()
+
+        # Apply the rotation to each point
+        for pt in self.points:
+            coords = np.array([pt.x, pt.y, pt.z]) - soma_center
+            rotated_coords = np.dot(rotation_matrix, coords) + soma_center
+            pt.x, pt.y, pt.z = rotated_coords
+
+
+    # I/O METHODS
+    def remove_overlaps(self):
+        """
+        Removes overlapping nodes from the tree.
+        """
+        nodes_before = len(self.points)
+
+        overlapping_nodes = [
+            pt for pt in self.traverse() 
+            if pt.parent is not None and pt.overlaps_with(pt.parent)
+        ]
+        for pt in overlapping_nodes:
+            self.remove_node(pt)
+
+        self._is_extended = False
+        nodes_after = len(self.points)
+        print(f'Removed {nodes_before - nodes_after} overlapping nodes.')
+
+
+    def extend_sections(self):
+        """
+        Extends each section by adding a node in the beginning 
+        overlapping with the parent node for geometrical continuity.
+        """
+        
+        nodes_before = len(self.points)
+
+        if self._is_extended:
+            print('Tree is already extended.')
+            return
+
+        bifurcations_excluding_root = [
+            b for b in self.bifurcations if b != self.root
+        ]
+
+        for pt in bifurcations_excluding_root:
+            children = pt.children[:]
+            for child in children:
+                if child.overlaps_with(pt):
+                    raise ValueError(f'Child {child} already overlaps with parent {pt}.')
+                new_node = pt.copy()
+                new_node.domain = child.domain
+                self.insert_node_before(new_node, child)           
+
+        self._is_extended = True
+        nodes_after = len(self.points)
+        print(f'Extended {nodes_after - nodes_before} nodes.')
+
+
+    def to_swc(self, path_to_file):
+        """
+        Save the tree to an SWC file.
+        """
+        with remove_overlaps(self):
+            df = self.df.astype({
+                'idx': int,
+                'type_idx': int,
+                'x': float,
+                'y': float,
+                'z': float,
+                'r': float,
+                'parent_idx': int
+            })
+            df['idx'] += 1
+            df.loc[df['parent_idx'] >= 0, 'parent_idx'] += 1
+            df.to_csv(path_to_file, sep=' ', index=False, header=False)
+
+
+    # PLOTTING METHODS
+
+    def plot(self, ax=None, 
+             show_nodes=True, show_edges=True, show_domains=True,
+             annotate=False, projection='XY', 
+             highlight_nodes=None, focus_nodes=None):
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=(10, 10))
+
+        # Convert focus/highlight to sets for faster lookup
+        focus_nodes = set(focus_nodes) if focus_nodes else None
+        highlight_nodes = set(highlight_nodes) if highlight_nodes else None
+
+        # Determine which points to consider
+        points_to_plot = self.points if focus_nodes is None else [pt for pt in self.points if pt in focus_nodes]
+
+        # Extract coordinates for projection
+        coords = {axis: [getattr(pt, axis.lower()) for pt in points_to_plot] for axis in "XYZ"}
+
+        # Draw edges efficiently
+        if show_edges:
+            point_set = set(points_to_plot)  # Convert list to set for fast lookup
+            for pt1, pt2 in self.edges:
+                if pt1 in point_set and pt2 in point_set:
+                    ax.plot(
+                        [getattr(pt1, projection[0].lower()), getattr(pt2, projection[0].lower())],
+                        [getattr(pt1, projection[1].lower()), getattr(pt2, projection[1].lower())],
+                        color='C1'
+                    )
+
+        # Assign colors based on domains
+        if show_domains:
+            domains_to_colors = DOMAINS_TO_COLORS.copy()  # Avoid modifying the global dict
+            for pt in points_to_plot:
+                domains_to_colors.setdefault(pt.domain, "#{:02x}{:02x}{:02x}".format(*(int(255 * random.random()),) * 3))
+            colors = [domains_to_colors[pt.domain] for pt in points_to_plot]
+        else:
+            colors = 'C0'
+
+        # Plot nodes
+        if show_nodes:
+            ax.scatter(coords[projection[0]], coords[projection[1]], s=10, c=colors, marker='.', zorder=2)
+
+        # Annotate nodes if few enough
+        if annotate and len(points_to_plot) < 50:
+            for pt, x, y in zip(points_to_plot, coords[projection[0]], coords[projection[1]]):
+                ax.annotate(f'{pt.idx}', (x, y), fontsize=8)
+
+        # Highlight nodes correctly
+        if highlight_nodes:
+            for i, pt in enumerate(points_to_plot):
+                if pt in highlight_nodes:
+                    ax.plot(coords[projection[0]][i], coords[projection[1]][i], 'o', color='C3', markersize=5)
+
+        # Set labels and aspect ratio
+        ax.set_xlabel(projection[0])
+        ax.set_ylabel(projection[1])
+        if projection in {"XY", "XZ", "YZ"}:
+            ax.set_aspect('equal')
+
+
+
+    def plot_radii_distribution(self, ax=None, highlight=None, 
+    domains=True, show_soma=False):
+        if ax is None:
+            fig, ax = plt.subplots(figsize=(8, 3))
+
+        for pt in self.points:
+            if not show_soma and pt.domain == 'soma':
+                continue
+            color = 'gray'
+            if domains:
+                color = DOMAINS_TO_COLORS.get(pt.domain, color)
+            if highlight and pt.idx in highlight:
+                ax.plot(
+                    pt.path_distance(), 
+                    pt.r, 
+                    marker='.', 
+                    color='red', 
+                    zorder=2
+                )
+            else:
+                ax.plot(
+                    pt.path_distance(), 
+                    pt.r, 
+                    marker='.', 
+                    color=color, 
+                    zorder=1
+                )
+        ax.set_xlabel('Distance from root')
+        ax.set_ylabel('Radius')
+
+
+@contextmanager
+def remove_overlaps(point_tree):
+    """
+    Context manager for temporarily removing overlaps in the given point_tree.
+    Restores the point_tree's original state when exiting the context.
+    """
+    # Store whether the point_tree was already extended
+    was_extended = point_tree._is_extended
+    
+    # Remove overlaps
+    point_tree.remove_overlaps()
+    point_tree.sort()
+    
+    try:
+        # Yield control to the context block
+        yield
+    finally:
+        # Restore the overlapping state if the point_tree was extended
+        if was_extended:
+            point_tree.extend_sections()
+            point_tree.sort()
