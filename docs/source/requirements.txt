@@ -1,0 +1,3 @@
+sphinx >= 5.1
+furo
+sphinx-copybutton
