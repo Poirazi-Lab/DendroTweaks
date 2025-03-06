@@ -1,57 +1,80 @@
 import os
 from typing import List, Dict
+import shutil
 
 class PathManager:
     """
     A manager class for handling file and directory paths related to models data.
     """
-    def __init__(self, path_to_data: str, model_name: str = None):
-        self.path_to_data = path_to_data
-        self.model_name = model_name
+    def __init__(self, path_to_model: str):
+        self.path_to_model = path_to_model
         self.paths = {
-            'default_mod': os.path.join(path_to_data, 'Default'),
-            'templates': os.path.join(path_to_data, 'Templates'),
+            'default_mod': os.path.join(self.path_to_data, 'Default'),
+            'templates': os.path.join(self.path_to_data, 'Templates'),
+            'morphology': os.path.join(self.path_to_model, 'morphology'),
+            'membrane': os.path.join(self.path_to_model, 'membrane'),
+            'mod': os.path.join(self.path_to_model, 'membrane', 'mod'),
+            'python': os.path.join(self.path_to_model, 'membrane', 'python'),
+            'stimuli': os.path.join(self.path_to_model, 'stimuli'),
         }
-        if model_name:
-            self.update_paths(model_name)
+        self._ensure_paths_exist()
 
-    def update_paths(self, model_name: str):
+
+    def _ensure_paths_exist(self):
         """
-        Set the paths for the given model name and data path.
-        
-        Parameters
-        ----------
-        model_name : str
-            The name of the model.
+        Ensure all necessary paths exist.
         """
-        self.paths.update({
-            'model': os.path.join(self.path_to_data, model_name),
-            'mod': os.path.join(self.path_to_data, model_name, 'mod'),
-            'python': os.path.join(self.path_to_data, model_name, 'python'),
-            'morphology': os.path.join(self.path_to_data, model_name, 'morphology'),
-            'membrane': os.path.join(self.path_to_data, model_name, 'membrane'),
-            'stimuli': os.path.join(self.path_to_data, model_name, 'stimuli'),
-        })
+        os.makedirs(self.path_to_model, exist_ok=True)
         for path in self.paths.values():
-            if not os.path.exists(path):
-                os.makedirs(path)
+            os.makedirs(path, exist_ok=True)
+        # if empty, copy default mod files
+        if not os.listdir(self.paths['default_mod']):
+            self.copy_default_mod_files()
+        if not os.listdir(self.paths['templates']):
+            self.copy_template_files()
+        
+    @property
+    def path_to_data(self):
+        return os.path.dirname(self.path_to_model)
 
     def __repr__(self):
-        return f"PathManager({self.path_to_data}/{self.model_name})"
+        return f"PathManager({self.path_to_model})"
 
-    def list_models(self) -> List[str]:
+    def copy_default_mod_files(self):
         """
-        List all model files.
+        Copy default mod files to the data directory.
+        """
+        # __file__ + 'membrane' + 'default_mod'
+        DEFAULT_MOD_DIR = os.path.join(os.path.dirname(__file__), 'membrane', 'default_mod')
+        for file_name in os.listdir(DEFAULT_MOD_DIR):
+            source = os.path.join(DEFAULT_MOD_DIR, file_name)
+            destination = os.path.join(self.paths['default_mod'], file_name)
+            shutil.copyfile(source, destination)
+
+    def copy_template_files(self):
+        """
+        Copy template files to the data directory.
+        """
+        # __file__ + 'membrane' + 'templates'
+        TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), 'membrane', 'default_templates')
+        for file_name in os.listdir(TEMPLATES_DIR):
+            source = os.path.join(TEMPLATES_DIR, file_name)
+            destination = os.path.join(self.paths['templates'], file_name)
+            shutil.copyfile(source, destination)
+
+    # def list_models(self) -> List[str]:
+    #     """
+    #     List all model files.
         
-        Returns
-        -------
-        List[str]
-            A list of model file names.
-        """
-        DIRS_TO_IGNORE = ['Default', 'Templates']
-        return [f for f in os.listdir(self.path_to_data)
-                if os.path.isdir(os.path.join(self.path_to_data, f))
-                and f not in DIRS_TO_IGNORE]
+    #     Returns
+    #     -------
+    #     List[str]
+    #         A list of model file names.
+    #     """
+    #     DIRS_TO_IGNORE = ['Default', 'Templates']
+    #     return [f for f in os.listdir(self.path_to_data)
+    #             if os.path.isdir(os.path.join(self.path_to_data, f))
+    #             and f not in DIRS_TO_IGNORE]
 
     def get_path(self, file_type: str) -> str:
         """

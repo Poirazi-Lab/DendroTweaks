@@ -23,27 +23,31 @@ DendroTweaks organizes these components in a structured directory:
         .
         .
         └── UserModel/  
-            ├── membrane/  
-            │   ├── config1.json
-            │   └── config2.json
-            ├── mod/
-            │   ├── Kv.mod
-            │   └── Nav.mod
             ├── morphology/
             │   ├── cell1.swc
             │   └── cell2.swc
+            ├── membrane/  
+            │   ├── config1.json
+            │   ├── config2.json
+            |   ├── mod/
+            |   |   ├── Kv.mod
+            |   |   └── Nav.mod
+            |   └── python/
+            |       ├── Kv.py
+            |       └── Nav.py
             └── stimuli/ 
                 ├── stim1.csv 
                 ├── stim1.json
                 ├── stim2.csv
                 └── stim2.json
 
-Each component serves a specific purpose:
+Each folder contains specific components of the model:
 
-- **membrane/**: Contains JSON files defining the distribution and properties of ion channels and other membrane mechanisms
-- **mod/**: Houses NEURON mechanism files (MOD) that implement specific ion channel kinetics and other biophysical processes
-- **morphology/**: Stores standardized SWC files describing the 3D structure of neurons
-- **stimuli/**: Defines both the temporal patterns (JSON) and spatial distribution (CSV) of inputs to the model
+- **membrane/**: JSON files defining the distribution and properties of ion channels and other membrane mechanisms
+- **mod/**: NEURON mechanism files (MOD) that implement specific ion channel kinetics and other biophysical processes
+- **python/**: Python classes automatically generated from MOD files
+- **morphology/**: SWC files describing the morphological structure of the neuron
+- **stimuli/**: the temporal patterns (JSON) and spatial distribution (CSV) of inputs to the model
 
 Assembling a model
 ------------------------------------------

@@ -64,15 +64,15 @@ class Model():
         The path to the data files where swc and mod files are stored.
     """
 
-    def __init__(self, name: str=None,
-                 simulator_name='NEURON',
-                 path_to_data='data') -> None:
+    def __init__(self, path_to_model,
+                simulator_name='NEURON',) -> None:
 
         # Metadata
-        self._name = name or os.path.basename(os.path.normpath(path))
+        self.path_to_model = path_to_model
+        self._name = os.path.basename(os.path.normpath(path_to_model))
         self.morphology_name = ''
         self.version = ''
-        self.path_manager = PathManager(path_to_data, model_name=name)
+        self.path_manager = PathManager(path_to_model)
         self.simulator_name = simulator_name
         self._verbose = False
 
@@ -120,19 +120,6 @@ class Model():
     # -----------------------------------------------------------------------
     # PROPERTIES
     # -----------------------------------------------------------------------
-
-    @property
-    def name(self):
-        """
-        The name of the model.
-        """
-        return self._name
-
-
-    @name.setter
-    def name(self, name):
-        self._name = name
-        self.path_manager.update_paths(name)
 
 
     @property

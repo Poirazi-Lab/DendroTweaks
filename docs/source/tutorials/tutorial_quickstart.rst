@@ -6,63 +6,83 @@ a single-cell biophysical neuronal model in DendroTweaks. You will learn how to 
 and membrane mechanisms, distribute parameters across the cell, add stimuli, and run a simulation.
 
 
-Create a model
+Organizing model data
 ------------------------------------------
 
-A neuronal model is a mathematical representation of a neuron that captures its essential 
-biophysical properties and behavior. The process of modeling involves defining the morphology 
-of the neuron, specifying the biophysical properties of the neuronal membrane, and ultimately 
-simulating neuronal responses to external stimuli. Morphological and biophysical properties 
-of the model are reflected in model parameters such as the diameter and length of dendritic branches, 
-ion channel conductances, membrane capacitance, and axial resistance. 
-When building a model, our task is to adjust and optimize these parameters to ensure that the 
-model accurately reproduces experimental observations.
+Before diving into model building, we need to establish a well-organized directory structure 
+for our model data. First, choose a :code:`data` directory that will store all your models. 
+Within this directory, create a unique subfolder for each model you plan to develop.
 
-We will begin by creating a :code:`model` object which will serve as the main interface 
-and a container for all the components of the model, such as the morphology, 
+.. code-block:: bash
+
+    /path/to/data/
+        ├── UserModel1/
+        ├── UserModel2/
+        ...
+            
+For each model, we will need two essential components: the neuronal morphology (in SWC format) 
+stored in the :code:`morphology/` folder, and the membrane mechanisms (ion channels defined 
+as MOD files) placed in the :code:`membrane/mod/` folder.
+
+.. code-block:: bash
+
+    /path/to/data/
+        ...
+        └── UserModel1/
+            ├── morphology/
+            |  └── cell.swc
+            └── membrane/
+               └── mod/
+                  ├── Nav.mod
+                  └── Kv.mod
+            
+.. tip::
+
+    Don't worry about compiling the MOD files manually - 
+    DendroTweaks will handle this step automatically later in the process.
+
+Creating a model
+------------------------------------------
+
+With our directory structure in place, we can now create a :code:`model` object. This object 
+serves as the central interface for managing all model components, including morphology, 
 membrane mechanisms, and stimuli.
 
 .. code-block:: python
 
     >>> import dendrotweaks as dd
-    >>> model = dd.Model(name='UserModel', path_to_data='path/to/data/')
+    >>> model = dd.Model(path_to_model='path/to/data/UserModel1/')
 
-We instantiate a model object from the :code:`Model` class by
-specifing the name of the model and the path to the data folder where the model components are stored.
+When we instantiate the model by specifying the path to our model directory, DendroTweaks 
+automatically sets up additional required folders. It creates a :code:`Default` folder containing 
+standard mechanisms and a :code:`Templates` folder with templates for converting MOD files to Python classes. 
+These folders are created only once and are shared across all models. Within your model folder, it generates a :code:`stimuli` 
+directory for stimulation protocols and a :code:`membrane/python` folder for storing Python files generated from MOD files.
 
+.. code-block:: bash
 
-The model data should be organized in a structured directory,
-the contents of which we can see using the :code:`print_directory_tree` method.
-
-.. code-block:: python
-
-    >>> model.print_directory_tree()
-    .
-    └── data/
+    /path/to/data/
         ├── Default/
-        |  ├── Leak.mod
-        |  ├── CaDyn.mod
-        |  ├── AMPA.mod
-        |  ...
+        │   ├── Leak.mod
+        │   ├── CaDyn.mod
+        │   ├── AMPA.mod
+        │   ...
         ├── Templates/
-        |  ├── channel.py
-        |  └── standard_channel.mod
-        └── UserModel/
+        │   ├── channel.py
+        |   ...
+        │   └── standard_channel.mod
+        └── UserModel1/
             ├── morphology/
             │   └── cell.swc
-            └── mod/
-                ├── Nav.mod
-                └── Kv.mod
+            ├── membrane/
+            │   ├── mod/
+            │   │   ├── Nav.mod
+            │   │   └── Kv.mod
+            │   └── python/
+            └── stimuli/
 
-The model data is organized in the following directories:
-
-- **Default/**: Contains MOD files for default mechanisms, such as the leak channel and synaptic mechanisms.
-- **Templates/**: Contains templates to standardize MOD files and/or convert them to Python code.
-- **UserModel/**: Contains the specific components defined by the user.
-    - **morphology/**: Contains SWC files representing the neuronal morphology.
-    - **mod/**: Contains MOD files specifying the membrane mechanisms, such as ion channels.
-
-Note that this is the initial state of the directory tree. As we develop the model, we will create new folders and save additional files.
+This structure provides the foundation for model development. As we progress, we will add more 
+files to these directories, but the basic framework is now ready.
 You can learn more about the directory structure in the :doc:`tutorial</tutorials/tutorial_io>` on loading and saving models.
 
 Load the morphology
@@ -103,7 +123,7 @@ For more information about representing neuronal morphology with tree graphs, se
     :doc:`tutorial</tutorials/tutorial_segmentation>` on setting the spatial discretization of the model.
 
 
-Add mechanisms
+Adding mechanisms
 ------------------------------------------
 
 After defining the neuronal morphology, we now need to specify its biophysical properties.
@@ -182,7 +202,7 @@ We will learn more about segment groups and parameter distributions in the
     In the next step, we will insert the mechanisms into the membrane.
 
 
-Insert mechanisms to specific domains
+Inserting mechanisms to specific domains
 ------------------------------------------
 
 In DendroTweaks, membrane mechanisms are mapped to morphological domains.
@@ -269,7 +289,7 @@ As we can see, all parameters are set to their default values across all segment
 parameters initialized to 0.0. Before running the simulation, we need to set these parameters to more realistic
 values, which we will learn how to do in the next step.
 
-Set model parameters
+Setting model parameters
 ------------------------------------------
 
 We can set the value of a parameter using the :code:`set_param` method.
@@ -353,7 +373,7 @@ Now, we can access the model parameters again and see that the values have been 
 To learn more about segment groups and parameter distributions, refer to the
 :doc:`tutorial</tutorials/tutorial_distributions>` on distributing parameters.
 
-Add stimuli and run a simulation
+Adding stimuli and running a simulation
 ------------------------------------------
 
 We will learn how to simulate neuronal activity by applying a current stimulus 
@@ -411,7 +431,7 @@ After the simulation completes, the voltage data is stored in
 
 For more complex stimuli, such as synaptic inputs, refer to the :doc:`tutorial</tutorials/tutorial_synapses>`.
 
-Analyze the results
+Analyzing the results
 ------------------------------------------
 
 Finally, we can analyze the results of the simulation using some of the built-in functions in DendroTweaks.

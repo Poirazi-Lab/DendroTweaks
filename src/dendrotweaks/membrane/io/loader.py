@@ -1,5 +1,6 @@
 import os
 import shutil
+import subprocess
 import neuron
 from neuron import h
 
@@ -73,17 +74,11 @@ class MODFileLoader():
 
     # HELPER METHODS
 
+    
     def _compile_files(self, path: str) -> None:
-        """
-        Compile the mod files in the specified directory.
+        """Compile the MOD files in the specified directory."""
+        try:
+            subprocess.run(["nrnivmodl"], cwd=path, check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Compilation failed: {e}")
 
-        Parameters
-        ----------
-        path : str
-            The path to the directory with the mod files.
-        """
-        cwd = os.getcwd()
-        os.chdir(path)
-        os.system('nrnivmodl')
-        os.chdir(cwd)
-        if self.verbose: print(f'Compiled mod files from "{path}"')

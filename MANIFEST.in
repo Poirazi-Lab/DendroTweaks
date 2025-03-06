@@ -1,0 +1,2 @@
+include src/dendrotweaks/membrane/default_mod/*.mod
+include src/dendrotweaks/membrane/templates/*.jinja
