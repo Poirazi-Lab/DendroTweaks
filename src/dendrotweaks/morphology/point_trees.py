@@ -50,6 +50,9 @@ import random
 
 
 class Point(Node):
+    """
+    A class representing a single point in a morphological reconstruction.
+    """
 
     def __init__(self, idx: str, type_idx: int, 
                  x: float, y: float, z: float, r: float, 
@@ -61,10 +64,15 @@ class Point(Node):
         self.z = z
         self.r = r
         self._section = None
-    
+
+
     @property
     def domain(self):
+        """
+        The morphological or functional domain of the node.
+        """
         return ID_TO_DOMAIN.get(self.type_idx, f"custom_{int(self.type_idx)}")
+
 
     @domain.setter
     def domain(self, value):
@@ -73,6 +81,9 @@ class Point(Node):
 
     @property
     def distance_to_parent(self):
+        """
+        The Euclidean distance from this node to its parent.
+        """
         if self.parent:
             return np.sqrt((self.x - self.parent.x)**2 + 
                         (self.y - self.parent.y)**2 + 
@@ -82,7 +93,7 @@ class Point(Node):
 
     def path_distance(self, within_domain=False, ancestor=None):
         """
-        Computes the distance from this node to an ancestor.
+        Compute the distance from this node to an ancestor node.
         
         Args:
             within_domain (bool): If True, stops when domain changes.
@@ -110,7 +121,9 @@ class Point(Node):
 
     @property
     def df(self):
-        # put the required data in a pandas dataframe
+        """
+        Return a DataFrame representation of the node.
+        """
         return pd.DataFrame({'idx': [self.idx],
                              'type_idx': [self.type_idx],
                              'x': [self.x],
@@ -120,6 +133,9 @@ class Point(Node):
                              'parent_idx': [self.parent_idx]})
 
     def info(self):
+        """
+        Print information about the node.
+        """
         info = (
             f"Node {self.idx}:\n"
             f"  Type: {ID_TO_DOMAIN.get(self.type_idx, 'unknown')}\n"
@@ -133,12 +149,28 @@ class Point(Node):
         print(info)
 
     def copy(self):
+        """
+        Create a copy of the node.
+
+        Returns:
+            Point: A copy of the node with the same attributes.
+        """
         new_node = Point(self.idx, self.type_idx, self.x,
                             self.y, self.z, self.r, self.parent_idx)
         return new_node
 
 
     def overlaps_with(self, other, **kwargs) -> bool:
+        """
+        Check if the coordinates of this node overlap with another node.
+
+        Args:
+            other (Point): The other node to compare with.
+            kwargs: Additional keyword arguments passed to np.allclose.
+
+        Returns:
+            bool: True if the coordinates overlap, False otherwise.
+        """
         return np.allclose(
             [self.x, self.y, self.z], 
             [other.x, other.y, other.z], 
@@ -148,6 +180,9 @@ class Point(Node):
 
 
 class PointTree(Tree):
+    """
+    A class representing a tree graph of points in a morphological reconstruction.
+    """
 
     def __init__(self, nodes: list[Point]) -> None:
         super().__init__(nodes)
@@ -158,23 +193,35 @@ class PointTree(Tree):
 
     @property
     def points(self):
+        """
+        The list of points in the tree. An alias for self._nodes.
+        """
         return self._nodes
 
-    @property
-    def is_sectioned(self):
-        return len(self._sections) > 0
+    # @property
+    # def is_sectioned(self):
+    #     return len(self._sections) > 0
 
     @property
     def soma_points(self):
+        """
+        The list of points representing the soma (type 1).
+        """
         return [pt for pt in self.points if pt.type_idx == 1]
 
     @property
     def soma_center(self):
+        """
+        The center of the soma as the average of the coordinates of the soma points.
+        """
         return np.mean([[pt.x, pt.y, pt.z] 
                         for pt in self.soma_points], axis=0)
 
     @property
     def apical_center(self):
+        """
+        The center of the apical dendrite as the average of the coordinates of the apical points.
+        """
         apical_points = [pt for pt in self.points 
                         if pt.type_idx == 4]
         if len(apical_points) == 0:
@@ -184,6 +231,13 @@ class PointTree(Tree):
 
     @property
     def soma_notation(self):
+        """
+        The type of soma notation used in the tree.
+        - '1PS': One-point soma
+        - '2PS': Two-point soma
+        - '3PS': Three-point soma
+        - 'contour': Soma represented as a contour
+        """
         if len(self.soma_points) == 1:
             return '1PS'
         elif len(self.soma_points) == 2:
@@ -195,6 +249,9 @@ class PointTree(Tree):
 
     @property
     def df(self):
+        """
+        A DataFrame representation of the tree.
+        """
         data = {
             'idx': [node.idx for node in self._nodes],
             'type_idx': [node.type_idx for node in self._nodes],
@@ -279,6 +336,11 @@ class PointTree(Tree):
     def round_coordinates(self, decimals=8):
         """
         Round the coordinates of all nodes to the specified number of decimals.
+
+        Parameters
+        ----------
+        decimals : int, optional
+            The number of decimals to round to, by default
         """
         for pt in self.points:
             pt.x = round(pt.x, decimals)
@@ -298,7 +360,15 @@ class PointTree(Tree):
 
     @timeit
     def rotate(self, angle_deg, axis='Y'):
-        """Rotate the point cloud around the specified axis at the soma center using numpy."""
+        """Rotate the point cloud around the specified axis at the soma center using numpy.
+
+        Parameters
+        ----------
+        angle_deg : float
+            The rotation angle in degrees.
+        axis : str, optional
+            The rotation axis ('X', 'Y', or 'Z'), by default 'Y'.
+        """
 
         # Get the rotation center point
         rotation_point = self.soma_center
@@ -341,6 +411,16 @@ class PointTree(Tree):
             pt.x, pt.y, pt.z = x, y, z
 
     def align_apical_dendrite(self, axis='Y', facing='up'):
+        """
+        Align the apical dendrite with the specified axis.
+
+        Parameters
+        ----------
+        axis : str, optional
+            The axis to align the apical dendrite with ('X', 'Y', or 'Z'), by default 'Y'.
+        facing : str, optional
+            The direction the apical dendrite should face ('up' or 'down'), by default 'up'.
+        """
         soma_center = self.soma_center
         apical_center = self.apical_center
 
@@ -385,7 +465,7 @@ class PointTree(Tree):
     # I/O METHODS
     def remove_overlaps(self):
         """
-        Removes overlapping nodes from the tree.
+        Remove overlapping nodes from the tree.
         """
         nodes_before = len(self.points)
 
@@ -403,7 +483,7 @@ class PointTree(Tree):
 
     def extend_sections(self):
         """
-        Extends each section by adding a node in the beginning 
+        Extend each section by adding a node in the beginning 
         overlapping with the parent node for geometrical continuity.
         """
         
@@ -456,6 +536,28 @@ class PointTree(Tree):
              show_nodes=True, show_edges=True, show_domains=True,
              annotate=False, projection='XY', 
              highlight_nodes=None, focus_nodes=None):
+        """
+        Plot a 2D projection of the tree.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes, optional
+            The axes to plot on, by default None
+        show_nodes : bool, optional
+            Whether to plot the nodes, by default True
+        show_edges : bool, optional
+            Whether to plot the edges, by default True
+        show_domains : bool, optional
+            Whether to color the nodes based on their domains, by default True
+        annotate : bool, optional
+            Whether to annotate the nodes with their indices, by default False
+        projection : str, optional
+            The projection plane ('XY', 'XZ', or 'YZ'), by default 'XY'
+        highlight_nodes : list, optional
+            A list of nodes to highlight, by default None
+        focus_nodes : list, optional
+            A list of nodes to focus on, by default None
+        """
 
         if ax is None:
             fig, ax = plt.subplots(figsize=(10, 10))
@@ -548,7 +650,9 @@ class PointTree(Tree):
 def remove_overlaps(point_tree):
     """
     Context manager for temporarily removing overlaps in the given point_tree.
-    Restores the point_tree's original state when exiting the context.
+    Is primarily used for saving the tree to an SWC file without overlaps.
+    Restores the original state of the tree after the context block to ensure
+    the geometrical continuity of the tree.
     """
     # Store whether the point_tree was already extended
     was_extended = point_tree._is_extended

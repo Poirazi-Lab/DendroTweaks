@@ -6,4 +6,4 @@ Distributions
     :undoc-members:
     :show-inheritance:
     :inherited-members:
-    :exclude-members: __weakref__
+    :exclude-members: __weakref__, FUNCTIONS

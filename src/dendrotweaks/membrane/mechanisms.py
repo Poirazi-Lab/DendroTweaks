@@ -5,29 +5,44 @@ import matplotlib.pyplot as plt
 
 
 class Mechanism():
+    """
+    A class representing a mechanism in a neuron model. 
+    
+    A mechanism is a set of differential equations that 
+    describe the kinetics of a channel
+    or a pump in the neuron membrane
+    """
 
     def __init__(self, name):
         self.name = name
         self.params = {}
         self.range_params = {}
-        # self.domains = {}
 
     @property
     def params_with_suffix(self):
+        """
+        Returns the parameters of the mechanism with the suffix
+        — the name of the mechanism.
+        """
         return {f"{param}_{self.name}":value for param, value in self.params.items()}
 
     @property
     def range_params_with_suffix(self):
+        """
+        Returns the range parameters of the mechanism with the suffix
+        — the name of the mechanism. The range parameters are the parameters
+        defined in the RANGE block of the NMODL file.
+        """
         return {f"{param}_{self.name}":value for param, value in self.range_params.items()}
 
     def to_dict(self):
+        """
+        Returns the mechanism as a dictionary.
+        """
         return {
             'name': self.name,
             'params': self.params
         }
-
-    # def is_inserted(self):
-    #     return bool(self.domains)
 
     def __repr__(self):
         return f"<Mechnaism({self.name})>"
@@ -36,17 +51,59 @@ class Mechanism():
 
 
 class IonChannel(Mechanism):
+    """
+    A class representing an ion channel in a neuron model.
+    """
     
     def __init__(self, name):
         super().__init__(name)
         self.tadj = 1
 
     def set_tadj(self, temperature):
+        """
+        Set the temperature adjustment factor for the channel kinetics.
+
+        Parameters
+        ----------
+        temperature : float
+            The temperature in degrees Celsius.
+
+        Notes
+        -----
+        The temperature adjustment factor is calculated as:
+        tadj = q10 ** ((temperature - reference_temp) / 10)
+        where q10 is the temperature coefficient and reference_temp is the
+        temperature at which the channel kinetics were measured.
+        """
         q10 = self.params.get("q10", 2.3)
         reference_temp = self.params.get("temp", temperature)
         self.tadj = q10 ** ((temperature - reference_temp) / 10)
 
     def get_data(self, x=None, temperature: float = 37) -> Dict[str, Dict[str, float]]:
+        """
+        Get the data for the channel kinetics as a dictionary. The data
+        includes the steady state values and time constants of the channel,
+        as well as the independent variable values.
+
+        Parameters
+        ----------
+        x : np.array, optional
+            The independent variable for the channel kinetics. If None, the
+            default values will be used. The default is None.
+        temperature : float, optional
+            The temperature in degrees Celsius. The default is 37.
+
+        Returns
+        -------
+        Dict[str, Dict[str, np.ndarray]]
+            A dictionary of states with their steady state values and time constants:
+            {
+            'state1': {'inf': np.array, 'tau': np.array},
+            'state2': {'inf': np.array, 'tau': np.array},
+            ...
+            'x': np.array
+            }
+        """
 
         if x is None:
             if self.independent_var_name == 'v':
@@ -73,6 +130,19 @@ class IonChannel(Mechanism):
         return data
 
     def plot_kinetics(self, ax=None, linestyle='solid', **kwargs) -> None:
+        """
+        Plot the kinetics of the channel.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes, optional
+            The axes to plot the kinetics on. If None, a new figure
+            will be created. The default is None.
+        linestyle : str, optional
+            The line style for the plots. The default is 'solid'.
+        **kwargs : dict
+            Additional keyword arguments to pass to the get_data method.
+        """
 
         if ax is None:
             fig, ax = plt.subplots(1, 2, figsize=(10, 5))
@@ -103,7 +173,6 @@ class StandardIonChannel(IonChannel):
     theory. The model is based on the Hodgkin-Huxley formalism.
     """
 
-
     STANDARD_PARAMS = [
         'vhalf', 'sigma', 'k', 'delta', 'tau0'
     ]
@@ -132,6 +201,7 @@ class StandardIonChannel(IonChannel):
         tau = self.time_constant(v, vhalf, sigma, k, delta, tau0) / tadj
         return inf, tau
 
+
     def __init__(self, name, state_powers, ion=None):
         super().__init__('s' + name)
         
@@ -155,11 +225,31 @@ class StandardIonChannel(IonChannel):
 
         self.temperature = 37
 
+
     @property
     def states(self):
+        """
+        A list of state variable names of the channel.
+        """
         return [state for state in self._state_powers]
 
+
     def compute_kinetic_variables(self, v):
+        """
+        Compute the steady state values and time constants of the channel
+        for the given voltage values.
+
+        Parameters
+        ----------
+        v : np.array
+            The voltage values to compute the channel kinetics for.
+
+        Returns
+        -------
+        list
+            A list of steady state values and time constants for each state
+            of the channel.
+        """
         
         results = []
 
@@ -181,7 +271,7 @@ class StandardIonChannel(IonChannel):
 
     def fit(self, data, prioritized_inf=True, round_params=3):
         """
-        Fits the standardized set of parameters of the model to the data 
+        Fit the standardized set of parameters of the model to the data 
         of the channel kinetics. 
         
         Parameters
@@ -190,14 +280,13 @@ class StandardIonChannel(IonChannel):
             A dictionary containing the data for the channel kinetics. The
             dictionary should have the following structure:
             {
-                'x': np.array, # The independent variable
-                'state1': {'inf': np.array, 'tau': np.array},
-                'state2': {'inf': np.array, 'tau': np.array},
-                ...
+            'x': np.array, # The independent variable
+            'state1': {'inf': np.array, 'tau': np.array},
+            'state2': {'inf': np.array, 'tau': np.array},
+            ...
             }
         prioritized_inf : bool, optional
-            Whether to prioritize the fit to the 'inf' data. If False, the
-            fit will be performed to both 'inf' and 'tau' data. If True, an
+            Whether to prioritize the fit to the 'inf' data. If True, an
             additional fit will be performed to the 'inf' data only. The
             default is True.
         round_params : int, optional
@@ -238,6 +327,9 @@ class StandardIonChannel(IonChannel):
     
     
     def to_dict(self):
+        """
+        Return the mechanism as a dictionary.
+        """
         return {
             'suffix': self.name,
             'ion': self.ion,
@@ -252,6 +344,9 @@ class StandardIonChannel(IonChannel):
 
     @staticmethod
     def get_unit(param):
+        """
+        Get the unit of a parameter based on its name.
+        """
         if param.startswith('vhalf_'): return 'mV'
         elif param.startswith('sigma_'): return 'mV'
         elif param.startswith('k_'): return '1/ms'
@@ -260,6 +355,9 @@ class StandardIonChannel(IonChannel):
 
 
 class LeakChannel(Mechanism):
+    """
+    A class representing a leak channel in a neuron model.
+    """
 
     def __init__(self):
         super().__init__(name='Leak')
@@ -268,6 +366,9 @@ class LeakChannel(Mechanism):
 
 
 class CaDynamics(Mechanism):
+    """
+    A class representing a calcium dynamics mechanism in a neuron model.
+    """
 
     def __init__(self):
         super().__init__('CaDyn')

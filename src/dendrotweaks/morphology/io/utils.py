@@ -15,10 +15,17 @@ from dendrotweaks.morphology.io.validation import validate_tree
 
 def create_point_tree(source: Union[str, DataFrame]) -> PointTree:
     """
-    Creates a point tree from either a file path or a DataFrame.
+    Create a point tree from either a file path or a DataFrame.
     
-    Parameters:
-        source (str | pd.DataFrame): File path to the SWC file or a preprocessed DataFrame.
+    Parameters
+    ----------
+    source : Union[str, DataFrame]
+        The source of the SWC data. Can be a file path or a DataFrame.
+
+    Returns
+    -------
+    PointTree
+        The point tree created from the SWC data.
     """
     if isinstance(source, str):
         reader = SWCReader()
@@ -40,16 +47,17 @@ def create_point_tree(source: Union[str, DataFrame]) -> PointTree:
 
 def create_section_tree(point_tree: PointTree):
     """
-    Creates a section tree from an SWC tree.
+    Create a section tree from a point tree.
 
     Parameters
     ----------
     point_tree : PointTree
-        The SWC tree to be partitioned into a section tree.
+        The point tree to create the section tree from.
+
     Returns
     -------
     SectionTree
-        The section tree created from the SWC tree.
+        The section tree created representing the neuron morphology.
     """
 
     point_tree.extend_sections()
@@ -64,14 +72,14 @@ def create_section_tree(point_tree: PointTree):
 
 
 def _split_to_sections(point_tree: PointTree) -> List[Section]:
-
+    """
+    Split the point tree into sections.
+    """
     sections = []
 
     bifurcation_children = [
         child for b in point_tree.bifurcations for child in b.children]
     bifurcation_children = [point_tree.root] + bifurcation_children
-    # bifurcation_children = sorted(bifurcation_children,
-    #                               key=lambda x: x.idx)
     # Filter out the bifurcation children to enforce the original order
     bifurcation_children = [node for node in point_tree._nodes 
                             if node in bifurcation_children]
@@ -140,6 +148,19 @@ def _merge_soma(sections: List[Section], point_tree: PointTree):
 
 
 def create_segment_tree(sec_tree):
+    """
+    Create a segment tree from a section tree.
+
+    Parameters
+    ----------
+    sec_tree : SectionTree
+        The section tree to create the segment tree from.
+
+    Returns
+    -------
+    SegmentTree
+        The segment tree representing spatial discretization of the neuron morphology for numerical simulations.
+    """
 
     segments = _create_segments(sec_tree)
 
@@ -150,32 +171,26 @@ def create_segment_tree(sec_tree):
 
 
 def _create_segments(sec_tree) -> List[Segment]:
-
     """
-    Build the segment tree using the section tree.
+    Create a list of Segment objects from a SectionTree object.
     """
 
-    segments = []  # To store Segment objects
+    segments = []  
     # TODO: Refactor this to use a stack instead of recursion
     def add_segments(sec, parent_idx, idx_counter):
         segs = {seg: idx + idx_counter for idx, seg in enumerate(sec._ref)}
-
         sec.segments = []
-        # Add each segment of this section as a Segment object
         for seg, idx in segs.items():
-            # Create a Segment object with the parent index
             segment = Segment(
                 idx=idx, parent_idx=parent_idx, neuron_seg=seg, section=sec)
             segments.append(segment)
             sec.segments.append(segment)
 
-            # Update the parent index for the next segment in this section
             parent_idx = idx
-
-        # Update idx_counter for the next section
+        
         idx_counter += len(segs)
 
-        # Recursively add child sections
+        
         for child in sec.children:
             # IMPORTANT: This is needed since 0 and 1 segments are not explicitly
             # defined in the section segments list

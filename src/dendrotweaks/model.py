@@ -7,7 +7,7 @@ from dendrotweaks.morphology.point_trees import PointTree
 from dendrotweaks.morphology.sec_trees import Section, SectionTree, Domain
 from dendrotweaks.morphology.seg_trees import Segment, SegmentTree
 from dendrotweaks.simulators import NEURONSimulator
-from dendrotweaks.membrane.groups import SectionGroup, SegmentGroup
+from dendrotweaks.membrane.groups import SegmentGroup
 from dendrotweaks.membrane.mechanisms import Mechanism, LeakChannel, CaDynamics
 from dendrotweaks.membrane.io import create_channel, standardize_channel, create_standard_channel
 from dendrotweaks.membrane.io import MODFileLoader
@@ -123,6 +123,9 @@ class Model():
 
     @property
     def name(self):
+        """
+        The name of the model.
+        """
         return self._name
 
 
@@ -134,6 +137,9 @@ class Model():
 
     @property
     def verbose(self):
+        """
+        Whether to print verbose output.
+        """
         return self._verbose
 
     @verbose.setter
@@ -144,11 +150,18 @@ class Model():
 
     @property
     def domains(self):
+        """
+        The morphological or functional domains of the model.
+        Reference to the domains in the section tree.
+        """
         return self.sec_tree.domains
 
 
     @property
     def recordings(self):
+        """
+        The recordings of the model. Reference to the recordings in the simulator.
+        """
         return self.simulator.recordings
 
 
@@ -159,14 +172,16 @@ class Model():
 
     @property
     def groups(self):
+        """
+        The dictionary of segment groups in the model.
+        """
         return {group.name: group for group in self._groups}
 
 
     @property
     def groups_to_parameters(self):
         """
-        Return a dictionary of groups to parameters.
-        group : mechanism : parameter
+        The dictionary mapping segment groups to parameters.
         """
         groups_to_parameters = {}
         for group in self._groups:
@@ -179,6 +194,9 @@ class Model():
 
     @property
     def mechs_to_domains(self):
+        """
+        The dictionary mapping mechanisms to domains where they are inserted.
+        """
         mechs_to_domains = defaultdict(set)
         for domain, mechs in self.domains_to_mechs.items():
             for mech in mechs:
@@ -189,7 +207,7 @@ class Model():
     @property
     def parameters_to_groups(self):
         """
-        Return a dictionary of parameters to groups.
+        The dictionary mapping parameters to groups where they are distributed.
         """
         parameters_to_groups = defaultdict(list)
         for group in self._groups:
@@ -203,6 +221,9 @@ class Model():
 
     @property
     def params_to_mechs(self):
+        """
+        The dictionary mapping parameters to mechanisms to which they belong.
+        """
         params_to_mechs = {}
         # Sort mechanisms by length (longer first) to ensure specific matches
         sorted_mechs = sorted(self.mechanisms, key=len, reverse=True)
@@ -221,6 +242,9 @@ class Model():
 
     @property
     def mechs_to_params(self):
+        """
+        The dictionary mapping mechanisms to parameters they contain.
+        """
         mechs_to_params = defaultdict(list)
         for param, mech_name in self.params_to_mechs.items():
             mechs_to_params[mech_name].append(param)
@@ -229,6 +253,9 @@ class Model():
 
     @property 
     def conductances(self):
+        """
+        A filtered dictionary of parameters that represent conductances.
+        """
         return {param: value for param, value in self.params.items()
                 if param.startswith('gbar')}
     # -----------------------------------------------------------------------
@@ -254,6 +281,9 @@ class Model():
 
     @property
     def df_params(self):
+        """
+        A DataFrame of parameters and their distributions.
+        """
         data = []
         for mech_name, params in self.mechs_to_params.items():
             for param in params:
@@ -302,7 +332,7 @@ class Model():
     # MORPHOLOGY
     # ========================================================================
 
-    def load_morphology(self, file_name, soma_notation='3PS', align=True):
+    def load_morphology(self, file_name, soma_notation='3PS', align=True) -> None:
         """
         Read an SWC file and build the SWC and section trees.
 
@@ -310,6 +340,10 @@ class Model():
         ----------
         file_name : str
             The name of the SWC file to read.
+        soma_notation : str, optional
+            The notation of the soma in the SWC file. Can be '3PS' or '1PS'. Default is '3PS'.
+        align : bool, optional
+            Whether to align the morphology to the soma center and align the apical dendrite.
         """
         # self.name = file_name.split('.')[0]
         self.morphology_name = file_name.replace('.swc', '')
@@ -373,11 +407,25 @@ class Model():
 
 
     def get_sections(self, filter_function):
-        """Filter sections using a lambda function."""
+        """Filter sections using a lambda function.
+        
+        Parameters
+        ----------
+        filter_function : Callable
+            The lambda function to filter sections.
+        """
         return [sec for sec in self.sec_tree.sections if filter_function(sec)]
 
 
     def get_segments(self, group_name):
+        """
+        Get the segments in a group.
+
+        Parameters
+        ----------
+        group_name : str
+            The name of the group to get segments from.
+        """
         group = self.groups[group_name]
         return [seg for seg in self.seg_tree.segments if seg in group]
         
@@ -428,6 +476,11 @@ class Model():
     def add_default_mechanisms(self, recompile=False):
         """
         Add default mechanisms to the model.
+
+        Parameters
+        ----------
+        recompile : bool, optional
+            Whether to recompile the mechanisms.
         """
         leak = LeakChannel()
         self.mechanisms[leak.name] = leak
@@ -444,8 +497,10 @@ class Model():
 
         Parameters
         ----------
-        archive_name : str
-            The name of the archive to add.
+        dir_name : str, optional
+            The name of the archive to load mechanisms from. Default is 'mod'.
+        recompile : bool, optional
+            Whether to recompile the mechanisms.
         """
         # Create Mechanism objects and add them to the model
         for mechanism_name in self.path_manager.list_files(dir_name, extension='mod'):
@@ -467,8 +522,10 @@ class Model():
         ----------
         mechanism_name : str
             The name of the mechanism to add.
-        archive_name : str, optional
-            The name of the archive to add.
+        python_template_name : str, optional
+            The name of the Python template to use. Default is 'default'.
+        load : bool, optional
+            Whether to load the mechanism using neuron.load_mechanisms.
         """
         paths = self.path_manager.get_channel_paths(
             mechanism_name, 
@@ -508,6 +565,8 @@ class Model():
         ----------
         mechanism_name : str
             The name of the mechanism to load.
+        dir_name : str, optional
+            The name of the directory to load the mechanism from. Default is 'mod'.
         recompile : bool, optional
             Whether to recompile the mechanism.
         """
@@ -521,6 +580,21 @@ class Model():
 
     def standardize_channel(self, channel_name, 
         python_template_name=None, mod_template_name=None, remove_old=True):
+        """
+        Standardize a channel by creating a new channel with the same kinetic
+        properties using the standard equations.
+
+        Parameters
+        ----------
+        channel_name : str
+            The name of the channel to standardize.
+        python_template_name : str, optional
+            The name of the Python template to use.
+        mod_template_name : str, optional
+            The name of the MOD template to use. 
+        remove_old : bool, optional
+            Whether to remove the old channel from the model. Default is True.
+        """
 
         # Get data to transfer
         channel = self.mechanisms[channel_name]
@@ -671,6 +745,15 @@ class Model():
                          domain_name: str, distribute=True):
         """
         Insert a mechanism into all sections in a domain.
+
+        Parameters
+        ----------
+        mechanism_name : str
+            The name of the mechanism to insert.
+        domain_name : str
+            The name of the domain to insert the mechanism into.
+        distribute : bool, optional
+            Whether to distribute the parameters after inserting the mechanism.
         """
         mech = self.mechanisms[mechanism_name]
         domain = self.domains[domain_name]
@@ -715,6 +798,13 @@ class Model():
                             domain_name: str):
         """
         Uninsert a mechanism from all sections in a domain
+
+        Parameters
+        ----------
+        mechanism_name : str
+            The name of the mechanism to uninsert.
+        domain_name : str
+            The name of the domain to uninsert the mechanism from.
         """
         mech = self.mechanisms[mechanism_name]
         domain = self.domains[domain_name]
@@ -783,6 +873,14 @@ class Model():
         
 
     def remove_group(self, group_name):
+        """
+        Remove a group from the model.
+
+        Parameters
+        ----------
+        group_name : str
+            The name of the group to remove.
+        """
         # Remove group from the list of groups
         self._groups = [group for group in self._groups 
                         if group.name != group_name]
@@ -792,6 +890,14 @@ class Model():
 
 
     def move_group_down(self, name):
+        """
+        Move a group down in the list of groups.
+
+        Parameters
+        ----------
+        name : str
+            The name of the group to move down.
+        """
         idx = next(i for i, group in enumerate(self._groups) if group.name == name)
         if idx > 0:
             self._groups[idx-1], self._groups[idx] = self._groups[idx], self._groups[idx-1]
@@ -800,6 +906,14 @@ class Model():
 
 
     def move_group_up(self, name):
+        """
+        Move a group up in the list of groups.
+
+        Parameters
+        ----------
+        name : str
+            The name of the group to move up.
+        """
         idx = next(i for i, group in enumerate(self._groups) if group.name == name)
         if idx < len(self._groups) - 1:
             self._groups[idx+1], self._groups[idx] = self._groups[idx], self._groups[idx+1]
@@ -815,6 +929,20 @@ class Model():
                         group_name: str = 'all',
                         distr_type: str = 'constant',
                         **distr_params):
+        """
+        Set a parameter for a group of segments.
+
+        Parameters
+        ----------
+        param_name : str
+            The name of the parameter to set.
+        group_name : str, optional
+            The name of the group to set the parameter for. Default is 'all'.
+        distr_type : str, optional
+            The type of the distribution to use. Default is 'constant'.
+        distr_params : dict
+            The parameters of the distribution.
+        """
 
         if 'group' in distr_params:
             raise ValueError("Did you mean 'group_name' instead of 'group'?")
@@ -835,6 +963,20 @@ class Model():
                          group_name: None,
                          distr_type: str = 'constant',
                          **distr_params):
+        """
+        Set a distribution for a parameter.
+
+        Parameters
+        ----------
+        param_name : str
+            The name of the parameter to set.
+        group_name : str, optional
+            The name of the group to set the parameter for. Default is 'all'.
+        distr_type : str, optional
+            The type of the distribution to use. Default is 'constant'.
+        distr_params : dict
+            The parameters of the distribution.
+        """
         
         if distr_type == 'inherit':
             distribution = 'inherit'
@@ -844,11 +986,22 @@ class Model():
 
     @timeit
     def distribute_all(self):
+        """
+        Distribute all parameters to the segments.
+        """
         for param_name in self.params:
             self.distribute(param_name)
 
     
     def distribute(self, param_name: str):
+        """
+        Distribute a parameter to the segments.
+
+        Parameters
+        ----------
+        param_name : str
+            The name of the parameter to distribute.
+        """
         if param_name == 'Ra':
             self._distribute_Ra()
             return
@@ -882,6 +1035,16 @@ class Model():
 
 
     def remove_distribution(self, param_name, group_name):
+        """
+        Remove a distribution for a parameter.
+
+        Parameters
+        ----------
+        param_name : str
+            The name of the parameter to remove the distribution for.
+        group_name : str
+            The name of the group to remove the distribution for.
+        """
         self.params[param_name].pop(group_name, None)
         self.distribute(param_name)
 
@@ -901,6 +1064,22 @@ class Model():
     # -----------------------------------------------------------------------
 
     def add_iclamp(self, sec, loc, amp=0, delay=100, dur=100):
+        """
+        Add an IClamp to a section.
+
+        Parameters
+        ----------
+        sec : Section
+            The section to add the IClamp to.
+        loc : float
+            The location of the IClamp in the section.
+        amp : float, optional
+            The amplitude of the IClamp. Default is 0.
+        delay : float, optional
+            The delay of the IClamp. Default is 100.
+        dur : float, optional
+            The duration of the IClamp. Default is 100.
+        """
         seg = sec(loc)
         if self.iclamps.get(seg):
             self.remove_iclamp(sec, loc)
@@ -910,12 +1089,26 @@ class Model():
 
 
     def remove_iclamp(self, sec, loc):
+        """
+        Remove an IClamp from a section.
+
+        Parameters
+        ----------
+        sec : Section
+            The section to remove the IClamp from.
+        loc : float
+            The location of the IClamp in the section.
+        """
         seg = sec(loc)
         if self.iclamps.get(seg):
             self.iclamps.pop(seg)
 
 
     def remove_all_iclamps(self):
+        """
+        Remove all IClamps from the model.
+        """
+
         for seg in list(self.iclamps.keys()):
             sec, loc = seg._section, seg.x
             self.remove_iclamp(sec, loc)
@@ -933,6 +1126,18 @@ class Model():
 
 
     def add_population(self, segments, N, syn_type):
+        """
+        Add a population of synapses to the model.
+
+        Parameters
+        ----------
+        segments : list[Segment]
+            The segments to add the synapses to.
+        N : int
+            The number of synapses to add.
+        syn_type : str
+            The type of synapse to add.
+        """
         idx = len(self.populations[syn_type])
         population = Population(idx, segments, N, syn_type)
         population.allocate_synapses()
@@ -941,6 +1146,14 @@ class Model():
 
 
     def remove_population(self, name):
+        """
+        Remove a population of synapses from the model.
+
+        Parameters  
+        ----------
+        name : str
+            The name of the population
+        """
         syn_type, idx = name.rsplit('_', 1)
         population = self.populations[syn_type].pop(name)
         population.clean()
@@ -976,6 +1189,14 @@ class Model():
     # ========================================================================
 
     def remove_subtree(self, sec):
+        """
+        Remove a subtree from the model.
+
+        Parameters
+        ----------
+        sec : Section
+            The root section of the subtree to remove.
+        """
         self.sec_tree.remove_subtree(sec)
         self.sec_tree.sort()
         self._remove_empty()
@@ -1046,6 +1267,15 @@ class Model():
     def plot_param(self, param_name, ax=None, show_nan=True):
         """
         Plot the distribution of a parameter in the model.
+
+        Parameters
+        ----------
+        param_name : str
+            The name of the parameter to plot.
+        ax : matplotlib.axes.Axes, optional
+            The axes to plot on. Default is None.
+        show_nan : bool, optional
+            Whether to show NaN values. Default is True.            
         """
         if ax is None:
             fig, ax = plt.subplots(figsize=(10, 2))
@@ -1082,6 +1312,11 @@ class Model():
     def export_morphology(self, version='modified'):
         """
         Write the SWC tree to an SWC file.
+
+        Parameters
+        ----------
+        version : str, optional
+            The version of the morphology appended to the morphology name.
         """
         name = self.morphology_name + '_' + version
         path_to_file = self.path_manager.get_file_path('morphology', name, extension='swc')
@@ -1118,6 +1353,12 @@ class Model():
 
     def from_dict(self, data):
         """
+        Load the model from a dictionary.
+
+        Parameters
+        ----------
+        data : dict
+            The dictionary representation of the model.
         """
         if not self.name == data['metadata']['name']:
             raise ValueError('Model name does not match the data.')

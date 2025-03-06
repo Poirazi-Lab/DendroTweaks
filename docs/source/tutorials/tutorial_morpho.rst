@@ -1,4 +1,4 @@
-Neuronal morphologies
+Neuronal Morphologies
 ==========================================
 
 In this tutorial, we will discuss how to represent neuronal morphologies in DendroTweaks.
@@ -8,7 +8,7 @@ and how to create a morphology from an SWC file.
 What are SWC files?
 -------------------
 
-SWC files are a standard format for representing neuronal morphologies. They consist of a series of lines, each describing a point in the neuron with specific attributes. Below is an example of an SWC file represented as a table:
+SWC (Stockley-Wheal-Cole) files are a standard format for representing neuronal morphologies. They consist of a series of lines, each describing a point in the neuron with specific attributes. Below is an example of an SWC file represented as a table:
 
 .. table:: Example SWC File
     :widths: 10 10 10 10 10 10 10

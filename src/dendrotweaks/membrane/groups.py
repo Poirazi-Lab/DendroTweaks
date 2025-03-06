@@ -9,74 +9,42 @@ from dendrotweaks.utils import timeit
 from dataclasses import dataclass, field, asdict
 from typing import List, Tuple, Dict, Optional
 
-# TODO: Sec or seg? Layering or partitioning? Make the user choose.
 
-# Group first approach:
-
-# Pros:
-# - Better UX logic, the user first defines the domain and then its parameters.
-# - Better output JSON, no need to duplicate nodes. G x N instead of P x G x N.
-
-# Cons:
-# - Need to modify the UI.
-# - No layering, each node belongs to one and only one group (not necessarily!).
-
-class SectionGroup:
+@dataclass
+class SegmentGroup:
     """
-    A group of sections often representing a domain.
+    A group of segments that share a common property.
 
     Parameters
     ----------
     name : str
-        The name of the group.
-    sections : List[Section]
-        The list of sections in the group.
+        The name of the segment group.
+    domains : List[str]
+        The domains the segments belong to.
+    select_by : Optional[str]
+        The property to select the segments by. Can be:
+        - 'diam': the diameter of the segment.
+        - 'section_diam': the diameter of the section the segment belongs to.
+        - 'absolute_distance': the absolute distance of the segment from the root.
+        - 'domain_distance': the distance of the segment from the root within the domain.
+    min_value : Optional[float]
+        The minimum value of the property.
+    max_value : Optional[float]
+        The maximum value of the property.
+
+    Examples
+    --------
+    Create a segment group that selects segments by diameter:
+
+    >>> group = SegmentGroup('group1', domains=['dend'], select_by='diam', min_value=1, max_value=2)
+    >>> group
+    SegmentGroup("group1", domains=['dend'], diam(1, 2))
+
+    Check if a segment is in the group:
+
+    >>> segment in group
+    True
     """
-
-    def __init__(self, name, sections):
-
-        self.name = name
-        self.params = {
-            'domain': None,
-            'diam': None,
-            'distance': None,
-        }
-        self._sections = sections
-        self.mechanisms = ['Independent']
-
-    @property
-    def sections(self):
-        return self._sections
-
-    @sections.setter
-    def sections(self, sections):
-        raise AttributeError('Sections cannot be set directly.')
-
-    def to_dict(self) -> Dict:
-        """
-        Exports the group to a dictionary format.
-
-        Returns
-        -------
-        dict
-            The group in dictionary format.
-        """
-        return {
-            'name': self.name,
-            'mechanisms': [mechanism_name for mechanism_name in self.mechanisms],
-            # 'sections': [sec.idx for sec in self.sections],
-        }
-
-    def __repr__(self):
-        return f'Group("{self.name}", {len(self.sections)})'
-
-
-
-
-
-
-@dataclass
-class SegmentGroup:
     name: str
     domains: List[str]
     select_by: Optional[str] = None
@@ -114,6 +82,9 @@ class SegmentGroup:
         return f'SegmentGroup("{self.name}", domains={self.domains}' + (f", {filters}" if filters else "") + ')'
 
     def to_dict(self) -> Dict:
+        """
+        Convert the SegmentGroup to a dictionary.
+        """
         result = {
             'name': self.name,
             'domains': self.domains,
@@ -125,5 +96,8 @@ class SegmentGroup:
 
     @staticmethod
     def from_dict(data: Dict) -> 'SegmentGroup':
+        """
+        Create a SegmentGroup from a dictionary.
+        """
         return SegmentGroup(**data)
 

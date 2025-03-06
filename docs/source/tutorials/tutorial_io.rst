@@ -1,19 +1,27 @@
-.. _importing_exporting_models:
-
 Importing and Exporting Models
-==========================================
+=======================================================
 
-This tutorial provides an overview of DendroTweaks model structure and demonstrates how to import and export model components.
+This tutorial will guide you through the process of creating, manipulating, and sharing computational neuron models using DendroTweaks. 
+You will learn how different components work together to simulate realistic neuronal behavior.
 
-Understanding Model Structure
+Understanding the model architecture
 ------------------------------------------
 
-DendroTweaks models are composed of multiple modular components, such as morphologies, membrane configurations, and stimulation protocols. These components are stored in a structured directory as follows:
+At its core, a computational neuron model requires several key components that mirror the biological structure and function of real neurons:
+
+1. **Morphology**: The physical structure of the neuron (dendrites, soma, axon)
+2. **Membrane Properties**: Ion channels and other biophysical mechanisms
+3. **Stimulation Protocols**: How we activate or inhibit the neuron
+
+DendroTweaks organizes these components in a structured directory:
 
 .. code-block:: bash
 
     .
     └── data/
+        .
+        .
+        .
         └── UserModel/  
             ├── membrane/  
             │   ├── config1.json
@@ -30,101 +38,88 @@ DendroTweaks models are composed of multiple modular components, such as morphol
                 ├── stim2.csv
                 └── stim2.json
 
-Each subdirectory serves a specific function:
+Each component serves a specific purpose:
 
-- **membrane/**: Defines biophysical configurations in JSON format.
-- **mod/**: Contains MOD files specifying ion channel mechanisms.
-- **morphology/**: Stores SWC files representing neuron morphologies.
-- **stimuli/**: Holds JSON and CSV files defining stimulation properties and spatial locations.
+- **membrane/**: Contains JSON files defining the distribution and properties of ion channels and other membrane mechanisms
+- **mod/**: Houses NEURON mechanism files (MOD) that implement specific ion channel kinetics and other biophysical processes
+- **morphology/**: Stores standardized SWC files describing the 3D structure of neurons
+- **stimuli/**: Defines both the temporal patterns (JSON) and spatial distribution (CSV) of inputs to the model
 
-This modular structure enables flexibility in combining different components to create customized models.
-
-Loading Model Components
+Assembling a model
 ------------------------------------------
 
-To work with a model, we first inspect its available components.
-
-Listing the available morphologies:
+Let's walk through the process of loading an existing model.
+Assuming we have cratead a :code:`UserModel` directory with the necessary components, we can
+start by creating a :code:`Model` 
+examining the available morphologies:
 
 .. code-block:: python
 
+    >>> from dendrotweaks.model import Model
+    >>> model = Model(name='UserModel', path_to_data='data/')
     >>> model.list_morphologies()
     ['cell1', 'cell2']
 
-Loading a specific morphology:
+We can load a specific morphology using the :code:`load_morphology` method:
 
 .. code-block:: python
 
     >>> model.load_morphology('cell1')
 
-Checking the available membrane configurations:
+Next, we will add membrane properties to the model.
 
 .. code-block:: python
 
     >>> model.list_membrane_configurations()
     ['config1', 'config2']
 
-Loading a specific membrane configuration:
-
 .. code-block:: python
 
     >>> model.load_membrane('config1')
 
-Listing available stimulation protocols:
+Finally, we will set up the stimulation protocol:
 
 .. code-block:: python
 
     >>> model.list_stimuli()
     ['stim1', 'stim2']
 
-Loading a specific stimulation protocol:
-
 .. code-block:: python
 
     >>> model.load_stimuli('stim1')
 
-This applies the stimulation protocol as defined in `stim1.json` and `stim1.csv`.
 
-Switching Components Dynamically
+
+Switching between configurations
 ------------------------------------------
 
-DendroTweaks models allow dynamic switching between components, facilitating flexible experimentation. For instance, we can apply the same membrane configuration to a different morphology:
+One of the key advantages of computational modeling is the ability to rapidly test different scenarios. 
+For instance, we can apply the same membrane configuration and stimulation pattern to a different morphological structure:
 
 .. code-block:: python
 
     >>> model.load_morphology('cell2')
 
-Similarly, we can change the stimulation protocol:
+Or we can change the stimulation pattern while keeping the same morphology and membrane properties:
 
 .. code-block:: python
 
     >>> model.load_stimuli('stim2')
 
-This approach enables us to study how different stimuli affect the same neuronal model.
+This flexibility allows you to investigate how cellular properties and input patterns interact to produce different responses.
 
-Exporting Model Components
+
+Sharing and reproducibility
 ------------------------------------------
 
-When exporting a model, we follow the same modular structure.
-
-Exporting the current stimulation (and recording) protocol:
+After developing your model, you can export components for sharing or future use:
 
 .. code-block:: python
 
     >>> model.export_stimuli(version='stim3')
-
-This generates `stim3.json` and `stim3.csv` in the `stimuli/` directory.
-
-Exporting the current membrane configuration:
-
-.. code-block:: python
-
     >>> model.export_membrane(version='config3')
-
-Exporting the current morphology:
-
-.. code-block:: python
-
     >>> model.export_morphology(version='cell3')
 
-By exporting components separately, we can efficiently share and reuse them in different models, enhancing modularity and reproducibility.
+
+
+

@@ -71,18 +71,43 @@ class NEURONSimulator(Simulator):
 
 
     def add_recording(self, sec, loc, var='v'):
+        """
+        Add a recording to the simulator.
+
+        Parameters
+        ----------
+        sec : Section
+            The section to record from.
+        loc : float
+            The location along the normalized section length to record from.
+        var : str
+            The variable to record. Default is 'v' (voltage).
+        """
         seg = sec(loc)
         if self.recordings.get(seg):
             self.remove_recording(sec, loc)
         self.recordings[seg] = h.Vector().record(getattr(seg._ref, f'_ref_{var}'))
 
     def remove_recording(self, sec, loc):
+        """
+        Remove a recording from the simulator.
+
+        Parameters
+        ----------
+        sec : Section
+            The section to remove the recording from.
+        loc : float 
+            The location along the normalized section length to remove the recording from.
+        """
         seg = sec(loc)
         if self.recordings.get(seg):
             self.recordings[seg] = None
             self.recordings.pop(seg)
 
     def remove_all_recordings(self):
+        """
+        Remove all recordings from the simulator.
+        """
         for seg in self.recordings.keys():
             sec, loc = seg._section, seg.x
             self.remove_recording(sec, loc)
@@ -105,6 +130,14 @@ class NEURONSimulator(Simulator):
         h.frecord_init()
 
     def run(self, duration=300):
+        """
+        Run a simulation.
+
+        Parameters
+        ----------
+        duration : float
+            The duration of the simulation in milliseconds.
+        """
         self._duration = duration
 
 
@@ -137,6 +170,9 @@ class NEURONSimulator(Simulator):
     
 
     def to_dict(self):
+        """
+        Convert the simulator to a dictionary.
+        """
         return {
             'temperature': self.temperature,
             'v_init': self.v_init,
@@ -145,6 +181,9 @@ class NEURONSimulator(Simulator):
         }
 
     def from_dict(self, data):
+        """
+        Create a simulator from a dictionary.
+        """
         self.temperature = data['temperature']
         self.v_init = data['v_init']
         self.dt = data['dt']

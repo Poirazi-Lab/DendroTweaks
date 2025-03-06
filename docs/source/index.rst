@@ -17,9 +17,6 @@ To learn more about the GUI, please refer to the :doc:`GUI documentation<gui>`.
    
 For a quick overview of the toolbox, including a video demonstration, you can visit our e-poster presented at the FENS Forum 2024 in Vienna.
 
-.. admonition:: Citation 
-
-   * Roman Makarov, Spyridon Chavlis, Panayiota Poirazi (2024). DendroTweaks: An interactive approach for unraveling dendritic dynamics. Science Communications World Wide. https://doi.org/10.57736/abba-7149
 
 .. image:: _static/poster.png
    :width: 75 %
@@ -78,6 +75,7 @@ If you find DendroTweaks helpful for building your models, please consider citin
    api/membrane
    api/stimuli
    api/core
+   api/analysis
 
 .. toctree::
    :maxdepth: 1

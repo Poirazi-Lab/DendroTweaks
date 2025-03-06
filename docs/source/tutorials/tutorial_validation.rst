@@ -2,7 +2,7 @@ Analyzing Neural Models
 =========================================
 
 This tutorial will guide you through the process of analyzing computational neuron models using DendroTweaks. 
-You'll learn how to quantify morphological properties, measure passive electrical characteristics, 
+You will learn how to quantify morphological properties, measure passive electrical characteristics, 
 and analyze neuronal firing patterns.
 
 Introduction to Morphometric Analysis
@@ -93,7 +93,7 @@ Passive Membrane Properties
 
 Passive properties describe how neurons respond to small inputs when voltage-gated channels are not activated. Key properties include input resistance and membrane time constant, which influence how the neuron integrates synaptic inputs.
 
-To measure these properties, we'll inject a small hyperpolarizing current into the soma:
+To measure these properties, we will inject a small hyperpolarizing current into the soma:
 
 .. code-block:: python
 
@@ -142,7 +142,7 @@ These passive properties tell us:
 Action Potential Generation and Analysis
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To study how the neuron generates action potentials (spikes), we'll reset the model and apply a depolarizing current:
+To study how the neuron generates action potentials (spikes), we will reset the model and apply a depolarizing current:
 
 .. code-block:: python
 

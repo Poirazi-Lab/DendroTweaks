@@ -4,65 +4,66 @@ Glossary
 .. glossary::
 
     **Model**
-        In DendroTweaks, a model is a representation of a neuron that contains the morphological data, the membrane mechanisms, stimuli and the means to run simulations.
+         In DendroTweaks, a computational representation of a neuron that includes its morphological structure, membrane properties, 
+         and simulation parameters necessary for numerical simulation.
+
 
     **Tree graph**
-        A tree graph is a type of a network graph that is composed of nodes connected by edges. 
-        In a tree graph, there is only one path between any two nodes.
+         A hierarchical graph structure where nodes are connected by edges, with no cycles and a single path between any two nodes.
 
     **Node**
-        A node is a point in a tree graph that is connected to other nodes by edges.
+        The fundamental unit of which graphs are formed.
+
+    **Edge**
+        A connection between two nodes in a graph.
 
     **Tree traversal**
-        Tree traversal is the process of visiting each node in a tree graph exactly once.
+        An algorithmic process of visiting each node in a tree graph exactly once.
 
     **Reconstruction**
-        A reconstruction is a representation of a neuron morphology as a collection of points
-        with coordinates and properties such as diameter, type, etc.
+        A digital representation of a neuron's three-dimensional morphology, composed of interconnected points with spatial coordinates.
 
     **SWC file**
-        An SWC file is a file format that is used to store neuron morphologies as a collection of points and connections between them.
+        A standard text-based file format for storing neuronal morphology data, where each line represents a point with its type, 
+        coordinates, radius, and parent point index.
 
     **Point**
-        A point in 3D space that represents a part of a neuron 
-        and is defined by its coordinates and properties such as diameter, type, etc. as well as connections to other points.
+        A discrete location in 3D space representing a specific position in a neuronal reconstruction, 
+        defined by x, y, z coordinates and associated properties.
 
     **Section**
-        A section is a part of a neuron between two bifurcation points.
+        A continuous unbranched segment of a neuron between points of topological change (bifurcations).
 
     **Domain**
-        A domain is a collection of sections that share the same properties and typically represents
-        a part of a neuron such as soma, axon, dendrite, etc.
+        A collection of sections sharing common morphological or physiological characteristics, 
+        typically corresponding to parts of a neuron such as soma, dendrites, axon, etc.
 
     **Segmentation**
-        Segmentation is the process of dividing a neuron into segments.
+        The process of dividing a section into smaller segments to discretize the spatial domain for numerical simulation.
 
     **Segment**
-        A segment is a part of a section that is defined by a set of points.
+        A small subunit of a section resulting from the segmentation process, used to approximate the spatial properties of a neuron.
 
     **Segment Group**
-        A segment group is a collection of segments selected based on certain 
-        criteria such as domain, diameter, distance, etc.
+        A collection of segments selected based on specific criteria such as domain, diameter, or distance.
 
     **Membrane mechanism**
-        A membrane mechanism is a set of equations that describe the behavior of the membrane of a neuron.
+        A mathematical model describing the electrical properties of a neuronal membrane, such as ion channels and pumps.
 
     **MOD file**
-        A MOD file is a file that contains the equations, parameters, and other information
-        that describe the behavior of a membrane mechanism.
+        A NEURON-specific file containing the implementation of membrane mechanisms, defining their mathematical equations and computational behavior.
 
     **Parameter**
-        A parameter is a variable such as membrane capacitance, channel conductance, etc.
-        that can have different values in different parts of a neuron. 
-        Often, parameters are associated with membrane mechanisms, but they can also be independent.
+        A quantitative variable describing specific neuronal properties, such as membrane capacitance, ion channel conductance, 
+        or other physiological characteristics.
 
     **Distribution**
-        A distribution is a function that assigns values to parameters based on certain criteria, typically distance from the soma.
+        A mathematical function that assigns parameter values across neuronal structures based on spatial or morphological relationships.
 
     **Synapse**
-        A synapse is a connection between two neurons that allows them to communicate.
+        A specialized junction enabling signal transmission between neurons, represented computationally as a point of conductance and kinetic changes.
 
     **Population**
-        A (presynaptic) population in DendroTweaks is a group of "virtual" neurons
+        In DendroTweaks, a group of "virtual" neurons
         that form synapses on the postsynaptic neuron (the model). The synapses in a population
         share the same kinetic and activation properties.

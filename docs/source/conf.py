@@ -11,10 +11,12 @@ import sys
 
 sys.path.insert(0, os.path.abspath('../../src'))
 
+from dendrotweaks import __version__
+
 project = 'DendroTweaks'
 copyright = '2024, Roman Makarov'
 author = 'Roman Makarov'
-release = '0.1'
+release = __version__
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -38,12 +40,14 @@ html_theme = 'furo'
 
 html_static_path = ['_static']
 
-html_logo = '_static/logo.png'
+pygments_dark_style = "stata-dark"
 
 copybutton_prompt_text = r'>>> '
 copybutton_only_copy_prompt_lines = True
 
 html_theme_options = {
     'sidebar_hide_name': True,
+    'light_logo': 'logo_light.png',
+    'dark_logo': 'logo_dark.png',
 }
 html_favicon = '_static/favicon.png'

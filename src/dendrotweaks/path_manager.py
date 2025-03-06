@@ -3,7 +3,7 @@ from typing import List, Dict
 
 class PathManager:
     """
-    A versatile manager for handling file and directory paths related to modeling data.
+    A manager class for handling file and directory paths related to models data.
     """
     def __init__(self, path_to_data: str, model_name: str = None):
         self.path_to_data = path_to_data
@@ -19,9 +19,10 @@ class PathManager:
         """
         Set the paths for the given model name and data path.
         
-        Parameters:
-        - model_name: The name of the model.
-        - path_to_data: The base path to the data.
+        Parameters
+        ----------
+        model_name : str
+            The name of the model.
         """
         self.paths.update({
             'model': os.path.join(self.path_to_data, model_name),
@@ -42,8 +43,10 @@ class PathManager:
         """
         List all model files.
         
-        Returns:
-        - List[str]: A list of model file names.
+        Returns
+        -------
+        List[str]
+            A list of model file names.
         """
         DIRS_TO_IGNORE = ['Default', 'Templates']
         return [f for f in os.listdir(self.path_to_data)
@@ -54,11 +57,15 @@ class PathManager:
         """
         Get the path for a specific file type.
         
-        Parameters:
-        - file_type: The type of file (e.g., 'mod', 'swc').
+        Parameters
+        ----------
+        file_type : str
+            The type of file (e.g., 'mod', 'swc').
         
-        Returns:
-        - str: The path to the file type.
+        Returns
+        -------
+        str
+            The full directory path.
         """
         path = self.paths.get(file_type, None)
         if os.path.isdir(path):
@@ -69,13 +76,19 @@ class PathManager:
         """
         Construct a file path with an optional extension for a specific type.
         
-        Parameters:
-        - file_type: The type of file (e.g., 'mod', 'swc').
-        - filename: The name of the file.
-        - extension: The file extension.
-        
-        Returns:
-        - str: The constructed file path.
+        Parameters
+        ----------
+        file_type : str
+            The type of file (e.g., 'morphology', 'stimuli').
+        file_name : str
+            The name of the file.
+        extension : str
+            The file extension (e.g., 'mod', 'swc').
+
+        Returns
+        -------
+        str
+            The full file path.
         """
         dir_path = self.get_path(file_type)
         file_name = f"{file_name}.{extension}"
@@ -85,13 +98,17 @@ class PathManager:
         """
         List all files of a given type and optional archive.
         
-        Parameters:
-        - file_type: The type of files to list (e.g., 'mod').
-        - archive: The optional subdirectory within the type.
-        - extension: File extension to filter by (e.g., 'mod').
+        Parameters
+        ----------
+        file_type : str
+            The type of file (e.g. 'morphology', 'stimuli').
+        extension : str
+            The file extension to filter by (e.g., 'mod', 'swc').
         
-        Returns:
-        - List[str]: A list of file names with the specified extension.
+        Returns
+        -------
+        List[str]
+            A list of file names.
         """
         directory = self.paths.get(file_type, "")
         if not extension.startswith('.'): extension = f".{extension}"
@@ -105,8 +122,10 @@ class PathManager:
         """
         List all SWC files.
         
-        Returns:
-        - List[str]: A list of SWC file names.
+        Returns
+        -------
+        List[str]
+            A list of SWC file names.
         """
         return self.list_files('morphology', extension=extension)
 
@@ -115,8 +134,10 @@ class PathManager:
         """
         List all JSON files.
         
-        Returns:
-        - List[str]: A list of JSON file names.
+        Returns
+        -------
+        List[str]
+            A list of JSON file names.
         """
         return self.list_files('stimuli', extension=extension)
 
@@ -125,8 +146,10 @@ class PathManager:
         """
         List all membrane files.
         
-        Returns:
-        - List[str]: A list of membrane file names.
+        Returns
+        -------
+        List[str]
+            A list of membrane file
         """
         return self.list_files('membrane', extension='.json')
 
@@ -135,8 +158,10 @@ class PathManager:
         """
         Print a directory tree for a given file type.
         
-        Parameters:
-        - file_type: The type of files (e.g., 'mod', 'swc').
+        Parameters
+        ----------
+        file_type : str
+            The type of file (e.g., 'mod', 'swc').
         """
         base_path = self.paths.get('model') if not subfolder else self.paths.get(subfolder)
         if not base_path or not os.path.isdir(base_path):

@@ -25,7 +25,9 @@ warnings.formatwarning = custom_warning_formatter
 
 class Section(Node):
     """
-    A set of nodes with a relation on the set. A path.
+    A class representing a section in a neuron morphology.
+
+    A section is continuous part of a neuron's morphology between two branching points.
     """
 
     def __init__(self, idx: str, parent_idx: str, points: List[Node]) -> None:
@@ -38,8 +40,8 @@ class Section(Node):
         if not all(pt.domain == self._domain for pt in points):
             raise ValueError('All points in a section must belong to the same domain.')
 
-    # MAGIC METHODS
 
+    # MAGIC METHODS
 
     def __call__(self, x: float):
         """
@@ -68,11 +70,16 @@ class Section(Node):
         for seg in self.segments:
             yield seg
 
+
     # PROPERTIES
 
     @property
     def domain(self):
+        """
+        The morphological or functional domain of the node.
+        """
         return self._domain
+
 
     @domain.setter
     def domain(self, domain):
@@ -80,20 +87,28 @@ class Section(Node):
         for pt in self.points:
             pt.domain = domain
 
+
     @property
     def df_points(self):
         """
-        Return the nodes in the section as a pandas DataFrame.
+        A DataFrame of the points in the section.
         """
         # concatenate the dataframes of the nodes
         return pd.concat([pt.df for pt in self.points])
 
+
     @property
     def df(self):
+        """
+        A DataFrame of the section.
+        """
         return pd.DataFrame({'idx': [self.idx],
                             'parent_idx': [self.parent_idx]})
 
+
     # TODO: Figure out why this is different from NEURON's diam
+    # Update: In NEURON, sec.diam returns the diameter of the segment at the center of the section
+    # In this implementation, sec.diam returns the average diameter of the section
     # @property
     # def diam(self):
     #     """
@@ -117,85 +132,143 @@ class Section(Node):
 
     @property
     def diam(self):
+        """
+        Diameter of the central segment of the section (from NEURON).
+        """
         return self._ref.diam
         
 
     @property
     def L(self):
+        """
+        Length of the section (from NEURON).
+        """
         return self._ref.L
+
 
     @property
     def Ra(self):
+        """
+        Axial resistance of the section (from NEURON).
+        """
         return self._ref.Ra
+
 
     @property
     def nseg(self):
+        """
+        Number of segments in the section (from NEURON).
+        """
         return self._ref.nseg
+
 
     @property
     def radii(self):
+        """
+        Radii of the points in the section.
+        """
         return [pt.r for pt in self.points]
+
 
     @property
     def xs (self):
+        """
+        X-coordinates of the points in the section.
+        """
         return [pt.x for pt in self.points]
+
 
     @property
     def ys(self):
+        """
+        Y-coordinates of the points in the section.
+        """
         return [pt.y for pt in self.points]
+
 
     @property
     def zs(self):
+        """
+        Z-coordinates of the points in the section.
+        """
         return [pt.z for pt in self.points]
+
 
     @property
     def seg_centers(self):
+        """
+        The list of segment centers in the section with normalized length.
+        """
         if self._ref is None:
             raise ValueError('Section is not referenced in NEURON.')
         return (np.array([(2*i - 1) / (2 * self._ref.nseg)
                 for i in range(1, self._ref.nseg + 1)]) * self._ref.L).tolist()
 
+
     @property
     def seg_borders(self):
+        """
+        The list of segment borders in the section with normalized length.
+        """
         if self._ref is None:
             raise ValueError('Section is not referenced in NEURON.')
         nseg = int(self._ref.nseg)
         return [i / nseg for i in range(nseg + 1)]
 
+
     @property
     def distances(self):
+        """
+        The list of cumulative euclidean distances of the points in the section.
+        """
         coords = np.array([[pt.x, pt.y, pt.z] for pt in self.points])
         deltas = np.diff(coords, axis=0)
         frusta_distances = np.sqrt(np.sum(deltas**2, axis=1))
         cumulative_frusta_distances = np.insert(np.cumsum(frusta_distances), 0, 0)
         return cumulative_frusta_distances
 
+
     @property
     def center(self):
+        """
+        The coordinates of the center of the section.
+        """
         return np.mean(self.xs), np.mean(self.ys), np.mean(self.zs)
+
 
     @property
     def length(self):
+        """
+        The length of the section calculated as the sum of the distances between the points.
+        """
         return self.distances[-1]
+
 
     @property
     def area(self):
         """
-        Calculate the area of the section using the formula for a frustum.
+        The surface area of the section calculated as the sum of the areas of the frusta segments.
         """
         areas = [np.pi * (r1 + r2) * np.sqrt((r1 - r2)**2 + h**2) for r1, r2, h in zip(self.radii[:-1], self.radii[1:], np.diff(self.distances))]
         return sum(areas)
+
 
     # REFERENCING METHODS
 
     def create_and_reference(self, simulator_name='NEURON'):
         """
         Add a reference to the section in the simulator.
+
+        Parameters
+        ----------
+        simulator_name : str
+            The name of the simulator to create the section in.
         """
         if simulator_name == 'NEURON':
             self.create_NEURON_section()
         elif simulator_name == 'JAXLEY':
             self.create_JAXLEY_section()
+
 
     def create_NEURON_section(self):
         """
@@ -220,6 +293,7 @@ class Section(Node):
         """
         raise NotImplementedError
 
+
     # MECHANISM METHODS
 
     def insert_mechanism(self, name: str):
@@ -227,26 +301,36 @@ class Section(Node):
         Inserts a mechanism in the section if 
         it is not already inserted.
         """
-        # if already inserted, return
         if self._ref.has_membrane(name):
             return
         self._ref.insert(name)
+
 
     def uninsert_mechanism(self, name: str):
         """
         Uninserts a mechanism in the section if
         it was inserted.
         """
-        # if already inserted, return
         if not self._ref.has_membrane(name):
             return
         self._ref.uninsert(name)
+
 
     # PARAMETER METHODS
 
     def get_param_value(self, param_name):
         """
         Get the average parameter of the section's segments.
+
+        Parameters
+        ----------
+        param_name : str
+            The name of the parameter to get.
+
+        Returns
+        -------
+        float
+            The average value of the parameter in the section's segments.
         """
         # if param_name in ['Ra', 'diam', 'L', 'nseg', 'domain', 'subtree_size']:
         #     return getattr(self, param_name)
@@ -265,6 +349,8 @@ class Section(Node):
         ----------
         relative_position : float
             The position along the section's normalized length [0, 1].
+        within_domain : bool
+            Whether to stop at the domain boundary.
 
         Returns
         -------
@@ -298,7 +384,7 @@ class Section(Node):
     
     def disconnect_from_parent(self):
         """
-        Detach the section from the parent.
+        Detach the section from its parent section.
         """
         # In SectionTree
         super().disconnect_from_parent()
@@ -311,9 +397,15 @@ class Section(Node):
         if self.segments:
             self.segments[0].disconnect_from_parent()
 
+
     def connect_to_parent(self, parent):
         """
-        Attaches the section to a parent section.
+        Attach the section to a parent section.
+
+        Parameters
+        ----------
+        parent : Section
+            The parent section to attach to.
         """
         # In SectionTree
         super().connect_to_parent(parent)
@@ -566,6 +658,9 @@ class Section(Node):
 
 
 class SectionTree(Tree):
+    """
+    A class representing a tree graph of sections in a neuron morphology.
+    """
 
     def __init__(self, sections: list[Section]) -> None:
         super().__init__(sections)
@@ -576,7 +671,7 @@ class SectionTree(Tree):
 
     def _create_domains(self):
         """
-        Create the domains in the tree.
+        Create domains using the data from the sections (from the points in the sections).
         """
 
         unique_domain_names = set([sec.domain for sec in self.sections])
@@ -584,20 +679,31 @@ class SectionTree(Tree):
 
         for sec in self.sections:
             self.domains[sec.domain].add_section(sec)
-            
+
+
+    # PROPERTIES    
 
     @property
     def sections(self):
+        """
+        A list of sections in the tree. Alias for self._nodes.
+        """
         return self._nodes
+
 
     @property
     def soma(self):
+        """
+        The soma section of the tree. Alias for self.root.
+        """
         return self.root
+
 
     @property
     def sections_by_depth(self):
         """
-        Return the sections grouped by depth.
+        A dictionary of sections grouped by depth in the tree
+        (depth is the number of edges from the root).
         """
         sections_by_depth = {}
         for sec in self.sections:
@@ -606,48 +712,61 @@ class SectionTree(Tree):
             sections_by_depth[sec.depth].append(sec)
         return sections_by_depth
 
+
+    @property
+    def df(self):
+        """
+        A DataFrame of the sections in the tree.
+        """
+        data = {
+            'idx': [],
+            'domain': [],
+            'x': [],
+            'y': [],
+            'z': [],
+            'r': [],
+            'parent_idx': [],
+            'section_idx': [],
+            'parent_section_idx': [],
+        }
+
+        for sec in self.sections:
+            points = sec.points if sec.parent is None or sec.parent.parent is None else sec.points[1:]
+            for pt in points:
+                data['idx'].append(pt.idx)
+                data['domain'].append(pt.domain)
+                data['x'].append(pt.x)
+                data['y'].append(pt.y)
+                data['z'].append(pt.z)
+                data['r'].append(pt.r)
+                data['parent_idx'].append(pt.parent_idx)
+                data['section_idx'].append(sec.idx)
+                data['parent_section_idx'].append(sec.parent_idx)
+
+        return pd.DataFrame(data)
+
+
     def sort(self):
         """
-        
+        Sort the sections in the tree using a depth-first traversal.
         """
-        print('Sorting sections...')
-        count_sections = 0
-        count_points = 0
-        count_segments = 0
-
-        for sec in self.traverse():
-            sec.idx = count_sections
-            sec.parent_idx = sec.parent.idx if sec.parent else -1
-            count_sections += 1
-
-            if sec.parent is None:
-                sec.points[1].idx = count_points
-                sec.points[1].parent_idx = -1
-                count_points += 1
-                sec.points[0].idx = count_points
-                sec.points[0].parent_idx = sec.points[0].parent.idx
-                count_points += 1
-                sec.points[2].idx = count_points
-                sec.points[2].parent_idx = sec.points[2].parent.idx
-                count_points += 1
-            else:
-                for pt in sec.points:
-                    pt.idx = count_points
-                    pt.parent_idx = pt.parent.idx
-                    count_points += 1
-
-            for seg in sec:
-                seg.idx = count_segments
-                seg.parent_idx = seg.parent.idx if seg.parent else -1
-                count_segments += 1
-
-    def sort(self):
         super().sort()
         self._point_tree.sort()
         if self._seg_tree:
             self._seg_tree.sort()
 
+
+    # STRUCTURE METHODS
+
     def remove_subtree(self, section):
+        """
+        Remove a section and its subtree from the tree.
+
+        Parameters
+        ----------
+        section : Section
+            The section to remove.
+        """
         super().remove_subtree(section)
         # Domains
         for domain in self.domains.values():
@@ -665,6 +784,7 @@ class SectionTree(Tree):
             for sec in section.subtree:
                 h.delete_section(sec=sec._ref)
 
+
     def remove_zero_length_sections(self):
         """
         Remove sections with zero length.
@@ -676,7 +796,6 @@ class SectionTree(Tree):
                 for seg in sec.segments:
                     self._seg_tree.remove_node(seg)
                 self.remove_node(sec)
-
 
 
     def downsample(self, factor: float):
@@ -715,28 +834,52 @@ class SectionTree(Tree):
         self._point_tree.sort()
 
             
+    # def plot_sections_as_matrix(self, ax=None):
+    #     """
+    #     Plot the sections as a connectivity matrix.
+    #     """
+    #     if ax is None:
+    #         fig, ax = plt.subplots()
 
-    def plot_sections_as_matrix(self, ax=None):
-        """
-        Plot the sections as a connectivity matrix.
-        """
-        if ax is None:
-            fig, ax = plt.subplots()
+    #     n = len(self.sections)
+    #     matrix = np.zeros((n, n))
+    #     for section in self.sections:
+    #         if section.parent:
+    #             matrix[section.idx, section.parent.idx] = section.idx
+    #     matrix[matrix == 0] = np.nan
 
-        n = len(self.sections)
-        matrix = np.zeros((n, n))
-        for section in self.sections:
-            if section.parent:
-                matrix[section.idx, section.parent.idx] = section.idx
-        matrix[matrix == 0] = np.nan
+    #     ax.imshow(matrix.T, cmap='jet_r')
+    #     ax.set_xlabel('Section ID')
+    #     ax.set_ylabel('Parent ID')
 
-        ax.imshow(matrix.T, cmap='jet_r')
-        ax.set_xlabel('Section ID')
-        ax.set_ylabel('Parent ID')
+
+    # PLOTTING METHODS
 
     def plot(self, ax=None, show_points=False, show_lines=True, 
             show_domains=True, annotate=False, 
             projection='XY', highlight_sections=None, focus_sections=None):
+        """
+        Plot the sections in the tree in a 2D projection.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes, optional
+            Axes to plot on. If None, creates a new figure and axes.
+        show_points : bool, optional
+            Whether to show the points in the sections.
+        show_lines : bool, optional
+            Whether to show the lines connecting the points.
+        show_domains : bool, optional
+            Whether to color sections based on their domain.
+        annotate : bool, optional
+            Whether to annotate the sections with their index.
+        projection : str or tuple, optional
+            The projection to use for the plot. Can be 'XY', 'XZ', 'YZ', or a tuple of two axes.
+        highlight_sections : list of Section, optional
+            Sections to highlight in the plot.
+        focus_sections : list of Section, optional
+            Sections to focus on in the plot.
+        """
         if ax is None:
             fig, ax = plt.subplots(figsize=(10, 10))
 
@@ -785,6 +928,20 @@ class SectionTree(Tree):
 
     def plot_radii_distribution(self, ax=None, highlight=None, 
     domains=True, show_soma=False):
+        """
+        Plot the radius distribution of the sections in the tree.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes, optional
+            Axes to plot on. If None, creates a new figure and axes.
+        highlight : list of int, optional
+            Indices of sections to highlight in the plot.
+        domains : bool, optional
+            Whether to color sections based on their domain.
+        show_soma : bool, optional
+            Whether to show the soma section in the plot.
+        """
         if ax is None:
             fig, ax = plt.subplots(figsize=(8, 3))
 
@@ -813,9 +970,17 @@ class SectionTree(Tree):
         ax.set_xlabel('Distance from root')
         ax.set_ylabel('Radius')
 
+
+    # EXPORT METHODS
+
     def to_swc(self, path_to_file: str):
         """
         Save the SectionTree as an SWC file.
+
+        Parameters
+        ----------
+        path_to_file : str
+            The path to save the SWC file.
         """
         if not self.is_sorted or not self._point_tree.is_sorted:
             raise ValueError('The tree must be sorted before saving.')
@@ -844,31 +1009,3 @@ class SectionTree(Tree):
         df = pd.DataFrame(data)
         df.to_csv(path_to_file, sep=' ', index=False, header=False)
 
-    @property
-    def df(self):
-        data = {
-            'idx': [],
-            'domain': [],
-            'x': [],
-            'y': [],
-            'z': [],
-            'r': [],
-            'parent_idx': [],
-            'section_idx': [],
-            'parent_section_idx': [],
-        }
-
-        for sec in self.sections:
-            points = sec.points if sec.parent is None or sec.parent.parent is None else sec.points[1:]
-            for pt in points:
-                data['idx'].append(pt.idx)
-                data['domain'].append(pt.domain)
-                data['x'].append(pt.x)
-                data['y'].append(pt.y)
-                data['z'].append(pt.z)
-                data['r'].append(pt.r)
-                data['parent_idx'].append(pt.parent_idx)
-                data['section_idx'].append(sec.idx)
-                data['parent_section_idx'].append(sec.parent_idx)
-
-        return pd.DataFrame(data)

@@ -38,7 +38,7 @@ want to standardize it, we can use the :code:`standardize_channel` function.
 
 
 Assuming that we have an instance of a model with a custom sodium channel `Na` created before,
-we can standardize it with :code:`model.standardize_channel` method.
+we can standardize it with the :code:`model.standardize_channel` method.
 The standard channel with the name `sNa` (standard-Na) and very similar kinetics to the original channel model
 is created to replace the original channel model.
 This method also exports the standard channel model to a MOD file which is immediately loaded into the NEURON simulator.
@@ -67,7 +67,6 @@ to compare it with the trace produced by the original channel model.
     :alt: Voltage trace
 
     *Figure 2: Voltage trace of the standard channel model (dashed line represents the standard channel)*
-    
 
 
 
@@ -139,5 +138,5 @@ where:
 These parameters are fitted to the kinetic curves derived from the original channel model.
 
 We perform simultaneous fitting of the steady-state and time constant curves to the Hodgkin-Huxley model equations.
-In order to better reproduce the voltage trace of the original channel model we perform a second fit 
+In order to better reproduce the voltage trace of the original channel model, we perform a second fit 
 on the steady-state curve alone.

@@ -10,8 +10,8 @@ We can do this by setting the values globally for the entire cell.
     >>> model.set_parameter('cm', value=1.0)
     >>> model.set_parameter('Ra', value=100.0)
 
-Alternatively, we can set the values for specific groups of sections. For example, to set the membrane capacitance and axial resistance for all sections in the model.
-This approach is more flexible and allows us to set different values for different groups of sections. For example, we can set the membrane capacitance for the soma to 2 pF/cm^2 and for all other sections to 1 pF/cm^2.
+Alternatively, we can set the values for specific groups of sections. For example, to set the membrane capacitance and axial resistance for all sections in the model
+as it was done in the previous :doc:`tutorial</tutorials/tutorial_distributions>`.
 
 
 

@@ -13,3 +13,4 @@ src/data/*/mod/*/
 src/data/Default/*/
 !src/data/Default/*.mod
 *.egg-info
+dist/

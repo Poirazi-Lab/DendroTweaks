@@ -1,4 +1,4 @@
-SWC tree (Reconstruction)
+Point tree 
 ==========================
 
 

@@ -1,4 +1,4 @@
-Mechanism utils
+Mechanism IO Utils
 ==========================
 
 .. automodule:: dendrotweaks.membrane.io.utils

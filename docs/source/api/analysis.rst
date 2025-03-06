@@ -1,9 +1,9 @@
-Core
+Analysis
 ==========================
 
 .. toctree::
    :maxdepth: 1
 
-   core/model
-   core/path_manager
-   core/simulators
+   analysis/morphology
+   analysis/ephys
+   

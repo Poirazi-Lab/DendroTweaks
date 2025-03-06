@@ -7,7 +7,14 @@ import warnings
 
 
 def validate_tree(tree):
+    """
+    Validate the toplogical structure of a tree graph.
 
+    Parameters
+    ----------
+    tree : Tree
+        The tree to validate.
+    """
     # Check for unique node ids
     check_unique_ids(tree)
     check_unique_root(tree)
@@ -22,7 +29,6 @@ def validate_tree(tree):
     check_bifurcations(tree)
     print("Tree is binary (not considering the root node)")
     # validate_order(self.tree)
-
 
     if isinstance(tree, PointTree):
         validate_point_tree(tree)
@@ -40,7 +46,6 @@ def validate_tree(tree):
 # -----------------------------------------------------------------------------
 # Indicies
 # -----------------------------------------------------------------------------
-
 
 def check_unique_ids(tree):
     node_ids = {node.idx for node in tree._nodes}
@@ -68,7 +73,6 @@ def check_unique_root(tree):
 # -----------------------------------------------------------------------------
 # Connectivity
 # -----------------------------------------------------------------------------
-
 
 def check_connections(tree):
     """
@@ -118,11 +122,18 @@ def check_bifurcations(tree):
 
 
 # =============================================================================
-# SWC-specific validation
+# Point-specific validation
 # =============================================================================
 
-
 def validate_point_tree(point_tree):
+    """
+    Validate the geometry of a point tree.
+
+    Parameters
+    ----------
+    point_tree : PointTree
+        The point tree to validate.
+    """
 
     # Check for NaN values in the DataFrame
     nan_counts = point_tree.df.isnull().sum()
@@ -146,12 +157,20 @@ def validate_point_tree(point_tree):
             issues_str = "\n".join([f"Child {child} does not overlap with parent {pt}" for pt, child in non_overlapping_children])
             warnings.warn(f"Found non-overlapping children:\n{issues_str} for bifurcations")
         
+
 # =============================================================================
 # Section-specific validation
 # =============================================================================
 
-
 def validate_section_tree(section_tree):
+    """
+    Validate a section tree.
+
+    Parameters
+    ----------
+    section_tree : SectionTree
+        The section tree to validate.
+    """
 
     for sec in section_tree:
         if not all(pt.domain == sec.domain for pt in sec.points):
@@ -170,7 +189,6 @@ def validate_section_tree(section_tree):
 # =============================================================================
 # Validation utilities
 # =============================================================================
-
 
 def shuffle_indices_for_testing(df):
     idx_range = int(df['Index'].max() - df['Index'].min()) + 1
