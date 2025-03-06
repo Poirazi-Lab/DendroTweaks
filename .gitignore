@@ -6,8 +6,6 @@
 *.gexf
 *.log
 docs/build/
-docs/make.bat
-docs/Makefile
 src/data/*/mod/*/
 !src/data/*/mod/*.mod
 src/data/Default/*/
