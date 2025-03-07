@@ -452,8 +452,7 @@ class Model():
         self.seg_tree = create_segment_tree(self.sec_tree)
 
         # Redistribute parameters
-        for param_name in self.params:
-            self.distribute(param_name)  
+        self.distribute_all()
 
 
     # ========================================================================
@@ -971,16 +970,18 @@ class Model():
             distribution = Distribution(distr_type, **distr_params)
         self.params[param_name][group_name] = distribution
 
-    @timeit
+    
     def distribute_all(self):
         """
         Distribute all parameters to the segments.
         """
+        groups_to_segments = {group.name: [seg for seg in self.seg_tree if seg in group] 
+                         for group in self._groups}
         for param_name in self.params:
-            self.distribute(param_name)
+            self.distribute(param_name, groups_to_segments)
 
     
-    def distribute(self, param_name: str):
+    def distribute(self, param_name: str, precomputed_groups=None):
         """
         Distribute a parameter to the segments.
 
@@ -988,37 +989,55 @@ class Model():
         ----------
         param_name : str
             The name of the parameter to distribute.
+        precomputed_groups : dict, optional
+            A dictionary mapping group names to segments. Default is None.
         """
         if param_name == 'Ra':
-            self._distribute_Ra()
+            self._distribute_Ra(precomputed_groups)
             return
 
-        groups_to_segments = {group.name: [seg 
-            for seg in self.seg_tree if seg in group] 
-            for group in self._groups}
+        groups_to_segments = precomputed_groups
+        if groups_to_segments is None:
+            groups_to_segments = {group.name: [seg for seg in self.seg_tree if seg in group] 
+                                for group in self._groups}
 
-        for group_name, distribution in self.params[param_name].items():
-            group = self.groups[group_name]
+        param_distributions = self.params[param_name]
+
+        for group_name, distribution in param_distributions.items():
+            
             filtered_segments = groups_to_segments[group_name]
-            for seg in filtered_segments:
-                # TODO: would it slow down the process?
-                if distribution == 'inherit':
+
+            if distribution == 'inherit':
+                for seg in filtered_segments:
                     value = seg.parent.get_param_value(param_name)
-                else:
+                    seg.set_param_value(param_name, value)
+            else:
+                for seg in filtered_segments:
                     value = distribution(seg.path_distance())
-                seg.set_param_value(param_name, value)
+                    seg.set_param_value(param_name, value)
 
 
-    def _distribute_Ra(self):
-        for group_name, distribution in self.params['Ra'].items():
-            group = self.groups[group_name]
-            filtered_segments = [
-                seg for seg in self.seg_tree.segments
-                if seg in group
-            ]
-            for seg in filtered_segments:
-                value = distribution(seg._section.path_distance(0.5))
-                seg._section._ref.Ra = value
+    def _distribute_Ra(self, precomputed_groups=None):
+        """
+        Distribute the axial resistance to the segments.
+        """
+
+        groups_to_segments = precomputed_groups
+        if groups_to_segments is None:
+            groups_to_segments = {group.name: [seg for seg in self.seg_tree if seg in group] 
+                                for group in self._groups}
+
+        param_distributions = self.params['Ra']
+
+        for group_name, distribution in param_distributions.items():
+            
+            filtered_segments = groups_to_segments[group_name]
+            if distribution == 'inherit':
+                raise NotImplementedError("Inheritance of Ra is not implemented.")
+            else:
+                for seg in filtered_segments:
+                    value = distribution(seg._section.path_distance(0.5))
+                    seg._section._ref.Ra = value
 
 
     def remove_distribution(self, param_name, group_name):
