@@ -29,6 +29,8 @@ import pandas as pd
 
 import warnings
 
+POPULATIONS = {'AMPA': {}, 'NMDA': {}, 'AMPA_NMDA': {}, 'GABAa': {}}
+
 def custom_warning_formatter(message, category, filename, lineno, file=None, line=None):
     return f"{category.__name__}: {message} ({os.path.basename(filename)}, line {lineno})\n"
 
@@ -105,7 +107,7 @@ class Model():
 
         # Stimuli
         self.iclamps = {}
-        self.populations = {'AMPA': {}, 'NMDA': {}, 'AMPA_NMDA': {}, 'GABAa': {}}
+        self.populations = POPULATIONS
 
         # Simulator
         if simulator_name == 'NEURON':
@@ -404,17 +406,16 @@ class Model():
         return [sec for sec in self.sec_tree.sections if filter_function(sec)]
 
 
-    def get_segments(self, group_name):
+    def get_segments(self, group_names):
         """
-        Get the segments in a group.
+        Get the segments in specified groups.
 
         Parameters
         ----------
-        group_name : str
-            The name of the group to get segments from.
+        group_names : List[str]
+            The names of the groups to get segments from.
         """
-        group = self.groups[group_name]
-        return [seg for seg in self.seg_tree.segments if seg in group]
+        return [seg for group_name in group_names for seg in self.seg_tree.segments if seg in self.groups[group_name]]
         
     # ========================================================================
     # SEGMENTATION
@@ -1151,6 +1152,40 @@ class Model():
         self._add_population(population)
 
 
+    def update_population_kinetic_params(self, pop_name, **params):
+        """
+        Update the kinetic parameters of a population of synapses.
+
+        Parameters
+        ----------
+        pop_name : str
+            The name of the population.
+        params : dict
+            The parameters to update.
+        """
+        syn_type, idx = pop_name.rsplit('_', 1)
+        population = self.populations[syn_type][pop_name]
+        population.update_kinetic_params(**params)
+        print(population.kinetic_params)
+
+    
+    def update_population_input_params(self, pop_name, **params):
+        """
+        Update the input parameters of a population of synapses.
+
+        Parameters
+        ----------
+        pop_name : str
+            The name of the population.
+        params : dict
+            The parameters to update.
+        """
+        syn_type, idx = pop_name.rsplit('_', 1)
+        population = self.populations[syn_type][pop_name]
+        population.update_input_params(**params)
+        print(population.input_params)
+
+
     def remove_population(self, name):
         """
         Remove a population of synapses from the model.
@@ -1164,6 +1199,23 @@ class Model():
         population = self.populations[syn_type].pop(name)
         population.clean()
         
+    def remove_all_populations(self):
+        """
+        Remove all populations of synapses from the model.
+        """
+        for syn_type in self.populations:
+            for name in list(self.populations[syn_type].keys()):
+                self.remove_population(name)
+        if any(self.populations.values()):
+            warnings.warn(f'Not all populations were removed: {self.populations}')
+        self.populations = POPULATIONS
+
+    def remove_all_stimuli(self):
+        """
+        Remove all stimuli from the model.
+        """
+        self.remove_all_iclamps()
+        self.remove_all_populations()
 
     # ========================================================================
     # SIMULATION
@@ -1315,7 +1367,7 @@ class Model():
     # FILE EXPORT
     # ========================================================================
 
-    def export_morphology(self, version='modified'):
+    def export_morphology(self, file_name):
         """
         Write the SWC tree to an SWC file.
 
@@ -1324,8 +1376,7 @@ class Model():
         version : str, optional
             The version of the morphology appended to the morphology name.
         """
-        name = self.morphology_name + '_' + version
-        path_to_file = self.path_manager.get_file_path('morphology', name, extension='swc')
+        path_to_file = self.path_manager.get_file_path('morphology', file_name, extension='swc')
         
         self.point_tree.to_swc(path_to_file)
 
@@ -1403,11 +1454,11 @@ class Model():
             
 
 
-    def export_membrane(self, version, **kwargs):
+    def export_membrane(self, file_name, **kwargs):
         """
         """        
-        name = self.name + '_' + version
-        path_to_json = self.path_manager.get_file_path('membrane', name, extension='json')
+        
+        path_to_json = self.path_manager.get_file_path('membrane', file_name, extension='json')
 
         data = self.to_dict()
         with open(path_to_json, 'w') as f:
@@ -1508,18 +1559,17 @@ class Model():
         return df
         
 
-    def export_stimuli(self, version, **kwargs):
+    def export_stimuli(self, file_name, **kwargs):
         """
         """
-        name = self.name + '_' + version
-        path_to_json = self.path_manager.get_file_path('stimuli', name, extension='json')
+        path_to_json = self.path_manager.get_file_path('stimuli', file_name, extension='json')
 
         data = self.stimuli_to_dict()
 
         with open(path_to_json, 'w') as f:
             json.dump(data, f, **kwargs)
 
-        path_to_stimuli_csv = self.path_manager.get_file_path('stimuli', name, extension='csv')
+        path_to_stimuli_csv = self.path_manager.get_file_path('stimuli', file_name, extension='csv')
         self._stimuli_to_csv(path_to_stimuli_csv)
 
 

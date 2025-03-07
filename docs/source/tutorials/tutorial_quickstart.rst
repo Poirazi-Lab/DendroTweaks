@@ -85,7 +85,7 @@ This structure provides the foundation for model development. As we progress, we
 files to these directories, but the basic framework is now ready.
 You can learn more about the directory structure in the :doc:`tutorial</tutorials/tutorial_io>` on loading and saving models.
 
-Load the morphology
+Loading the morphology
 ------------------------------------------
 
 We proceed by loading the morphology of the cell from an SWC file.

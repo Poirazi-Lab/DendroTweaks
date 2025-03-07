@@ -62,13 +62,15 @@ class MODFileLoader():
             os.makedirs(mechanism_dir, exist_ok=True)
             shutil.copy(path_to_mod_file, mechanism_dir)
             self._compile_files(mechanism_dir)
-        else:
-            if self.verbose: print(f'Using precompiled mechanism "{mechanism_name}"')
 
         if hasattr(h, mechanism_name):
             if self.verbose: print(f'Mechanism "{mechanism_name}" already exists in hoc')
         else:
-            neuron.load_mechanisms(mechanism_dir)
+            try:
+                neuron.load_mechanisms(mechanism_dir)
+            except Exception as e:
+                print(f"Failed to load mechanism {mechanism_name}: {e}")
+                return
         self._loaded_mechanisms.add(mechanism_name)
         if self.verbose: print(f'Loaded mechanism "{mechanism_name}"')
 
