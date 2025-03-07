@@ -2,11 +2,11 @@
 Utility functions for dendrotweaks package.
 """
 
-
-
 import time
 import numpy as np
 import os
+import zipfile
+import urllib.request
 
 
 DOMAINS_TO_COLORS = {
@@ -32,7 +32,7 @@ def timeit(func):
         start = time.time()
         result = func(*args, **kwargs)
         end = time.time()
-        print(f"  Elapsed time: {round(end-start, 2)} seconds")
+        print(f"  Elapsed time: {round(end-start, 3)} seconds")
         return result
     return wrapper
 
@@ -139,3 +139,29 @@ def read_file(path_to_file):
     with open(path_to_file, 'r') as f:
         content = f.read()
     return content
+
+
+def download_example_data(path_to_destination):
+    """
+    Download the examples from the dendrotweaks GitHub repository.
+
+    Parameters
+    ----------
+    path_to_destination : str
+        The path to the destination folder where the examples will be downloaded.
+    """
+    if not os.path.exists(path_to_destination):
+        os.makedirs(path_to_destination)
+
+    repo_url = "https://github.com/Poirazi-Lab/dendrotweaks/archive/refs/heads/main.zip"
+    zip_path = os.path.join(path_to_destination, "examples.zip")
+
+    print(f"Downloading examples from {repo_url}...")
+    urllib.request.urlretrieve(repo_url, zip_path)
+
+    print(f"Extracting examples to {path_to_destination}")
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        zip_ref.extractall(path_to_destination)
+
+    os.remove(zip_path)  # Clean up the zip file
+    print(f"Examples downloaded successfully to {path_to_destination}/.")

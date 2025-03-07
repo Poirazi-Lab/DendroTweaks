@@ -6,9 +6,9 @@
 *.gexf
 *.log
 docs/build/
-src/data/*/mod/*/
-!src/data/*/mod/*.mod
-src/data/Default/*/
-!src/data/Default/*.mod
+examples/*/membrane/mod/*/
+!examples/*/membrane/mod/*.mod
+examples/Default/
+examples/Templates/
 *.egg-info
 dist/

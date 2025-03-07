@@ -5,3 +5,5 @@ from dendrotweaks.simulators import NEURONSimulator
 from dendrotweaks.membrane.distributions import Distribution
 from dendrotweaks.path_manager import PathManager
 from dendrotweaks.stimuli import Synapse, Population, IClamp
+
+from dendrotweaks.utils import download_example_data

@@ -49,6 +49,18 @@ Each folder contains specific components of the model:
 - **morphology/**: SWC files describing the morphological structure of the neuron
 - **stimuli/**: the temporal patterns (JSON) and spatial distribution (CSV) of inputs to the model
 
+Downloading example data
+------------------------------------------
+
+To follow along with this tutorial, you can download the example data from the DendroTweaks repository:
+
+.. code-block:: python
+
+    >>> import dendrotweaks as dd
+    >>> dd.download_example_data()
+
+    
+
 Assembling a model
 ------------------------------------------
 
@@ -59,8 +71,7 @@ examining the available morphologies:
 
 .. code-block:: python
 
-    >>> from dendrotweaks.model import Model
-    >>> model = Model(name='UserModel', path_to_data='data/')
+    >>> model = dd.Model(path_to_model='data/UserModel')
     >>> model.list_morphologies()
     ['cell1', 'cell2']
 
