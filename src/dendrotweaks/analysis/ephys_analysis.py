@@ -5,105 +5,11 @@ import matplotlib.pyplot as plt
 from scipy.signal import find_peaks, peak_widths
 from scipy.optimize import curve_fit
 
-def get_node_data(nodes):
-
-    data = {
-        'idx': [node.idx for node in nodes],
-        'length': [node.length for node in nodes],
-        'diam': [node.diam for node in nodes],
-        'area': [node.area for node in nodes],
-        'n_children': [len(node.children) for node in nodes]
-    }
-
-    return pd.DataFrame(data)
-
-
-def calculate_section_statistics(sections, param_name=None):
-    
-    df = get_node_data(sections)
-
-    stats = {
-        'N_sections': len(df),
-        'N_bifurcations': (df['n_children'] == 2).sum(),
-        'N_terminations': (df['n_children'] == 0).sum(),
-        'diam': {
-            'min': np.round(df['diam'].min(), 2),
-            'max': np.round(df['diam'].max(), 2),
-            'mean': np.round(df['diam'].mean(), 2),
-            'std': np.round(df['diam'].std(), 2)
-        },
-        'length': {
-            'min': np.round(df['length'].min(), 2),
-            'max': np.round(df['length'].max(), 2),
-            'mean': np.round(df['length'].mean(), 2),
-            'std': np.round(df['length'].std(), 2)
-        },
-        'area': {
-            'min': np.round(df['area'].min(), 2),
-            'max': np.round(df['area'].max(), 2),
-            'mean': np.round(df['area'].mean(), 2),
-            'std': np.round(df['area'].std(), 2)
-        },
-        'total_length': np.round(df['length'].sum(), 2),
-        'total_area': np.round(df['area'].sum(), 2)
-    }
-
-    return stats
-
-
-def calculate_cell_statistics(tree):
-
-    all_sections = []
-    for domain in tree.domains.values():
-        all_sections.extend(domain.sections)
-
-    return calculate_section_statistics(all_sections)
-
-
-def calculate_domain_statistics(tree, domain_names=None, param_name=None):
-
-    if domain_names is None:
-        return calculate_cell_statistics(tree)
-    if not isinstance(domain_names, list):
-        raise ValueError("domain_names must be a list of strings")
-
-    domains = [domain for domain in tree.domains.values() if domain.name in domain_names]
-
-    stats = {}
-
-    for domain in domains:
-        stats[domain.name] = calculate_section_statistics(domain.sections)
-
-    return stats
-        
-
-def calculate_segment_statistics(self, segments):
-
-    df = self.get_node_data(segments)
-
-    stats = {
-        'N_segments': len(df),
-        'N_bifurcations': (df['n_children'] == 2).sum(),
-        'N_terminations': (df['n_children'] == 0).sum(),
-        'diam': (np.round(df['diam'].mean(), 2), np.round(df['diam'].std(), 2), np.round(df['diam'].min(), 2), np.round(df['diam'].max(), 2)),
-        'length': (np.round(df['length'].mean(), 2), np.round(df['length'].std(), 2), np.round(df['length'].min(), 2), np.round(df['length'].max(), 2)),
-        'area': (np.round(df['area'].mean(), 2), np.round(df['area'].std(), 2), np.round(df['area'].min(), 2), np.round(df['area'].max(), 2)),
-        'total_lenght': np.round(df['length'].sum(), 2),
-        'total_area': np.round(df['area'].sum(), 2)
-    }
-
-
-def update_histogram(self, param_name, segments, **kwargs):
-    if param not in ['diam', 'length', 'area']:
-        raise ValueError(f"Invalid parameter: {param}")
-    values = [seg.get_param_value(param_name) for seg in segments]
-    hist, edges = np.histogram(values, **kwargs)
-    return hist, edges
-
 
 # =============================================================================
 # PASSIVE PROPERTIES
 # =============================================================================
+
 def get_somatic_data(model):
     seg = model.seg_tree.root
     iclamp = model.iclamps[seg]
@@ -137,8 +43,10 @@ def calculate_input_resistance(model):
         'I': amp
     }
 
+
 def exp_decay(t, A, tau):
     return A * np.exp(-t / tau)
+
 
 def calculate_time_constant(model):
     v, t, dt, iclamp = get_somatic_data(model)
@@ -161,6 +69,7 @@ def calculate_time_constant(model):
         'v_decay': v_decay
     }
 
+
 def plot_passive_properties(model, ax=None):
     data_rm = calculate_input_resistance(model)
     data_tau = calculate_time_constant(model)
@@ -176,9 +85,6 @@ def plot_passive_properties(model, ax=None):
     shifted_exp_decay = exp_decay(data_tau['t_decay'], data_tau['A'], data_tau['tau']) + data_rm['v_offset']
     ax.plot(data_tau['t_decay'] + data_tau['start_t'], shifted_exp_decay, color='red', label='Exp. fit')
     ax.legend()
-
-
-        
 
 
 # =============================================================================
@@ -260,9 +166,7 @@ def plot_somatic_spikes(data, ax=None, show_metrics=False):
             ax.plot([t, t], [v, v - a], color='red', linestyle='--')
             # plot spike width
             ax.plot([t - 10*w/2, t + 10*w/2], [v - a/2, v - a/2], color='lawngreen', linestyle='--')
-            
-        
-        
+
 
 def calculate_fI_curve(model, duration=1000, min_amp=0, max_amp=1, n=5, **kwargs):
     
@@ -282,6 +186,7 @@ def calculate_fI_curve(model, duration=1000, min_amp=0, max_amp=1, n=5, **kwargs
         rates.append(rate)
         vs[amp] = model.simulator.vs[seg]
     return amps, rates, vs
+
 
 def plot_fI_curve(model, ax=None, **kwargs):
 
@@ -310,3 +215,142 @@ def plot_fI_curve(model, ax=None, **kwargs):
     ax[1].set_xlabel('Current (nA)')
     ax[1].set_ylabel('Firing rate (Hz)')
     ax[1].set_title('f-I curve')
+
+
+# =============================================================================
+# DENDRITIC PROPERTIES
+# =============================================================================
+
+def calculate_voltage_attenuation(model):
+
+    # Assuming one stimulation site and multiple recording sites including the stimulated site
+    stimulated_segs = list(model.iclamps.keys())
+    if len(stimulated_segs) != 1:
+        print("Only one stimulation site is supported")
+        return None
+    recorded_segs = list(model.recordings.keys())
+    if len(recorded_segs) < 2:
+        print("At least two recording sites are required")
+        return None
+
+    stimulated_seg = stimulated_segs[0]
+
+    iclamp = model.iclamps[stimulated_seg]
+    amp = iclamp.amp
+
+    if amp >= 0:
+        print("Stimulus amplitude must be negative")
+        return None
+
+    path_distances = [seg.path_distance() for seg in recorded_segs]
+
+    start_ts = int(iclamp.delay / model.simulator.dt)
+    stop_ts = int((iclamp.delay + iclamp.dur) / model.simulator.dt)
+
+    voltage_at_stimulated = np.array(model.simulator.vs[stimulated_seg])[start_ts:stop_ts]
+    voltages = [np.array(model.simulator.vs[seg])[start_ts:stop_ts] for seg in recorded_segs]
+
+    # Calculate voltage displacement from the resting potential
+    delta_v_at_stimulated = voltage_at_stimulated[0] - np.min(voltage_at_stimulated)
+    delta_vs = [v[0] - np.min(v) for v in voltages]
+
+    min_voltages = [np.min(v) for v in voltages]
+
+    attenuation = [dv / delta_v_at_stimulated for dv in delta_vs]
+
+    return path_distances, min_voltages, attenuation
+
+
+def plot_voltage_attenuation(model, ax=None):
+
+    path_distances, min_voltages, attenuation = calculate_voltage_attenuation(model)
+
+    if ax is None:
+        _, ax = plt.subplots()
+
+    ax.plot(path_distances, attenuation, 'o-')
+    ax.set_ylim(-0.1, 1.1)
+    ax.set_xlabel('Path distance (um)')
+    ax.set_ylabel('Voltage attenuation')
+    ax.set_title('Voltage attenuation')
+
+def calculate_dendritic_nonlinearity(model, duration=1000, max_weight=None, n=None):
+    """Calculate the expected and observed voltage changes for a range of synaptic weights.
+
+    Parameters
+    ----------
+    model : Model
+        The neuron model.
+    duration : int
+        Duration of the simulation in ms.
+    max_weight : int
+        Maximum synaptic weight to test.
+    """
+
+    recorded_segs = list(model.recordings.keys())
+    seg = recorded_segs[0]
+
+    populations = [pop for pops in model.populations.values() for pop in pops.values()]
+    if len(populations) != 1:
+        print("Only one population is supported")
+        return None
+    population = populations[0]
+    if population.N != 1:
+        print("Only one synapse should be placed on the dendrite")
+        return None
+
+    start_ts = int(population.input_params['start'] / model.simulator.dt)
+
+    vs = {}
+    delta_vs = []
+    min_weight = 1
+    if max_weight is None or min_weight is None or n is None:
+        max_weight = population.input_params['weight']
+        n = max_weight + 1
+
+    weights = np.linspace(min_weight, max_weight, n, dtype=int)
+    weights = np.unique(weights)
+
+    for w in weights:
+        population.update_input_params(weight=w)
+        model.simulator.run(duration)
+        v = np.array(model.simulator.vs[seg])
+        v_start = v[start_ts]
+        v_max = np.max(v[start_ts:])
+        delta_v = v_max - v_start
+        delta_vs.append(delta_v)
+        vs[w] = v
+    unitary_delta_v = delta_vs[0]
+    expected_delta_vs = [w * unitary_delta_v for w in weights]
+
+    return expected_delta_vs, delta_vs, vs
+
+
+def plot_dendritic_nonlinearity(model, ax=None, **kwargs):
+    
+    if ax is None:
+        _, ax = plt.subplots(1, 2, figsize=(10, 5))
+
+    expected_delta_vs, delta_vs, vs = calculate_dendritic_nonlinearity(model, **kwargs)
+    t = model.simulator.t
+
+    for i, (weight, v) in enumerate(vs.items()):
+        ax[0].plot(t, np.array(v) - i*200, label=f'{weight} synapses')
+    ax[0].set_title('Voltage traces')
+    ax[0].legend()
+    ax[0].spines['top'].set_visible(False)
+    ax[0].spines['right'].set_visible(False)
+    ax[0].spines['bottom'].set_visible(False)
+    ax[0].spines['left'].set_visible(False)
+    ax[0].set_xticks([])
+    ax[0].set_yticks([])
+
+    ax[1].plot(expected_delta_vs, delta_vs, 'o-')
+    ax[1].plot(expected_delta_vs, expected_delta_vs, color='gray', linestyle='--')
+    ax[1].set_xlabel('Expected voltage change (mV)')
+    ax[1].set_ylabel('Observed voltage change (mV)')
+    ax[1].set_title('Dendritic nonlinearity')
+    
+
+
+

@@ -123,6 +123,12 @@ class Model():
     # PROPERTIES
     # -----------------------------------------------------------------------
 
+    @property
+    def name(self):
+        """
+        The name of the directory containing the model.
+        """
+        return self._name
 
     @property
     def verbose(self):

@@ -58,7 +58,7 @@ class Population():
 
         self.input_params = {
             'rate': 1,
-            'noise': 1,
+            'noise': 0,
             'start': 100,
             'end': 200,
             'weight': 1,
@@ -74,16 +74,16 @@ class Population():
     def name(self):
         return f"{self.syn_type}_{self.idx}"
 
-    def update_kinetic_params(self, params:dict):
-        self.kinetic_params.update(**params)
+    def update_kinetic_params(self, **params):
+        self.kinetic_params.update(params)
         for syns in self.synapses.values():
             for syn in syns:
                 for key, value in params.items():
                     if hasattr(syn._ref_syn, key):
                         setattr(syn._ref_syn, key, value)
 
-    def update_input_params(self, params: dict):
-        self.input_params.update(**params)
+    def update_input_params(self, **params):
+        self.input_params.update(params)
         self.create_inputs()
 
     # ALLOCATION METHODS
@@ -109,7 +109,7 @@ class Population():
         for seg, n in self.n_per_seg.items():
             self.synapses[seg.idx] = [Synapse(syn_type, seg) for _ in range(n)]
 
-        self.update_kinetic_params(params=self.kinetic_params)
+        self.update_kinetic_params(**self.kinetic_params)
 
 
     # CREATION METHODS

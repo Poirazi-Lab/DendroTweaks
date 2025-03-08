@@ -108,7 +108,7 @@ class NEURONSimulator(Simulator):
         """
         Remove all recordings from the simulator.
         """
-        for seg in self.recordings.keys():
+        for seg in list(self.recordings.keys()):
             sec, loc = seg._section, seg.x
             self.remove_recording(sec, loc)
         if self.recordings:

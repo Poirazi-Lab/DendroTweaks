@@ -217,3 +217,84 @@ From this analysis, we can observe:
 
 Different neuron types have characteristic f-I curves. For example, some neurons show a linear relationship between current and frequency, while others display adaptation or saturation.
 
+
+Voltage Attenuation In Dendrites
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Voltage attenuation refers to the decrease in voltage amplitude 
+as signals propagate along dendrites. 
+This phenomenon is crucial for understanding how synaptic inputs 
+are integrated and how information is processed in the neuron.
+
+Let's visualize voltage attenuation in different dendritic locations for 
+a current injected at a terminal dendritic branch as the signal propagates towards the soma:
+
+To set up the experiment we need to add a current clamp to a dendritic branch and record the voltage at multiple locations:
+
+.. code:: python
+
+    >>> from dendrotweaks.analysis import plot_voltage_attenuation
+    >>> model.remove_all_stimuli(), model.remove_all_recordings()
+    >>> secs = [model.sec_tree[i] for i in [0, 9, 17, 18, 21, 22]]
+    >>> for sec in secs:
+    ...     model.add_recording(sec, loc=0.5)
+    >>> apical_branch = model.sec_tree[22]
+    >>> model.add_iclamp(apical_branch, loc=0.5, amp=-0.01, dur=1000, delay=50)
+
+
+Now we can run the simulation and plot the results:
+
+.. code:: python
+
+    >>> model.run(1000)
+    >>> fig, ax = plt.subplots(1, 1, figsize=(10, 5))    
+    >>> plot_voltage_attenuation(model, ax, locs=[0.1, 0.5, 0.9])
+
+The :code:`plot_voltage_attenuation` function:
+
+
+.. figure:: ../_static/attenuation.png
+    :align: center
+    :width: 50%
+    :alt: Voltage attenuation in dendrites
+
+    *Figure 4. Voltage attenuation in dendrites (dendritic injection)*
+
+
+Dendritic Nonlinearities
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Dendrites are not passive cables; they actively process synaptic inputs through various mechanisms like voltage-gated channels and NMDA receptors.
+These nonlinearities can significantly impact the neuron's integrative properties and information processing.
+
+To study dendritic nonlinearities, we can gradually increase the synaptic input at a dendritic location and observe the resulting voltage response:
+
+To set up the experiment, we need to place a synapse on a dendritic branch and record the voltage at the same location:
+
+.. code:: python
+
+    >>> from dendrotweaks.analysis import plot_dendritic_nonlinearity
+    >>> model.remove_all_stimuli(), model.remove_all_recordings()
+    >>> sec = model.sec_tree[22]
+    >>> model.add_recording(sec, loc=0.5)
+    >>> segments = [sec(0.5)]
+    >>> model.add_recording(sec, loc=0.5)
+    >>> model.add_population(segments, N=1, syn_type='AMPA')
+
+The :code:`plot_dendritic_nonlinearity` function will then gradually increase the synaptic weight and plot the resulting voltage response:
+
+.. code:: python
+
+    >>> fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+    >>> plot_dendritic_nonlinearity(model, ax=ax, 
+    ...     duration=300, max_weight=10, n=10)
+
+.. figure:: ../_static/nonlinearity.png
+    :align: center
+    :width: 80%
+    :alt: Dendritic nonlinearity
+
+    *Figure 5. Dendritic nonlinearity (terminal apical branch)*
+
+On the left, we see the voltage response to increasing synaptic weights, showing how the dendrite integrates and amplifies synaptic inputs.
+On the right, we see the resulting nonlinear relationship between expected and observed voltage responses, highlighting the dendrite's complex processing capabilities.

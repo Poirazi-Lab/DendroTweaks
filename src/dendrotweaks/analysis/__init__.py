@@ -3,4 +3,9 @@ from dendrotweaks.analysis.morphometric_analysis import calculate_domain_statist
 from dendrotweaks.analysis.morphometric_analysis import calculate_cell_statistics
 from dendrotweaks.analysis.ephys_analysis import calculate_fI_curve, detect_somatic_spikes
 from dendrotweaks.analysis.ephys_analysis import plot_fI_curve, plot_somatic_spikes
-from dendrotweaks.analysis.ephys_analysis import plot_passive_properties, calculate_time_constant, calculate_input_resistance
+from dendrotweaks.analysis.ephys_analysis import calculate_time_constant, calculate_input_resistance
+from dendrotweaks.analysis.ephys_analysis import plot_passive_properties 
+from dendrotweaks.analysis.ephys_analysis import calculate_voltage_attenuation
+from dendrotweaks.analysis.ephys_analysis import plot_voltage_attenuation
+from dendrotweaks.analysis.ephys_analysis import calculate_dendritic_nonlinearity
+from dendrotweaks.analysis.ephys_analysis import plot_dendritic_nonlinearity
