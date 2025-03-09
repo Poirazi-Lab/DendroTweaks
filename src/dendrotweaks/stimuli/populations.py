@@ -42,7 +42,44 @@ KINETIC_PARAMS = {
 
 class Population():
     """
-    A population of "virtual" presynaptic neurons.
+    A population of "virtual" presynaptic neurons forming synapses on the
+    explicitely modelled postsynaptic neuron. 
+
+    The population is defined by the number of synapses N, the segments
+    on which the synapses are placed, and the type of synapse. All synapses
+    in the population share the same kinetic parameters. Global input parameters
+    such as rate, noise, etc. are shared by all synapses in the population, 
+    however, each synapse receives a unique input spike train.
+
+    Parameters
+    ----------
+    idx : str
+        The index of the population.
+    segments : List[Segment]
+        The segments on which the synapses are placed.
+    N : int
+        The number of synapses in the population.
+    syn_type : str
+        The type of synapse to create e.g. 'AMPA', 'NMDA', 'AMPA_NMDA', 'GABA'.
+
+    Attributes
+    ----------
+    idx : str
+        The index of the population.
+    segments : List[Segment]
+        The segments on which the synapses are placed.
+    N : int
+        The number of synapses in the population.
+    syn_type : str
+        The type of synapse to create e.g. 'AMPA', 'NMDA', 'AMPA_NMDA', 'GABA'.
+    synapses : dict
+        A dictionary of synapses in the population, where the key is the segment index.
+    n_per_seg : dict
+        A dictionary of the number of synapses allocated to each segment.
+    input_params : dict
+        The input parameters of the synapses in the population.
+    kinetic_params : dict
+        The kinetic parameters of the synapses in the population.
     """
 
     def __init__(self, idx: str, segments: List[Segment], N: int, syn_type: str) -> None:
@@ -72,9 +109,25 @@ class Population():
     
     @property
     def name(self):
+        """A unique name for the population."""
         return f"{self.syn_type}_{self.idx}"
 
     def update_kinetic_params(self, **params):
+        """
+        Update the kinetic parameters of the synapses.
+
+        Parameters
+        ----------
+        **params : dict
+            The parameters to update self.kinetic_params.
+            Options are:
+            - gmax: the maximum conductance of the synapse
+            - tau_rise: the rise time of the synapse
+            - tau_decay: the decay time of the synapse
+            - e: the reversal potential of the synapse
+            - gamma: the voltage dependence of the magnesium block (NMDA only)
+            - mu: the sensitivity of the magnesium block to Mg2+ concentration (NMDA only)
+        """
         self.kinetic_params.update(params)
         for syns in self.synapses.values():
             for syn in syns:
@@ -83,15 +136,32 @@ class Population():
                         setattr(syn._ref_syn, key, value)
 
     def update_input_params(self, **params):
+        """
+        Update the input parameters of the synapses.
+
+        Parameters
+        ----------
+        **params : dict
+            The parameters to update self.input_params.
+            Options are:
+            - rate: the rate of the input in Hz
+            - noise: the noise level of the input
+            - start: the start time of the input
+            - end: the end time of the input
+            - weight: the weight of the synapse
+            - delay: the delay of the synapse
+        """
         self.input_params.update(params)
         self.create_inputs()
 
     # ALLOCATION METHODS
 
     def _calculate_n_per_seg(self):
-        """Assigns each section a random number of synapses 
+        """
+        Assign each section a random number of synapses 
         so that the sum of all synapses is equal to N synapses.
-        returns a dict {sec:n_syn}"""
+        returns a dict {sec:n_syn}
+        """
         n_per_seg = {seg: 0 for seg in self.segments}
         for i in range(self.N):
             seg = np.random.choice(self.segments)
@@ -99,7 +169,16 @@ class Population():
         return n_per_seg
 
     def allocate_synapses(self, n_per_seg=None):
-        """Assigns each synapse a section and a location on that section."""
+        """
+        Assign each synapse a section and a location on that section.
+
+        Parameters
+        ----------
+        n_per_seg : dict, optional
+            The number of synapses to allocate to each section.
+            If not provided, synapses are allocated randomly
+            to sections based on the number of segments in each section.
+        """
         self.synapses = {}
         if n_per_seg is not None:
             self.n_per_seg = n_per_seg
@@ -115,7 +194,11 @@ class Population():
     # CREATION METHODS
 
     def create_inputs(self):
-        """Creates and references the synapses in a simulator."""
+        """
+        Create and reference the synapses in a simulator.
+        
+        This method should be called after the synapses have been allocated.
+        """
         for syns in self.synapses.values():
             for syn in syns:
 
@@ -133,6 +216,9 @@ class Population():
 
 
     def to_dict(self):
+        """
+        Convert the population to a dictionary.
+        """
         return {
                 'name': self.name,
                 'syn_type': self.syn_type,
@@ -142,6 +228,9 @@ class Population():
         }
 
     def to_csv(self):
+        """
+        Prepare the data about the location of synapses for saving to a CSV file.
+        """
         return {
             'syn_type': [self.syn_type] * len(self.n_per_seg),
             'name': [self.name] * len(self.n_per_seg),
@@ -152,6 +241,11 @@ class Population():
         
 
     def clean(self):
+        """
+        Clear the synapses and connections from the simulator.
+
+        Removes all synapses, NetCon and NetStim objects.
+        """
         for seg in self.segments:
             for syn in self.synapses[seg.idx]:
                 if syn._ref_stim is not None:

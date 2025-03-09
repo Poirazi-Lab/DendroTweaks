@@ -7,25 +7,30 @@ class Synapse():
     """
     A synapse object that can be placed on a section of a neuron.
 
+    Contains references to the NEURON synapse object, the stimulus object (NetStim),
+    and the connection object (NetCon).
+
     Parameters
     ----------
     syn_type : str
-        The type of synapse to create e.g. 'AMPA', 'NMDA', 'GABA'.
-    sec : Section
-        The section of the neuron where the synapse is located.
-    loc : float
-        The location on the section where the synapse is placed, ranging from 0 to 1.
+        The type of synapse to create e.g. 'AMPA', 'NMDA', 'AMPA_NMDA', 'GABA'.
+    seg : Segment
+        The segment to place the synapse on.
 
+    Attributes
+    ----------
+    seg : Segment
+        The segment on which the synapse is placed.
     """
 
     def __init__(self, syn_type: str, seg: Segment) -> None:
         """
         Creates a new synapse object.
         """
-        self.Model = getattr(h, syn_type)
+        self._Model = getattr(h, syn_type)
         self.seg = seg
 
-        self._ref_syn = self.Model(self.seg._ref)
+        self._ref_syn = self._Model(self.seg._ref)
         self._ref_stim = None
         self._ref_con = None
 
@@ -38,11 +43,17 @@ class Synapse():
 
     @property
     def spike_times(self):
+        """
+        The spike times of the stimulus from the NetStim object.
+        """
         if self._ref_stim is not None:
             return self._ref_stim[1].to_python()
         return []
 
     def _clear_stim(self):
+        """
+        Clears the stimulus (NetStim) object.
+        """
         self._ref_stim[0] = None
         self._ref_stim[1] = None
         self._ref_stim.pop(0)
@@ -55,7 +66,7 @@ class Synapse():
 
         Parameters
         ----------
-        kwargs : dict
+        **kwargs : dict
             Keyword arguments for the create_spike_times function.
         """
 
@@ -70,11 +81,14 @@ class Synapse():
         self._ref_stim = [stim, spike_vec]
 
     def _clear_con(self):
+        """
+        Clears the connection (NetCon) object.
+        """
         self._ref_con = None
 
     def create_con(self, delay, weight):
         """
-        Creates a connection (NetCon) between the stimulus and the synapse.
+        Create a connection (NetCon) between the stimulus and the synapse.
 
         Parameters
         ----------
@@ -96,15 +110,22 @@ def create_spike_times(rate=1, noise=1, duration=300, delay=0):
     """
     Create a spike train with a given regularity.
 
-    Parameters:
-    rate (float): The rate of the spike train, in Hz.
-    duration (int): The total time to run the simulation for, in ms.
-    delay (int): The delay before the spike train starts, in ms.
-    regularity (float): A parameter between 0 and 1 that controls the regularity of the spike train. 
-                        0 corresponds to a Poisson process, 1 corresponds to a regular spike train.
+    Parameters
+    ----------
+    rate : float
+        The rate of the spike train, in Hz.
+    noise : float
+        A parameter between 0 and 1 that controls the regularity of the spike train. 
+        0 corresponds to a regular spike train. 1 corresponds to a Poisson process.
+    duration : int
+        The total time to run the simulation for, in ms.
+    delay : int
+        The delay of the spike train, in ms.
 
-    Returns:
-    np.array: The spike times as a vector, in ms.
+    Returns
+    -------
+    np.array
+        The spike times as a vector, in ms.
     """
 
     if noise == 1:
@@ -117,12 +138,17 @@ def generate_poisson_process(lam, dur):
     """
     Generate a Poisson process.
 
-    Parameters:
-    lam (float): The rate parameter (lambda) of the Poisson process, in Hz.
-    dur (int): The total time to run the simulation for, in ms.
+    Parameters
+    ----------
+    lam : float
+        The rate parameter (lambda) of the Poisson process, in Hz.
+    dur : int
+        The total time to run the simulation for, in ms.
 
-    Returns:
-    np.array: The spike times as a vector, in ms.
+    Returns
+    -------
+    np.array
+        The spike times as a vector, in ms.    
     """
     dur_s = dur / 1000
     intervals = np.random.exponential(1/lam, int(lam*dur_s))
@@ -137,14 +163,21 @@ def generate_jittered_spikes(rate, dur, noise):
     """
     Generate a jittered spike train.
 
-    Parameters:
-    rate (float): The rate of the spike train, in Hz.
-    dur (int): The total time to run the simulation for, in ms.
-    noise (float): A parameter that controls the amount of noise added to the spike times. 
-                   Higher values correspond to more noise (more randomness).
+    Parameters
+    ----------
+    rate : float
+        The rate of the spike train, in Hz.
+    dur : int
+        The total time to run the simulation for, in ms.
+    noise : float
+        A parameter between 0 and 1 that controls the regularity of the spike train. 
+        0 corresponds to a regular spike train. 1 corresponds to a Poisson process.
 
-    Returns:
-    np.array: The spike times as a vector, in ms.
+
+    Returns
+    -------
+    np.array
+        The spike times as a vector, in ms.
     """
     dur_s = dur / 1000
     spike_times = np.arange(0, dur_s, 1/rate)

@@ -11,6 +11,19 @@ from scipy.optimize import curve_fit
 # =============================================================================
 
 def get_somatic_data(model):
+    """
+    Get the somatic voltage, time, time step, and injected current.
+
+    Parameters
+    ----------
+    model : Model
+        The neuron model.
+
+    Returns
+    -------
+    tuple
+        A tuple containing the voltage, time, time step, and injected current.
+    """
     seg = model.seg_tree.root
     iclamp = model.iclamps[seg]
 
@@ -22,6 +35,19 @@ def get_somatic_data(model):
 
 
 def calculate_input_resistance(model):
+    """
+    Calculate the input resistance of the neuron model.
+
+    Parameters
+    ----------
+    model : Model
+        The neuron model.
+
+    Returns
+    -------
+    dict
+        A dictionary containing the onset and offset voltages, the input resistance, and the injected current.
+    """
     
     v, t, dt, iclamp = get_somatic_data(model)
 
@@ -33,22 +59,35 @@ def calculate_input_resistance(model):
     v_onset = v[int(start_ts)]
     v_offset = v[int(end_ts)]
     
-    R = (v_onset - v_offset) / amp
-    print(f"Input resistance: {R:.2f} MOhm")
+    R_in = (v_onset - v_offset) / amp
+    print(f"Input resistance: {R_in:.2f} MOhm")
 
     return {
-        'v_onset': v_onset,
-        'v_offset': v_offset,
-        'R': R,
-        'I': amp
+        'onset_voltage': v_onset,
+        'offset_voltage': v_offset,
+        'input_resistance': R_in,
+        'current_amplitude': amp
     }
 
 
-def exp_decay(t, A, tau):
+def _exp_decay(t, A, tau):
     return A * np.exp(-t / tau)
 
 
 def calculate_time_constant(model):
+    """
+    Calculate the membrane time constant of the neuron model.
+
+    Parameters
+    ----------
+    model : Model
+        The neuron model.
+
+    Returns
+    -------
+    dict
+        A dictionary containing the time constant and the exponential fit.
+    """
     v, t, dt, iclamp = get_somatic_data(model)
 
     start_ts = int(iclamp.delay / dt)
@@ -57,33 +96,59 @@ def calculate_time_constant(model):
     v_min = np.min(v[start_ts: min_ts])
     v_decay = v[start_ts: min_ts] - v_min
     t_decay = t[start_ts: min_ts] - t[start_ts]
-    popt, _ = curve_fit(exp_decay, t_decay, v_decay, p0=[1, 100])
+    popt, _ = curve_fit(_exp_decay, t_decay, v_decay, p0=[1, 100])
     tau = popt[1]
     A = popt[0]
     print(f"Membrane time constant: {tau:.2f} ms")
     return {
-        'tau': tau,
+        'time_constant': tau,
         'A': A,
-        'start_t': start_ts * dt,
-        't_decay': t_decay,
-        'v_decay': v_decay
+        'start_time': start_ts * dt,
+        'decay_time': t_decay,
+        'decay_voltage': v_decay
     }
 
+def calculate_passive_properties(model):
+    """
+    Calculate the passive properties of the neuron model.
 
-def plot_passive_properties(model, ax=None):
-    data_rm = calculate_input_resistance(model)
+    Parameters
+    ----------
+    model : Model
+        The neuron model.   
+
+    Returns
+    -------
+    dict
+        A dictionary containing the input resistance, time constant, and the exponential fit.
+    """
+
+    data_rin = calculate_input_resistance(model)
     data_tau = calculate_time_constant(model)
-    
+
+    return {**data_rin, **data_tau}
+
+def plot_passive_properties(data, ax=None):
+        
     if ax is None:
         _, ax = plt.subplots()
 
-    ax.set_title(f"Rm: {data_rm['R']:.2f} MOhm, Tau: {data_tau['tau']:.2f} ms")
-    ax.axhline(data_rm['v_onset'], color='gray', linestyle='--', label='V onset')
-    ax.axhline(data_rm['v_offset'], color='gray', linestyle='--', label='V offset')
+    R_in = data['input_resistance']
+    tau = data['time_constant']
+    v_onset = data['onset_voltage']
+    v_offset = data['offset_voltage']
+    t_decay = data['decay_time']
+    v_decay = data['decay_voltage']
+    A = data['A']
+    start_t = data['start_time']
+
+    ax.set_title(f"R_in: {R_in:.2f} MOhm, Tau: {tau:.2f} ms")
+    ax.axhline(v_onset, color='gray', linestyle='--', label='V onset')
+    ax.axhline(v_offset, color='gray', linestyle='--', label='V offset')
     
     # Shift the exp_decay output along the y-axis
-    shifted_exp_decay = exp_decay(data_tau['t_decay'], data_tau['A'], data_tau['tau']) + data_rm['v_offset']
-    ax.plot(data_tau['t_decay'] + data_tau['start_t'], shifted_exp_decay, color='red', label='Exp. fit')
+    shifted_exp_decay = _exp_decay(t_decay, A, tau) + v_offset
+    ax.plot(t_decay + start_t, shifted_exp_decay, color='red', label='Exp. fit', linestyle='--')
     ax.legend()
 
 
@@ -92,7 +157,8 @@ def plot_passive_properties(model, ax=None):
 # =============================================================================
 
 def detect_somatic_spikes(model, **kwargs):
-    """Detect somatic spikes in the model and calculate metrics.
+    """
+    Detect somatic spikes in the model and calculate spike amplitudes and widths.
     
     Returns:
         dict: A dictionary containing spike metrics.
@@ -169,7 +235,28 @@ def plot_somatic_spikes(data, ax=None, show_metrics=False):
 
 
 def calculate_fI_curve(model, duration=1000, min_amp=0, max_amp=1, n=5, **kwargs):
-    
+    """
+    Calculate the frequency-current (f-I) curve of the neuron model.
+
+    Parameters
+    ----------
+    model : Model
+        The neuron model.
+    duration : int
+        Duration of the simulation in ms.
+    min_amp : float
+        Minimum amplitude of the current injection in nA.
+    max_amp : float
+        Maximum amplitude of the current injection in nA.
+    n : int
+        Number of amplitudes to test.
+
+    Returns
+    -------
+    dict
+        A dictionary containing the current amplitudes, firing rates, and voltages.
+    """
+
     seg = model.seg_tree.root
     duration = duration
     
@@ -185,16 +272,24 @@ def calculate_fI_curve(model, duration=1000, min_amp=0, max_amp=1, n=5, **kwargs
         rate = n_spikes / iclamp.dur * 1000
         rates.append(rate)
         vs[amp] = model.simulator.vs[seg]
-    return amps, rates, vs
+
+    return {
+        'current_amplitudes': amps,
+        'firing_rates': rates,
+        'voltages': vs,
+        'time': model.simulator.t
+    }
 
 
-def plot_fI_curve(model, ax=None, **kwargs):
+def plot_fI_curve(data, ax=None, **kwargs):
 
     if ax is None:
         _, ax = plt.subplots(1, 2, figsize=(5, 5))
 
-    amps, rates, vs = calculate_fI_curve(model, **kwargs)
-    t = model.simulator.t
+    amps = data['current_amplitudes']
+    rates = data['firing_rates']
+    vs = data['voltages']
+    t = data['time']
 
     for i, (amp, v) in enumerate(vs.items()):
         ax[0].plot(t, np.array(v) - i*200, label=f'{amp} nA')
@@ -222,6 +317,19 @@ def plot_fI_curve(model, ax=None, **kwargs):
 # =============================================================================
 
 def calculate_voltage_attenuation(model):
+    """
+    Calculate the voltage attenuation along the dendrites.
+
+    Parameters
+    ----------
+    model : Model
+        The neuron model.
+
+    Returns
+    -------
+    dict
+        A dictionary containing the path distances, minimum voltages, and voltage attenuations
+    """
 
     # Assuming one stimulation site and multiple recording sites including the stimulated site
     stimulated_segs = list(model.iclamps.keys())
@@ -258,12 +366,17 @@ def calculate_voltage_attenuation(model):
 
     attenuation = [dv / delta_v_at_stimulated for dv in delta_vs]
 
-    return path_distances, min_voltages, attenuation
+    return {
+        'path_distances': path_distances,
+        'min_voltages': min_voltages,
+        'attenuation': attenuation
+    }
 
 
-def plot_voltage_attenuation(model, ax=None):
+def plot_voltage_attenuation(data, ax=None):
 
-    path_distances, min_voltages, attenuation = calculate_voltage_attenuation(model)
+    path_distances = data['path_distances']
+    attenuation = data['attenuation']
 
     if ax is None:
         _, ax = plt.subplots()
@@ -285,6 +398,11 @@ def calculate_dendritic_nonlinearity(model, duration=1000, max_weight=None, n=No
         Duration of the simulation in ms.
     max_weight : int
         Maximum synaptic weight to test.
+
+    Returns
+    -------
+    dict
+        A dictionary containing the expected and observed voltage changes.
     """
 
     recorded_segs = list(model.recordings.keys())
@@ -323,16 +441,24 @@ def calculate_dendritic_nonlinearity(model, duration=1000, max_weight=None, n=No
     unitary_delta_v = delta_vs[0]
     expected_delta_vs = [w * unitary_delta_v for w in weights]
 
-    return expected_delta_vs, delta_vs, vs
+    return {
+        'expected_response': expected_delta_vs,
+        'observed_response': delta_vs,
+        'voltages': vs,
+        'weights': weights,
+        'time': model.simulator.t
+    }
 
 
-def plot_dendritic_nonlinearity(model, ax=None, **kwargs):
+def plot_dendritic_nonlinearity(data, ax=None, **kwargs):
     
     if ax is None:
         _, ax = plt.subplots(1, 2, figsize=(10, 5))
 
-    expected_delta_vs, delta_vs, vs = calculate_dendritic_nonlinearity(model, **kwargs)
-    t = model.simulator.t
+    expected_delta_vs = data['expected_response']
+    delta_vs = data['observed_response']
+    vs = data['voltages']
+    t = data['time']
 
     for i, (weight, v) in enumerate(vs.items()):
         ax[0].plot(t, np.array(v) - i*200, label=f'{weight} synapses')

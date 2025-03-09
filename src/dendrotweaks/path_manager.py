@@ -5,6 +5,18 @@ import shutil
 class PathManager:
     """
     A manager class for handling file and directory paths related to models data.
+
+    Parameters
+    ----------
+    path_to_model : str
+        The path to the model directory.
+
+    Attributes
+    ----------
+    path_to_model : str
+        The path to the model directory.
+    paths : Dict[str, str]
+        A dictionary of paths for different file types.
     """
     def __init__(self, path_to_model: str):
         self.path_to_model = path_to_model
@@ -35,6 +47,9 @@ class PathManager:
         
     @property
     def path_to_data(self):
+        """
+        The path to the data directory.
+        """
         return os.path.dirname(self.path_to_model)
 
     def __repr__(self):
@@ -62,19 +77,6 @@ class PathManager:
             destination = os.path.join(self.paths['templates'], file_name)
             shutil.copyfile(source, destination)
 
-    # def list_models(self) -> List[str]:
-    #     """
-    #     List all model files.
-        
-    #     Returns
-    #     -------
-    #     List[str]
-    #         A list of model file names.
-    #     """
-    #     DIRS_TO_IGNORE = ['Default', 'Templates']
-    #     return [f for f in os.listdir(self.path_to_data)
-    #             if os.path.isdir(os.path.join(self.path_to_data, f))
-    #             and f not in DIRS_TO_IGNORE]
 
     def get_path(self, file_type: str) -> str:
         """
@@ -205,10 +207,23 @@ class PathManager:
         print_tree(base_path)
 
     def get_channel_paths(self, mechanism_name: str, 
-                          python_template_name: str = "default") -> Dict[str, str]:
+                          python_template_name: str = None) -> Dict[str, str]:
         """
         Get all necessary paths for creating a channel.
+
+        Parameters
+        ----------
+        mechanism_name : str
+            The name of the mechanism.
+        python_template_name : str, optional
+            The name of the Python template file.
+
+        Returns
+        -------
+        Dict[str, str]
+            A dictionary of paths.
         """
+        python_template_name = python_template_name or "default"
         return {
             'path_to_mod_file': self.get_file_path('mod', mechanism_name, 'mod'),
             'path_to_python_file': self.get_file_path('python', mechanism_name, 'py'),
@@ -220,6 +235,20 @@ class PathManager:
                                    mod_template_name: str = None) -> Dict[str, str]:
         """
         Get all necessary paths for creating a standard channel.
+
+        Parameters
+        ----------
+        mechanism_name : str
+            The name of the mechanism.
+        python_template_name : str, optional
+            The name of the Python template file.
+        mod_template_name : str, optional
+            The name of the MOD template file.
+
+        Returns
+        -------
+        Dict[str, str]
+            A dictionary of paths.
         """
         python_template_name = python_template_name or "default"
         mod_template_name = mod_template_name or "standard_channel"

@@ -3,18 +3,28 @@ h.load_file('stdrun.hoc')
 
 class IClamp():
     """
-    Creates a current clamp stimulus.
+    A current clamp stimulus.
 
     Parameters
     ----------
-    seg : neuron.Segment
-        The segment where the stimulus is applied.
+    sec : Section
+        The section to place the stimulus on.
+    loc : float
+        The location along the section to place the stimulus.
+        Can be a float between 0 and 1.
     amp : float
         The amplitude of the stimulus, in nA.
     delay : int
         The delay of the stimulus, in ms.
     dur : int
         The duration of the stimulus, in ms.
+
+    Attributes
+    ----------
+    sec : Section
+        The section to place the stimulus on.
+    loc : float
+        The location along the section to place the stimulus.
     """
 
     def __init__(self, sec, loc, amp=0, delay=100, dur=100):
@@ -30,6 +40,9 @@ class IClamp():
         
     @property
     def amp(self):
+        """
+        The amplitude of the stimulus, in nA.
+        """
         return self._iclamp.amp
 
     @amp.setter
@@ -39,6 +52,9 @@ class IClamp():
 
     @property
     def delay(self):
+        """
+        The delay of the stimulus, in ms.
+        """
         return self._iclamp.delay
 
     @delay.setter
@@ -47,6 +63,9 @@ class IClamp():
 
     @property
     def dur(self):
+        """
+        The duration of the stimulus, in ms.
+        """
         return self._iclamp.dur
 
     @dur.setter

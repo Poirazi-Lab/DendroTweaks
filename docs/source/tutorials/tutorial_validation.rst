@@ -112,11 +112,16 @@ Now we can visualize and analyze the response:
 
 .. code-block:: python
 
-    >>> from dendrotweaks.analysis import plot_passive_properties
+    >>> from dendrotweaks.analysis import calculate_passive_properties
+    >>> data_passive = calculate_passive_properties(model)
+
+.. code-block:: python
+
     >>> import matplotlib.pyplot as plt
+    >>> from dendrotweaks.analysis import plot_passive_properties
     >>> fig, ax = plt.subplots(figsize=(10, 5))
     >>> model.simulator.plot_voltage(ax=ax)
-    >>> plot_passive_properties(model, ax=ax)
+    >>> plot_passive_properties(data_passive, ax=ax)
     Input resistance: -119.22 MOhm
     Membrane time constant: 17.38 ms
 
@@ -148,17 +153,21 @@ To study how the neuron generates action potentials (spikes), we will reset the 
 
     >>> model.remove_all_iclamps()  # Clear previous current injections
     >>> model.add_iclamp(soma, loc=0.5, amp=0.162, dur=900, delay=50)
-    >>> model.run(1000)
 
 
 This time we're using a positive current (0.162 nA) to depolarize the membrane above its threshold, triggering action potentials. Now let's analyze the resulting spike pattern:
 
 .. code-block:: python
 
-    >>> from dendrotweaks.analysis import detect_somatic_spikes, plot_spikes
+    >>> from dendrotweaks.analysis import detect_somatic_spikes
+    >>> model.run(1000)
+    >>> spike_data = detect_somatic_spikes(model)
+    
+.. code-block:: python
+
+    >>> from dendrotweaks.analysis import plot_spikes
     >>> fig, ax = plt.subplots(1, 1, figsize=(10, 4))
     >>> model.simulator.plot_voltage(ax=ax)
-    >>> spike_data = detect_somatic_spikes(model)
     >>> plot_spikes(spike_data, ax, show_metrics=True)
     Detected 7 spikes
     Average spike width: 0.97 ms
@@ -191,9 +200,11 @@ Let's measure this relationship:
 
 .. code-block:: python
 
+    >>> from dendrotweaks.analysis import calculate_fI_curve
     >>> from dendrotweaks.analysis import plot_fI_curve
+    >>> fI_data = calculate_fI_curve(model, min_amp=0.140, max_amp=0.200, n=7)
     >>> fig, ax = plt.subplots(1, 2, figsize=(10, 5))
-    >>> plot_fI_curve(model, ax, min_amp=0.140, max_amp=0.200, n=7)
+    >>> plot_fI_curve(fI_data, ax=ax)
 
 
 .. figure:: ../_static/fI_curve.png
@@ -233,7 +244,6 @@ To set up the experiment we need to add a current clamp to a dendritic branch an
 
 .. code:: python
 
-    >>> from dendrotweaks.analysis import plot_voltage_attenuation
     >>> model.remove_all_stimuli(), model.remove_all_recordings()
     >>> secs = [model.sec_tree[i] for i in [0, 9, 17, 18, 21, 22]]
     >>> for sec in secs:
@@ -246,9 +256,15 @@ Now we can run the simulation and plot the results:
 
 .. code:: python
 
+    >>> from dendrotweaks.analysis import calculate_voltage_attenuation
     >>> model.run(1000)
+    >>> attenuation_data = calculate_voltage_attenuation(model)
+
+.. code:: python
+
+    >>> from dendrotweaks.analysis import plot_voltage_attenuation
     >>> fig, ax = plt.subplots(1, 1, figsize=(10, 5))    
-    >>> plot_voltage_attenuation(model, ax, locs=[0.1, 0.5, 0.9])
+    >>> plot_voltage_attenuation(model, ax)
 
 The :code:`plot_voltage_attenuation` function:
 
@@ -273,7 +289,6 @@ To set up the experiment, we need to place a synapse on a dendritic branch and r
 
 .. code:: python
 
-    >>> from dendrotweaks.analysis import plot_dendritic_nonlinearity
     >>> model.remove_all_stimuli(), model.remove_all_recordings()
     >>> sec = model.sec_tree[22]
     >>> model.add_recording(sec, loc=0.5)
@@ -285,9 +300,19 @@ The :code:`plot_dendritic_nonlinearity` function will then gradually increase th
 
 .. code:: python
 
+    >>> from dendrotweaks.analysis import calculate_dendritic_nonlinearity
+    >>> nonlinearity_data = calculate_dendritic_nonlinearity(
+    ...     model, 
+    ...     duration=300, 
+    ...     max_weight=10, 
+    ...     n=10
+    ... )
+
+.. code:: python
+
+    >>> from dendrotweaks.analysis import plot_dendritic_nonlinearity
     >>> fig, ax = plt.subplots(1, 2, figsize=(10, 5))
-    >>> plot_dendritic_nonlinearity(model, ax=ax, 
-    ...     duration=300, max_weight=10, n=10)
+    >>> plot_dendritic_nonlinearity(nonlinearity_data, ax=ax)
 
 .. figure:: ../_static/nonlinearity.png
     :align: center

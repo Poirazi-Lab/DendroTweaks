@@ -31,6 +31,9 @@ def reset_neuron():
 reset_neuron()            
 
 class Simulator:
+    """
+    A generic simulator class.
+    """
     def __init__(self):
         self.vs = None
         self.t = None
@@ -56,7 +59,27 @@ class Simulator:
 
 class NEURONSimulator(Simulator):
     """
-    A class to represent a NEURON simulator.
+    A class to represent the NEURON simulator.
+
+    Parameters
+    ----------
+    temperature : float
+        The temperature of the simulation in Celsius.
+    v_init : float
+        The initial membrane potential of the neuron in mV.
+    dt : float
+        The time step of the simulation in ms.
+    cvode : bool
+        Whether to use the CVode variable time step integrator.
+
+    Attributes
+    ----------
+    temperature : float
+        The temperature of the simulation in Celsius.
+    v_init : float
+        The initial membrane potential of the neuron in mV.
+    dt : float
+        The time step of the simulation in ms.
     """
 
     def __init__(self, temperature=37, v_init=-70, dt=0.025, cvode=False):
@@ -172,6 +195,11 @@ class NEURONSimulator(Simulator):
     def to_dict(self):
         """
         Convert the simulator to a dictionary.
+
+        Returns
+        -------
+        dict
+            A dictionary representation of the simulator.
         """
         return {
             'temperature': self.temperature,
@@ -183,6 +211,11 @@ class NEURONSimulator(Simulator):
     def from_dict(self, data):
         """
         Create a simulator from a dictionary.
+
+        Parameters
+        ----------
+        data : dict
+            The dictionary representation of the simulator.
         """
         self.temperature = data['temperature']
         self.v_init = data['v_init']
