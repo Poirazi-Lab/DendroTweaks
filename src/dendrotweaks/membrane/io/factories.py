@@ -18,13 +18,18 @@ def create_channel(path_to_mod_file: str,
     Parameters
     ----------
     path_to_mod_file : str
-        The path to the .mod file.
+        The full path to the .mod file containing the channel mechanism.
     path_to_python_file : str
-        The path to the Python file.
+        The path to the output Python file to be generated.
     path_to_python_template : str
-        The path to the Python template file.
+        The path to the jinja2 template file for the Python file.
     verbose : bool, optional
         Whether to print verbose output.
+
+    Returns
+    -------
+    IonChannel
+        The instantiated ion channel.
     """
     # Convert mod to python
     converter = MODFileConverter()
@@ -60,9 +65,9 @@ def standardize_channel(channel: IonChannel,
     channel : IonChannel
         The channel to standardize.
     path_to_mod_template : str, optional
-        The path to the .mod template file, if a MOD file should be generated.
+        The path to the jinja2 template file for the standard MOD file.
     path_to_standard_mod_file : str, optional
-        The path to save the standardized .mod file, if a MOD file should be generated.
+        The path to save the standardized MOD file.
 
     Returns
     -------
@@ -73,7 +78,9 @@ def standardize_channel(channel: IonChannel,
     ----
     Temperature-dependence is taken into account by performing
     a fit to the data at the temperature specified in the parameters
-    of the original channel model.
+    of the original channel model (the `temp` parameter). If no
+    temperature is specified, the default temperature of 23 degrees
+    Celsius is used.
     """
     standard_channel = StandardIonChannel(name=channel.name, 
                                           state_powers=channel._state_powers, 
@@ -110,17 +117,22 @@ def create_standard_channel(path_to_mod_file: str,
     Parameters
     ----------
     path_to_mod_file : str
-        The path to the .mod file.
+        The path to the original MOD file for an unstandardized channel.
     path_to_python_file : str
-        The path to the Python file.
+        The path to the output Python file to be generated.
     path_to_python_template : str
-        The path to the Python template file.
+        The path to the jinja2 template file for the Python file.
     path_to_mod_template : str
-        The path to the .mod template file.
+        The path to the jinja2 template file for the standard MOD file.
     path_to_standard_mod_file : str
-        The path to save the standardized .mod file.
+        The path to the output standardized MOD file.
     verbose : bool, optional
         Whether to print verbose output.
+
+    Returns
+    -------
+    StandardIonChannel
+        The standardized ion channel.
     """
     # First create the regular channel
     channel = create_channel(path_to_mod_file, 

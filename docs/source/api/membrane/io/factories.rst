@@ -1,7 +1,7 @@
-Mechanism IO Utils
+Mechanism Factories
 ==========================
 
-.. automodule:: dendrotweaks.membrane.io.utils
+.. automodule:: dendrotweaks.membrane.io.factories
     :members:
     :undoc-members:
     :show-inheritance:

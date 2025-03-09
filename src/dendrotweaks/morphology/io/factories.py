@@ -25,7 +25,7 @@ def create_point_tree(source: Union[str, DataFrame]) -> PointTree:
     Returns
     -------
     PointTree
-        The point tree created from the SWC data.
+        The point tree representing the reconstruction of the neuron morphology.
     """
     if isinstance(source, str):
         reader = SWCReader()
@@ -52,12 +52,12 @@ def create_section_tree(point_tree: PointTree):
     Parameters
     ----------
     point_tree : PointTree
-        The point tree to create the section tree from.
+        The point tree to create the section tree from by splitting it into sections.
 
     Returns
     -------
     SectionTree
-        The section tree created representing the neuron morphology.
+        The section tree created representing the neuron morphology on a more abstract level.
     """
 
     point_tree.extend_sections()
@@ -154,7 +154,7 @@ def create_segment_tree(sec_tree):
     Parameters
     ----------
     sec_tree : SectionTree
-        The section tree to create the segment tree from.
+        The section tree to create the segment tree from by splitting it into segments.
 
     Returns
     -------

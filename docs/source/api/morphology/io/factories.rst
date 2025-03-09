@@ -1,7 +1,7 @@
-Morphology IO Utils
+Morphology Factories
 ==========================
 
-.. automodule:: dendrotweaks.morphology.io.utils
+.. automodule:: dendrotweaks.morphology.io.factories
     :members:
     :undoc-members:
     :show-inheritance:

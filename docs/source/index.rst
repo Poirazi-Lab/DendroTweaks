@@ -62,15 +62,11 @@ If you find DendroTweaks helpful for building your models, please consider citin
    basics
    advanced
 
-
-.. toctree::
-   :maxdepth: 1
-   :caption: User guide:
-
 .. toctree::
    :maxdepth: 1
    :caption: API Reference:
 
+   genindex
    api/morphology
    api/membrane
    api/stimuli

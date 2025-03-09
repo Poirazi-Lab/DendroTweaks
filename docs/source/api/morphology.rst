@@ -4,7 +4,7 @@ Morphology
 .. toctree::
    :maxdepth: 2
 
-   morphology/utils
+   morphology/io_module
    morphology/trees
    morphology/point_trees
    morphology/sec_trees
