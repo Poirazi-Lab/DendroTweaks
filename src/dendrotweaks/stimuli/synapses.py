@@ -14,32 +14,40 @@ class Synapse():
     ----------
     syn_type : str
         The type of synapse to create e.g. 'AMPA', 'NMDA', 'AMPA_NMDA', 'GABA'.
-    seg : Segment
-        The segment to place the synapse on.
+    sec : Section
+        The section on which the synapse is placed.
+    loc : float
+        The location on the section where the synapse is placed, between 0 and 1.
 
     Attributes
     ----------
-    seg : Segment
-        The segment on which the synapse is placed.
+    sec : Section
+        The section on which the synapse is placed.
+    loc : float
+        The location on the section where the synapse is placed, between 0 and 1.
     """
 
-    def __init__(self, syn_type: str, seg: Segment) -> None:
+    def __init__(self, syn_type: str, sec, loc=0.5) -> None:
         """
         Creates a new synapse object.
         """
         self._Model = getattr(h, syn_type)
-        self.seg = seg
+        self.sec = sec
+        self.loc = loc
 
         self._ref_syn = self._Model(self.seg._ref)
         self._ref_stim = None
         self._ref_con = None
 
-    # @property
-    # def seg(self):
-    #     return self.sec._ref(self.loc)
+    @property
+    def seg(self):
+        """
+        The segment on which the synapse is placed.
+        """
+        return self.sec(self.loc)
 
     def __repr__(self):
-        return f"<Synapse({self.seg})>"
+        return f"<Synapse({self.sec}({self.loc:.3f}))>"
 
     @property
     def spike_times(self):

@@ -1137,7 +1137,7 @@ class Model():
     def _add_population(self, population):
         self.populations[population.syn_type][population.name] = population
 
-
+    @timeit
     def add_population(self, segments, N, syn_type):
         """
         Add a population of synapses to the model.
@@ -1526,7 +1526,6 @@ class Model():
             'idx': [i for i in range(len(self.recordings))],
             'sec_idx': [seg._section.idx for seg in self.recordings],
             'loc': [seg.x for seg in self.recordings],
-            'n_per_seg': [1] * len(self.recordings)
         }
 
         iclamp_data = {
@@ -1534,7 +1533,6 @@ class Model():
             'idx': [i for i in range(len(self.iclamps))],
             'sec_idx': [seg._section.idx for seg in self.iclamps],
             'loc': [seg.x for seg in self.iclamps],
-            'n_per_seg': [1] * len(self.iclamps)
         }
         
         synapses_data = {
@@ -1542,7 +1540,6 @@ class Model():
             'idx': [],
             'sec_idx': [],
             'loc': [],
-            'n_per_seg': []
         }
 
         for syn_type, pops in self.populations.items():
@@ -1552,7 +1549,6 @@ class Model():
                 synapses_data['idx'] += [int(name.rsplit('_', 1)[1]) for name in pop_data['name']]
                 synapses_data['sec_idx'] += pop_data['sec_idx']
                 synapses_data['loc'] += pop_data['loc']
-                synapses_data['n_per_seg'] += pop_data['n_per_seg']
 
         df = pd.concat([
             pd.DataFrame(rec_data),
@@ -1621,21 +1617,28 @@ class Model():
 
         syn_types = ['AMPA', 'NMDA', 'AMPA_NMDA', 'GABAa']
 
-        df_syn = df_stimuli[df_stimuli['type'] == 'AMPA']
+        for syn_type in syn_types:
+
+            df_syn = df_stimuli[df_stimuli['type'] == syn_type]
     
-        for i, pop_data in enumerate(data['stimuli']['populations']['AMPA']):
-            segments = [self.sec_tree.sections[sec_idx](loc) 
-                        for sec_idx, loc in zip(df_syn['sec_idx'], df_syn['loc'])]
-            
-            pop = Population(i, 
-                             segments, 
-                             pop_data['N'], 
-                             'AMPA')
-            n_per_seg = {seg: n for seg, n in zip(segments, df_syn['n_per_seg'])}
-            pop.allocate_synapses(n_per_seg=n_per_seg)
-            pop.update_kinetic_params(pop_data['kinetic_params'])
-            pop.update_input_params(pop_data['input_params'])
-            self._add_population(pop)
+            for i, pop_data in enumerate(data['stimuli']['populations'][syn_type]):
+
+                df_pop = df_syn[df_syn['idx'] == i]
+
+                segments = [self.sec_tree.sections[sec_idx](loc) 
+                            for sec_idx, loc in zip(df_pop['sec_idx'], df_pop['loc'])]
+                
+                pop = Population(i, 
+                                segments, 
+                                pop_data['N'], 
+                                'AMPA')
+                
+                syn_locs = [(self.sec_tree.sections[sec_idx], loc) for sec_idx, loc in zip(df_pop['sec_idx'].tolist(), df_pop['loc'].tolist())]
+                
+                pop.allocate_synapses(syn_locs=syn_locs)
+                pop.update_kinetic_params(**pop_data['kinetic_params'])
+                pop.update_input_params(**pop_data['input_params'])
+                self._add_population(pop)
 
 
         

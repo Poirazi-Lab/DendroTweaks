@@ -57,15 +57,17 @@ We can access individual synapses through the :code:`synapses` attribute.
 
     >>> model.populations['AMPA']['AMPA_0'].synapses
     {
-        59: [],
-        60: [<Synapse(Segment(idx=60))>, <Synapse(Segment(idx=60))>],
-        61: [],
-        62: [],
-        63: [],
-        64: [<Synapse(Segment(idx=64))>],
-        65: [],
+        (Section(idx=50), 0.853): [<Synapse(Section(idx=50)(0.853))>],
+        (Section(idx=10), 0.03): [<Synapse(Section(idx=10)(0.030))>],
+        (Section(idx=17), 0.819): [<Synapse(Section(idx=17)(0.819))>],
+        (Section(idx=23), 0.455): [<Synapse(Section(idx=23)(0.455))>],
+        (Section(idx=21), 0.444): [<Synapse(Section(idx=21)(0.444))>],
+        (Section(idx=45), 0.986): [<Synapse(Section(idx=45)(0.986))>],
         ...
     }
+
+We allocate the synapses to the sections of the postsynaptic neuron uniformly.
+A synapse is assigned a random section (:code:`syn.sec`) and location (:code:`syn.loc`) within the section.
 
 Each synapse has the following references to the NEURON objects:
 

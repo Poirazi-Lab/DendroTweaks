@@ -86,12 +86,13 @@ class Population():
 
         self.idx = idx
         self.segments = segments
+        self.sections = list(set([seg._section for seg in segments]))
+        self._excluded_segments = [seg for sec in self.sections for seg in sec if seg not in segments]
         self.syn_type = syn_type
 
         self.N = N
 
         self.synapses = {}
-        self.n_per_seg = {}
 
         self.input_params = {
             'rate': 1,
@@ -111,6 +112,19 @@ class Population():
     def name(self):
         """A unique name for the population."""
         return f"{self.syn_type}_{self.idx}"
+
+
+    @property
+    def spike_times(self):
+        """
+        Return the spike times of the synapses in the population.
+        """
+        spike_times = defaultdict(list)
+        for seg, syns in self.synapses.items():
+            for syn in syns:
+                spike_times[syn].extend(syn.spike_times)
+        return dict(spike_times)
+
 
     def update_kinetic_params(self, **params):
         """
@@ -156,39 +170,28 @@ class Population():
 
     # ALLOCATION METHODS
 
-    def _calculate_n_per_seg(self):
-        """
-        Assign each section a random number of synapses 
-        so that the sum of all synapses is equal to N synapses.
-        returns a dict {sec:n_syn}
-        """
-        n_per_seg = {seg: 0 for seg in self.segments}
-        for i in range(self.N):
-            seg = np.random.choice(self.segments)
-            n_per_seg[seg] += 1
-        return n_per_seg
+    def _choose_synapse_locations(self):
+        
+        valid_locs = [(sec, x) for sec in self.sections 
+            for x in np.linspace(0, 1, 1001) 
+            if sec(x) not in self._excluded_segments]
+        
+        syn_locs = [np.random.choice(valid_locs) for _ in range(self.N)]
+        
+        return syn_locs
 
-    def allocate_synapses(self, n_per_seg=None):
-        """
-        Assign each synapse a section and a location on that section.
 
-        Parameters
-        ----------
-        n_per_seg : dict, optional
-            The number of synapses to allocate to each section.
-            If not provided, synapses are allocated randomly
-            to sections based on the number of segments in each section.
-        """
-        self.synapses = {}
-        if n_per_seg is not None:
-            self.n_per_seg = n_per_seg
-        else:
-            self.n_per_seg = self._calculate_n_per_seg()
+    def allocate_synapses(self, syn_locs=None):
+
+        if syn_locs is None:
+            syn_locs = self._choose_synapse_locations()
         syn_type = self.syn_type
-        for seg, n in self.n_per_seg.items():
-            self.synapses[seg.idx] = [Synapse(syn_type, seg) for _ in range(n)]
+        self.synapses = {(sec, x) : [] for sec, x in syn_locs}
+        for sec, x in syn_locs:
+            self.synapses[(sec, x)].append(Synapse(syn_type, sec, x))
 
         self.update_kinetic_params(**self.kinetic_params)
+            
 
 
     # CREATION METHODS
@@ -227,16 +230,23 @@ class Population():
                 'kinetic_params': {**self.kinetic_params},
         }
 
+    @property
+    def flat_synapses(self):
+        """
+        Return a flat list of synapses.
+        """
+        return [syn for syns in self.synapses.values() for syn in syns]
+
     def to_csv(self):
         """
         Prepare the data about the location of synapses for saving to a CSV file.
         """
+        flat_synapses = self.flat_synapses
         return {
-            'syn_type': [self.syn_type] * len(self.n_per_seg),
-            'name': [self.name] * len(self.n_per_seg),
-            'sec_idx': [seg._section.idx for seg in self.n_per_seg.keys()],
-            'loc': [seg.x for seg in self.n_per_seg.keys()],
-            'n_per_seg': list(self.n_per_seg.values())
+            'syn_type': [self.syn_type] * len(flat_synapses),
+            'name': [self.name] * len(flat_synapses),
+            'sec_idx': [syn.sec.idx for syn in flat_synapses],
+            'loc': [syn.loc for syn in flat_synapses],
         }
         
 
@@ -246,11 +256,12 @@ class Population():
 
         Removes all synapses, NetCon and NetStim objects.
         """
-        for seg in self.segments:
-            for syn in self.synapses[seg.idx]:
-                if syn._ref_stim is not None:
+        for syns in self.synapses.values():
+            for syn in syns:
+                if syn._ref_stim:
                     syn._clear_stim()
-                if syn._ref_con is not None:
+                if syn._ref_con:
                     syn._clear_con()
-                syn = None
-            self.synapses.pop(seg.idx)
+        self.synapses.clear()
+
+    
