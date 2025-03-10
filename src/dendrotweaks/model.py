@@ -64,6 +64,37 @@ class Model():
         The name of the simulator to use (either 'NEURON' or 'Jaxley').
     path_to_data : str
         The path to the data files where swc and mod files are stored.
+
+    Attributes
+    ----------
+    path_to_model : str
+        The path to the model directory.
+    path_manager : PathManager
+        The path manager for the model.
+    mod_loader : MODFileLoader
+        The MOD file loader.
+    simulator_name : str
+        The name of the simulator to use. Default is 'NEURON'.
+    point_tree : PointTree
+        The point tree representing the morphological reconstruction.
+    sec_tree : SectionTree
+        The section tree representing the morphology on the section level.
+    mechanisms : dict
+        A dictionary of mechanisms available for the model.
+    domains_to_mechs : dict
+        A dictionary mapping domains to mechanisms inserted in them.
+    params : dict
+        A dictionary mapping parameters to their distributions.
+    d_lambda : float
+        The spatial discretization parameter.
+    seg_tree : SegmentTree
+        The segment tree representing the morphology on the segment level.
+    iclamps : dict
+        A dictionary of current clamps in the model.
+    populations : dict
+        A dictionary of "virtual" populations forming synapses on the model.
+    simulator : Simulator
+        The simulator object to use.
     """
 
     def __init__(self, path_to_model,
@@ -1137,7 +1168,7 @@ class Model():
     def _add_population(self, population):
         self.populations[population.syn_type][population.name] = population
 
-    @timeit
+
     def add_population(self, segments, N, syn_type):
         """
         Add a population of synapses to the model.
@@ -1228,18 +1259,51 @@ class Model():
     # ========================================================================
 
     def add_recording(self, sec, loc, var='v'):
+        """
+        Add a recording to the model.
+
+        Parameters
+        ----------
+        sec : Section
+            The section to record from.
+        loc : float
+            The location along the normalized section length to record from.
+        var : str, optional
+            The variable to record. Default is 'v'.
+        """
         self.simulator.add_recording(sec, loc, var)
 
 
     def remove_recording(self, sec, loc):
+        """
+        Remove a recording from the model.
+
+        Parameters
+        ----------
+        sec : Section
+            The section to remove the recording from.
+        loc : float
+            The location along the normalized section length to remove the recording from.
+        """
         self.simulator.remove_recording(sec, loc)
 
 
     def remove_all_recordings(self):
+        """
+        Remove all recordings from the model.
+        """
         self.simulator.remove_all_recordings()
 
 
     def run(self, duration=300):
+        """
+        Run the simulation for a specified duration.
+
+        Parameters
+        ----------
+        duration : float, optional
+            The duration of the simulation. Default is 300.
+        """
         self.simulator.run(duration)
 
     def get_traces(self):
@@ -1277,6 +1341,14 @@ class Model():
 
 
     def reduce_subtree(self, root):
+        """
+        Reduce a subtree to a single section.
+
+        Parameters
+        ----------
+        root : Section
+            The root section of the subtree to reduce.
+        """
         # Cannot remove domains
         # Can remove groups
 
@@ -1462,6 +1534,14 @@ class Model():
 
     def export_membrane(self, file_name, **kwargs):
         """
+        Export the membrane properties of the model to a JSON file.
+
+        Parameters
+        ----------
+        file_name : str
+            The name of the file to write to.
+        **kwargs : dict
+            Additional keyword arguments to pass to `json.dump`.
         """        
         
         path_to_json = self.path_manager.get_file_path('membrane', file_name, extension='json')
@@ -1473,6 +1553,14 @@ class Model():
 
     def load_membrane(self, file_name, recompile=True):
         """
+        Load the membrane properties of the model from a JSON file.
+
+        Parameters
+        ----------
+        file_name : str
+            The name of the file to read from.
+        recompile : bool, optional
+            Whether to recompile the mechanisms after loading. Default is True.
         """
         self.add_default_mechanisms()
         self.add_mechanisms('mod', recompile=recompile)
@@ -1486,6 +1574,14 @@ class Model():
 
 
     def stimuli_to_dict(self):
+        """
+        Convert the stimuli to a dictionary representation.
+
+        Returns
+        -------
+        dict
+            The dictionary representation of the stimuli.
+        """
         return {
             'metadata': {
                 'name': self.name,
@@ -1563,6 +1659,14 @@ class Model():
 
     def export_stimuli(self, file_name, **kwargs):
         """
+        Export the stimuli to a JSON and CSV file.
+
+        Parameters
+        ----------
+        file_name : str
+            The name of the file to write to.
+        **kwargs : dict
+            Additional keyword arguments to pass to `json.dump`.
         """
         path_to_json = self.path_manager.get_file_path('stimuli', file_name, extension='json')
 
@@ -1577,6 +1681,12 @@ class Model():
 
     def load_stimuli(self, file_name):
         """
+        Load the stimuli from a JSON file.
+
+        Parameters
+        ----------
+        file_name : str
+            The name of the file to read from.
         """
         
         path_to_json = self.path_manager.get_file_path('stimuli', file_name, extension='json')

@@ -28,6 +28,24 @@ class Section(Node):
     A class representing a section in a neuron morphology.
 
     A section is continuous part of a neuron's morphology between two branching points.
+
+    Parameters
+    ----------
+    idx : str
+        The index of the section.
+    parent_idx : str
+        The index of the parent section.
+    points : List[Point]
+        The points that define the section.
+
+    Attributes
+    ----------
+    points : List[Point]
+        The points that define the section.
+    segments : List[Segment]
+        The segments to which the section is divided.
+    _ref : h.Section
+        The reference to the NEURON section.
     """
 
     def __init__(self, idx: str, parent_idx: str, points: List[Node]) -> None:
@@ -660,6 +678,16 @@ class Section(Node):
 class SectionTree(Tree):
     """
     A class representing a tree graph of sections in a neuron morphology.
+
+    Parameters
+    ----------
+    sections : List[Section]
+        A list of sections in the tree.
+
+    Attributes
+    ----------
+    domains : Dict[str, Domain]
+        A dictionary of domains in the tree.
     """
 
     def __init__(self, sections: list[Section]) -> None:

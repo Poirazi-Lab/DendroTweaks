@@ -1,7 +1,20 @@
 
 class Domain:
     """
-    Represents a morphological or functional domain in a neuron.
+    A class representing
+    a morphological or functional domain in a neuron.
+
+    Parameters
+    ----------
+    name : str
+        The name of the domain.
+    sections : List[Section], optional
+        A list of sections in the domain.
+
+    Attributes
+    ----------
+    name : str
+        The name of the domain.
     """
 
     def __init__(self, name: str, sections = None) -> None:

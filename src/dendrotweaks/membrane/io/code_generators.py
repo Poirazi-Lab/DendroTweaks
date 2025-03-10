@@ -39,7 +39,7 @@ class PythonCodeGenerator(CodeGenerator):
 
     def generate(self, ast, path_to_template):
         """
-        Generates a Python class from the AST using a Jinja2 template.
+        Generate a Python class from the AST using a Jinja2 template.
 
         Parameters
         ----------
@@ -262,7 +262,17 @@ class NMODLCodeGenerator(CodeGenerator):
 
     def generate(self, channel, 
                 path_to_template: str) -> None:
-        """ Generates NMODL code for a standardized ion channel """
+        """ 
+        Generate NMODL code for a standardized ion channel 
+        using a Jinja2 template.
+
+        Parameters
+        ----------
+        channel : StandardIonChannel
+            The standardized ion channel.
+        path_to_template : str
+            The path to the Jinja2 template file.
+        """
         
         # Read the template file
         with open(path_to_template, 'r') as file:

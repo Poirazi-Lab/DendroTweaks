@@ -9,8 +9,15 @@ class MODFileReader():
     Provides methods to read and preprocess .mod files.
     Splits the content of the file into blocks for further parsing.
 
-    Attributes:
-        blocks (Dict[str, List[str]]): A dictionary with the blocks of the .mod file.
+    Attributes
+    ----------
+    content : str
+        The content of the MOD file.
+    blocks : Dict[str, List[str]]
+        The blocks of the MOD file corresponding to the
+        NMODL blocks e.g. NEURON, PARAMETER, ASSIGNED, etc.
+    unmatched : str
+        The unmatched content in the MOD file after splitting into blocks.
     """
 
     BLOCK_TYPES = ['TITLE',
@@ -40,8 +47,10 @@ class MODFileReader():
         """
         Read the content of the file.
 
-        Parameters:
-            path_to_file (str): The path to the file to read.
+        Parameters
+        ----------
+        path_to_file : str
+            The path to the file.
         """
         with open(path_to_file, 'r') as f:
             content = f.read()
@@ -74,8 +83,10 @@ class MODFileReader():
         -----
         Suffix is a string of the form SUFFIX suffix
 
-        Parameters:
-            overwirte (bool): Whether to overwrite the file with the modified content
+        Parameters
+        ----------
+        overwirte : bool, optional
+            Whether to overwrite the content of the file with the modified content.
         """
         suffix_pattern = r'SUFFIX\s+\w+'
         match = re.search(suffix_pattern, self.content)
@@ -94,28 +105,28 @@ class MODFileReader():
 
     def remove_inline_comments(self) -> None:
         """
-        Removes the rest of the line after ":" from the content of the file.
+        Remove the rest of the line after ":" from the content of the file.
         """
         self.content = re.sub(r':.*', '', self.content)
         
 
     def remove_unitsoff(self) -> None:
         """
-        Removes 'UNITSOFF' and 'UNITSON' from the content of the file.
+        Remove 'UNITSOFF' and 'UNITSON' from the content of the file.
         """
         self.content = re.sub(r'UNITSOFF|UNITSON', '', self.content)
         
 
     def remove_verbatim(self) -> None:
         """
-        Removes 'VERBATIM' and 'ENDVERBATIM' and everything in between from the content of the file.
+        Remove 'VERBATIM' and 'ENDVERBATIM' and everything in between from the content of the file.
         """
         self.content = re.sub(r'VERBATIM.*?ENDVERBATIM', '', self.content, flags=re.DOTALL)
         
 
     def remove_suffix_from_gbar(self) -> None:
         """
-        Removes the suffix from 'gbar' in the content of the file.
+        Remove the suffix from 'gbar' in the content of the file.
 
         Example
         -------
@@ -130,11 +141,16 @@ class MODFileReader():
         """
         Split the content of the file into blocks and return them.
 
-        Parameters:
-            verbose (bool): Whether to print the blocks information.
+        Parameters
+        ----------
+        verbose : bool, optional
+            Whether to print the
+            blocks of the file.
 
-        Returns:
-            Dict[str, List[str]]: A dictionary with the blocks of the file.
+        Returns
+        -------
+        Dict[str, List[str]]
+            A dictionary of blocks where the key is the block name
         """
         for block_type in self.BLOCK_TYPES:
             matches = self._get_block_regex(block_type)
@@ -158,11 +174,14 @@ class MODFileReader():
             }
 
         Parameters:
-        ----------
-            block_name (str): Name of the block to get the regex pattern for.
+        ------------
+        block_name : str
+            The name of the block e.g. 'NEURON', 'PARAMETER', etc.
 
-        Returns:
-            List[str]: A list of matches for the block.
+        Returns
+        -------
+        List[str]
+            A list of matches for the block.
         """
         if block_name == 'TITLE':
             pattern = r"(" + re.escape(block_name) + r"[\s\S]*?\n)"
@@ -179,7 +198,8 @@ class MODFileReader():
 
         Parameters
         ----------
-        verbose (bool): Whether to print the unmatched content.
+        verbose : bool, optional
+            Whether to print the unmatched content.
         """
         unmatched = self.content
         for block_name, block in self.blocks.items():

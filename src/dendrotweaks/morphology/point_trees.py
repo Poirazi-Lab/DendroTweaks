@@ -52,6 +52,40 @@ import random
 class Point(Node):
     """
     A class representing a single point in a morphological reconstruction.
+
+    Parameters
+    ----------
+    idx : str
+        The unique identifier of the node.
+    type_idx : int
+        The type of the node according to the SWC specification (e.g. soma-1, axon-2, dendrite-3).
+    x : float
+        The x-coordinate of the node.
+    y : float
+        The y-coordinate of the node.
+    z : float
+        The z-coordinate of the node.
+    r : float
+        The radius of the node.
+    parent_idx : str
+        The identifier of the parent node.
+
+    Attributes
+    ----------
+    idx : str
+        The unique identifier of the node.
+    type_idx : int
+        The type of the node according to the SWC specification (e.g. soma-1, axon-2, dendrite-3).
+    x : float
+        The x-coordinate of the node.
+    y : float
+        The y-coordinate of the node.
+    z : float
+        The z-coordinate of the node.
+    r : float
+        The radius of the node.
+    parent_idx : str
+        The identifier of the parent node.
     """
 
     def __init__(self, idx: str, type_idx: int, 
@@ -182,6 +216,11 @@ class Point(Node):
 class PointTree(Tree):
     """
     A class representing a tree graph of points in a morphological reconstruction.
+
+    Parameters
+    ----------
+    nodes : list[Point]
+        A list of points in the tree.
     """
 
     def __init__(self, nodes: list[Point]) -> None:

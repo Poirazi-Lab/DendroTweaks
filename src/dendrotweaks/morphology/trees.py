@@ -13,9 +13,12 @@ class Node():
     A node can be a 3D point in a neuron morphology,
     a segment, a section, or even a tree.
 
-    Parameters:
-        idx (Union[int, str]): The index of the node.
-        parent_idx (Union[int, str]): The index of the parent node.
+    Parameters
+    ----------
+    idx : Union[int, str]
+        The index of the node.
+    parent_idx : Union[int, str]
+        The index of the parent node.
 
     Examples:
         >>> node = Node(0, -1)
@@ -174,8 +177,17 @@ class Tree:
     """
     A class to represent a tree data structure.
 
-    Args:
-        nodes (List[Node]): A list of nodes in the tree.
+    A tree graph is a hierarchical data structure that consists of nodes connected by edges.
+
+    Parameters
+    ----------
+    nodes : list
+        A list of nodes in the tree.
+
+    Attributes
+    ----------
+    root : Node
+        The root node of the tree.
     """
 
     def __init__(self, nodes: list) -> None:
@@ -209,12 +221,12 @@ class Tree:
     @property
     def is_connected(self):
         """
-        Checks if all nodes in the tree are connected 
-        i.e. reachable from the root. 
-        
+        Whether the tree is connected i.e. each node can be reached from the root.
 
-        Returns:
-            bool: True if the root node's subtree contains exactly the same nodes
+        Returns
+        -------
+        bool 
+            True if the root node's subtree contains exactly the same nodes
         as the entire tree. False otherwise.
         """
         nodes_set = set(self._nodes)
@@ -223,6 +235,14 @@ class Tree:
 
     @property
     def is_sorted(self):
+        """
+        Whether the nodes in the tree are sorted by index.
+
+        Returns
+        -------
+        bool
+            True if the nodes are sorted by index. False otherwise.
+        """
         if not all([node.idx == i for i, node in enumerate(self._nodes, start=0)]):
             return False
         traversal_indices = [node.idx for node in self.traverse()]
@@ -230,6 +250,14 @@ class Tree:
 
     @property
     def bifurcations(self):
+        """
+        The bifurcation nodes in the tree.
+
+        Returns
+        -------
+        list
+            A list of bifurcation nodes in the tree.
+        """
         return [node for node in self._nodes if len(node.children) > 1]
 
     @property
@@ -254,10 +282,12 @@ class Tree:
 
     def _find_root(self):
         """
-        Finds the root node.
+        Find the root node.
 
-        Returns:
-            Node: The root node of the tree.
+        Returns
+        -------
+        Node
+            The root node of the tree.
         """
         ROOT_PARENT = {None, -1, '-1'}
         root_nodes = [node for node in self._nodes if node.parent_idx in ROOT_PARENT]
@@ -296,6 +326,11 @@ class Tree:
         """
         Iterate over the nodes in the tree using a stack-based 
         depth-first traversal.
+
+        Parameters
+        ----------
+        root : Node, optional
+            The root node to start the traversal from. Defaults to None.
         """
         root = root or self.root
         stack = [root]
@@ -321,9 +356,6 @@ class Tree:
         the number of bifurcations (nodes with more than one child) in each child's
         subtree. Nodes with fewer bifurcations in their subtrees are placed earlier in the list
         of the node's children, ensuring that the shortest paths are traversed first.
-
-        Returns:
-            None
         """
 
         # subtree_size_map = {node: len(self.get_subtree(node)) for node in self._nodes}
@@ -338,10 +370,11 @@ class Tree:
     @timeit
     def sort(self, sort_children=True):
         """
-        Sorts the nodes in the tree using a stack-based depth-first traversal.
+        Sort the nodes in the tree using a stack-based depth-first traversal.
 
-        Args:
-            sort_children (bool, optional): Whether to sort the children of each node 
+        Parameters
+        sort_children : bool, optional
+            Whether to sort the children of each node 
             based on the number of bifurcations in their subtrees. Defaults to True.
         """
         if self.is_sorted:
@@ -366,13 +399,17 @@ class Tree:
 
     def remove_node(self, node):
         """
-        Removes a node from the tree.
+        Remove a node from the tree.
 
-        Args:
-            node (Node): The node to remove.
+        Parameters
+        ----------
+        node : Node
+            The node to remove.
 
-        Raises:
-            ValueError: If the tree is not sorted.
+        Raises
+        ------
+        ValueError
+            If the tree is not sorted.
         """
         if node.parent is None:
             raise ValueError('Cannot remove the root node.')
@@ -386,12 +423,30 @@ class Tree:
 
 
     def remove_subtree(self, node):
+        """
+        Remove a subtree from the tree.
+
+        Parameters
+        ----------
+        node : Node
+            The root node of the subtree to remove.
+        """
         node.disconnect_from_parent()
         for n in node.subtree:
             self._nodes.remove(n)
 
 
     def add_subtree(self, node, parent):
+        """
+        Add a subtree to the tree.
+
+        Parameters
+        ----------
+        node : Node
+            The root node of the subtree to add.
+        parent : Node
+            The parent node to attach the subtree to.
+        """
         node.connect_to_parent(parent)
         self._nodes.extend(node.subtree)
 
@@ -399,6 +454,13 @@ class Tree:
     def insert_node_after(self, new_node, existing_node):
         """
         Insert a node after a given node in the tree.
+
+        Parameters
+        ----------
+        new_node : Node
+            The new node to insert.
+        existing_node : Node
+            The existing node after which to insert the new node.
         """
         if new_node in self._nodes:
             raise ValueError('Node already exists in the tree.')
@@ -414,6 +476,13 @@ class Tree:
     def insert_node_before(self, new_node, existing_node):
         """
         Insert a node before a given node in the tree.
+
+        Parameters
+        ----------
+        new_node : Node
+            The new node to insert.
+        existing_node : Node
+            The existing node before which to insert the new node.
         """
         if new_node in self._nodes:
             raise ValueError('Node already exists in the tree.')
@@ -426,8 +495,20 @@ class Tree:
 
     def reposition_subtree(self, node, new_parent_node, origin=None):
         """
+        Reposition a subtree in the tree.
+
+        Parameters
+        ----------
+        node : Node
+            The root node of the subtree to reposition.
+        new_parent_node : Node
+            The new parent node of the subtree.
+        origin : Node, optional
+            The origin node to use as the reference point for the repositioning. 
+            Defaults to None.
+
         Note
-        ----
+        -----
         Treats differently the children of the root node.
         """
         if node.parent is None:
@@ -470,6 +551,9 @@ class Tree:
 
 
 def shift_coordinates(points, origin, target):
+    """
+    Shift the coordinates of a list of points from an origin to a target.
+    """
     origin_vector = (origin.x, origin.y, origin.z)
     target_vector = (target.x, target.y, target.z)
     for pt in points:

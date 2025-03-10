@@ -7,6 +7,24 @@ class Segment(Node):
 
     A segment is a part of a section used to discretize the section
     in space for the purpose of numerical simulations.
+
+    Parameters
+    ----------
+    idx : int
+        The index of the segment.
+    parent_idx : int
+        The index of the parent segment.
+    neuron_seg : h.Segment
+        The NEURON segment.
+    section : Section
+        The section to which the segment belongs.
+
+    Attributes
+    ----------
+    _section : Section
+        The section to which the segment belongs.
+    _ref : h.Segment
+        The NEURON segment.
     """
 
     def __init__(self, idx, parent_idx, neuron_seg, section) -> None:

@@ -36,6 +36,10 @@ class MODFileLoader():
                        recompile: bool = False) -> None:
         """
         Load a mechanism from the specified mod file.
+        Uses the NEURON neuron.load_mechanisms method to make
+        the mechanism available in the hoc interpreter.
+        Creates a temporary directory for the mechanism files
+        to be able to dynamically load mechanisms.
 
         Parameters
         ----------

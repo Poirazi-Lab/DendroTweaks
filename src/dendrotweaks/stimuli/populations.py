@@ -74,8 +74,6 @@ class Population():
         The type of synapse to create e.g. 'AMPA', 'NMDA', 'AMPA_NMDA', 'GABA'.
     synapses : dict
         A dictionary of synapses in the population, where the key is the segment index.
-    n_per_seg : dict
-        A dictionary of the number of synapses allocated to each segment.
     input_params : dict
         The input parameters of the synapses in the population.
     kinetic_params : dict

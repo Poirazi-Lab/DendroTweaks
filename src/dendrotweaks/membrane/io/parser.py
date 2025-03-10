@@ -14,7 +14,7 @@ from dendrotweaks.membrane.io.ast import AbstracSyntaxTree
 
 class MODFileParser():
     """
-    A parser for .mod files that uses a Pyparsing grammar 
+    A parser for MOD files that uses a Pyparsing grammar 
     to parse the content of the file.
     """
 
@@ -37,6 +37,9 @@ class MODFileParser():
         self._ast = {}
 
     def info(self):
+        """
+        Print information about the parser.
+        """
         print(f"\n{'='*20}\nPARSER\n")
         print(f"File parsed: {bool(self._ast)}")
         for block_name, parsed_content in self._ast.items():
@@ -46,11 +49,16 @@ class MODFileParser():
 
     
     def get_ast(self) -> Dict:
+        """
+        Get the abstract syntax tree of the parsed content.
+        Available after parsing the content of the file.
+        """
         return AbstracSyntaxTree(self._ast)
 
     def parse_block(self, block_name: str, block_content: List[str]) -> List[Dict]:
-        """ To ensure that parsing is independent for each block.
-        Could help in debugging the grammar (per block).
+        """ 
+        Parse a block of the MOD file.
+        Ensures that parsing is independent for each block.
         """
         grammar = self.BLOCKS.get(block_name)
         if grammar is None:
@@ -67,7 +75,7 @@ class MODFileParser():
         Parameters
         ----------
         blocks : Dict[str, List[str]]
-            A dictionary with the blocks of the .mod file.
+            A dictionary with the blocks of the MOD file.
         """
         for block_name, block_content in blocks.items():
             self.parse_block(block_name, block_content)
@@ -82,6 +90,12 @@ class MODFileParser():
     def postprocess(self, restore_expressions=True):
         """
         Postprocess the parsed AST.
+
+        Parameters
+        ----------
+        restore_expressions : bool
+            Whether to restore the expressions in the AST to their original form
+            after parsing.
         """
         # self.split_comment_block()
         self.standardize_state_var_names()
@@ -181,7 +195,7 @@ class MODFileParser():
     def standardize_state_var_names(self):
         """
         Standardize the names of the variables representing the inf and tau of
-        the state variables in the .mod file.
+        the state variables in the MOD file.
         """
         
         for state_var in self._ast['STATE']:

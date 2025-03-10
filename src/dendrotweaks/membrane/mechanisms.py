@@ -11,6 +11,21 @@ class Mechanism():
     A mechanism is a set of differential equations that 
     describe the kinetics of a channel
     or a pump in the neuron membrane
+
+    Parameters
+    ----------
+    name : str
+        The name of the mechanism.
+
+    Attributes
+    ----------
+    name : str
+        The name of the mechanism.
+    params : dict
+        A dictionary of the parameters of the mechanism.
+    range_params : dict
+        A dictionary of the range parameters of the mechanism added
+        under the RANGE statement in the MOD file.
     """
 
     def __init__(self, name):
@@ -21,23 +36,33 @@ class Mechanism():
     @property
     def params_with_suffix(self):
         """
-        Returns the parameters of the mechanism with the suffix
+        The parameters of the mechanism with the suffix
         — the name of the mechanism.
+
+        Returns
+        -------
+        dict
+            A dictionary of the parameters of the mechanism with the suffix and their values.
         """
         return {f"{param}_{self.name}":value for param, value in self.params.items()}
 
     @property
     def range_params_with_suffix(self):
         """
-        Returns the range parameters of the mechanism with the suffix
+        The range parameters of the mechanism with the suffix
         — the name of the mechanism. The range parameters are the parameters
         defined in the RANGE block of the NMODL file.
+
+        Returns
+        -------
+        dict
+            A dictionary of the range parameters of the mechanism with the suffix and their values.
         """
         return {f"{param}_{self.name}":value for param, value in self.range_params.items()}
 
     def to_dict(self):
         """
-        Returns the mechanism as a dictionary.
+        Return the mechanism as a dictionary.
         """
         return {
             'name': self.name,
@@ -53,6 +78,25 @@ class Mechanism():
 class IonChannel(Mechanism):
     """
     A class representing an ion channel in a neuron model.
+
+    Parameters
+    ----------
+    name : str
+        The name of the channel.
+
+    Attributes
+    ----------
+    independent_var_name : str
+        The name of the independent variable for the channel kinetics e.g. 'v', 'cai'.
+    params : dict
+        A dictionary of the parameters of the channel kinetics and distribution.
+    range_params : dict
+        A dictionary of the range parameters of the channel kinetics added
+        under the RANGE statement in the MOD file.
+    temperature : float
+        The temperature in degrees Celsius.
+    tadj : float
+        The temperature adjustment factor for the channel kinetics.
     """
     
     def __init__(self, name):
@@ -171,6 +215,31 @@ class StandardIonChannel(IonChannel):
     A class representing a voltage-gated ion channel with a standard 
     set of kinetic parameters and equations grounded in the transition-state
     theory. The model is based on the Hodgkin-Huxley formalism.
+
+    Parameters
+    ----------
+    name : str
+        The name of the channel.
+    state_powers : dict
+        A dictionary of the state variables and their powers in the
+        differential equations of the channel kinetics.
+    ion : str, optional
+        The ion that the channel is permeable to. The default is None.
+    
+
+    Attributes
+    ----------
+    ion : str
+        The ion that the channel is permeable to e.g. 'na', 'k'.
+    independent_var_name : str
+        The name of the independent variable for the channel kinetics e.g. 'v', 'cai'.
+    params : dict
+        A dictionary of the parameters of the channel kinetics and distribution.
+    range_params : dict
+        A dictionary of the range parameters of the channel kinetics added 
+        under the RANGE statement in the MOD file.
+    temperature : float
+        The temperature in degrees Celsius.
     """
 
     STANDARD_PARAMS = [
@@ -179,9 +248,49 @@ class StandardIonChannel(IonChannel):
 
     @staticmethod
     def steady_state(v, vhalf, sigma):
+        """
+        Compute the steady state value of the channel.
+
+        Parameters
+        ----------
+        v : np.array
+            The voltage values to compute the steady state value for.
+        vhalf : float
+            The half-activation voltage.
+        sigma : float
+            The slope factor.
+        
+        Returns
+        -------
+        np.array
+            The steady state value of the channel at the given voltage values.
+        """
         return 1 / (1 + np.exp(-(v - vhalf) / sigma))
 
     def time_constant(self, v, vhalf, sigma, k, delta, tau0):
+        """
+        Compute the time constant of the channel.
+
+        Parameters
+        ----------
+        v : np.array
+            The voltage values to compute the time constant for.
+        vhalf : float
+            The half-activation voltage.
+        sigma : float
+            The slope factor.
+        k : float
+            The maximum rate parameter.
+        delta : float
+            The skew parameter of the time constant curve (unitless)
+        tau0 : float
+            The rate-limiting factor (minimum time constant) 
+
+        Returns
+        -------
+        np.array
+            The time constant of the channel at the given voltage values.
+        """
         return 1 / (self.alpha_prime(v, vhalf, sigma, k, delta) + self.beta_prime(v, vhalf, sigma, k, delta)) + tau0
 
     @staticmethod
@@ -194,9 +303,53 @@ class StandardIonChannel(IonChannel):
 
     @staticmethod
     def t_adj(temperature, q10=2.3, reference_temp=23):
+        """
+        Compute the temperature adjustment factor for the channel kinetics.
+
+        Parameters
+        ----------
+        temperature : float
+            The temperature in degrees Celsius.
+        q10 : float, optional
+            The temperature coefficient. The default is 2.3.
+        reference_temp : float, optional
+            The reference temperature at which the channel kinetics were measured.
+            The default is 23.
+
+        Returns
+        -------
+        float
+            The temperature adjustment factor.
+        """
         return q10 ** ((temperature - reference_temp) / 10)
 
     def compute_state(self, v, vhalf, sigma, k, delta, tau0, tadj=1):
+        """
+        Compute the steady state value and time constant of the channel
+        for the given voltage values.
+
+        Parameters
+        ----------
+        v : np.array
+            The voltage values to compute the channel kinetics for.
+        vhalf : float
+            The half-activation voltage.
+        sigma : float
+            The slope factor.
+        k : float
+            The maximum rate parameter.
+        delta : float
+            The skew parameter of the time constant curve (unitless)
+        tau0 : float
+            The rate-limiting factor (minimum time constant) 
+        tadj : float, optional
+            The temperature adjustment factor. The default is 1.
+
+        Returns
+        -------
+        np.array
+            A list of steady state values and time constants for the channel.
+        """
         inf = self.steady_state(v, vhalf, sigma)
         tau = self.time_constant(v, vhalf, sigma, k, delta, tau0) / tadj
         return inf, tau
@@ -346,6 +499,16 @@ class StandardIonChannel(IonChannel):
     def get_unit(param):
         """
         Get the unit of a parameter based on its name.
+
+        Parameters
+        ----------
+        param : str
+            The name of the parameter.
+
+        Returns
+        -------
+        str
+            The unit of the parameter.
         """
         if param.startswith('vhalf_'): return 'mV'
         elif param.startswith('sigma_'): return 'mV'
@@ -357,6 +520,19 @@ class StandardIonChannel(IonChannel):
 class LeakChannel(Mechanism):
     """
     A class representing a leak channel in a neuron model.
+
+    Parameters
+    ----------
+    name : str
+        The name of the channel.
+
+    Attributes
+    ----------
+    params : dict
+        A dictionary of the parameters of the channel kinetics and distribution.
+    range_params : dict
+        A dictionary of the range parameters of the channel kinetics added 
+        under the RANGE statement in the MOD file.
     """
 
     def __init__(self):
@@ -368,6 +544,14 @@ class LeakChannel(Mechanism):
 class CaDynamics(Mechanism):
     """
     A class representing a calcium dynamics mechanism in a neuron model.
+
+    Attributes
+    ----------
+    params : dict
+        A dictionary of the parameters of the calcium dynamics mechanism.
+    range_params : dict
+        A dictionary of the range parameters of the calcium dynamics mechanism
+        added under the RANGE statement in the MOD file.
     """
 
     def __init__(self):

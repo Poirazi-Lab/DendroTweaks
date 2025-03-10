@@ -4,28 +4,50 @@ from dendrotweaks.membrane.io.code_generators import PythonCodeGenerator
 
 class MODFileConverter():
     """
-    Converts a mod file to a Python file.
+    Converts a MOD file to a Python file.
+
+    Attributes
+    ----------
+    reader : MODFileReader
+        The MOD file reader.
+    parser : MODFileParser
+        The MOD file parser.
+    generator : PythonCodeGenerator
+        The Python code generator.
     """
 
-    def __init__(self, config: dict = None):
+    def __init__(self):
         self.reader = MODFileReader()
         self.parser = MODFileParser()
         self.generator = PythonCodeGenerator()
 
     @property
     def mod_content(self):
+        """
+        The content of the MOD file.
+        """
         return self.reader.content
 
     @property
     def blocks(self):
+        """
+        The blocks of the MOD file corresponding to the 
+        NMODL blocks e.g. NEURON, PARAMETER, ASSIGNED, etc.
+        """
         return self.reader.blocks
 
     @property
     def ast(self):
+        """
+        The abstract syntax tree of the MOD file.
+        """
         return self.parser.ast
 
     @property
     def python_content(self):
+        """
+        The content of the generated Python file.
+        """
         return self.code_generator.content
         
     # def convert(self, path_to_mod, path_to_python, path_to_template):
@@ -52,18 +74,20 @@ class MODFileConverter():
                 path_to_python_template: str, 
                 path_to_json_file:str = None,
                 verbose: bool = False) -> None:
-        """ Converts a mod file to a python file.
+        """ Converts a MOD file to a Python file.
 
         Parameters
         ----------
         path_to_mod : str
-            The path to the mod file.
+            The path to the original MOD file.
         path_to_python : str
-            The path to the python file.
+            The path to the output Python file.
         path_to_template : str
-            The path to the template file.
+            The path to the jinja2 template file.
         path_to_json : str, optional
-            The path to the json file.
+            The path to the json file to write the AST.
+        verbose : bool, optional
+            Whether to print the progress of the conversion.
         """
 
         if verbose: print(f"READING")
