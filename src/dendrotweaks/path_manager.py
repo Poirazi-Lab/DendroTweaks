@@ -19,6 +19,8 @@ class PathManager:
         A dictionary of paths for different file types.
     """
     def __init__(self, path_to_model: str):
+        if not os.path.isdir(path_to_model):
+            raise FileNotFoundError(f"Directory {path_to_model} does not exist.")
         self.path_to_model = path_to_model
         self.paths = {
             'default_mod': os.path.join(self.path_to_data, 'Default'),
