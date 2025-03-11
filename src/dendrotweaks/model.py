@@ -23,7 +23,7 @@ from numpy import nan
 # from .logger import logger
 
 from dendrotweaks.path_manager import PathManager
-
+import dendrotweaks.morphology.reduce as rdc
 
 import pandas as pd
 
@@ -754,8 +754,8 @@ class Model():
 
     def _remove_empty_groups(self):
         empty_groups = [group for group in self._groups 
-                        if not any(sec in group 
-                        for sec in self.sec_tree.sections)]
+                        if not any(seg in group 
+                        for seg in self.seg_tree)]
         for group in empty_groups:
             warnings.warn(f'Group {group.name} is empty and will be removed.')
             self.remove_group(group.name)
@@ -1340,7 +1340,7 @@ class Model():
         self.remove_empty()
 
 
-    def reduce_subtree(self, root):
+    def reduce_subtree(self, root, reduction_frequency=0, total_segments_manual=-1):
         """
         Reduce a subtree to a single section.
 
@@ -1352,18 +1352,30 @@ class Model():
         # Cannot remove domains
         # Can remove groups
 
-        domain = self.get_domain(sec)
-        parent = sec.parent
+        domain_name = root.domain
+        parent = root.parent
         domains_in_subtree = [self.domains[domain_name] 
             for domain_name in set([sec.domain for sec in root.subtree])]
+        if len(domains_in_subtree) > 1:
+            raise NotImplementedError('Currently cannot reduce a subtree with multiple domains.')
+        
+        inserted_mechs = {mech_name: mech for mech_name, mech
+            in self.mechanisms.items()
+            if mech_name in self.domains_to_mechs[domain_name]
+        }
+        print(domains_in_subtree)
+        print(inserted_mechs)
 
         subtree_without_root = [sec for sec in root.subtree if sec is not root]
 
         # Map original segment names to their parameters
-        ...
+        seg_to_params = rdc.map_seg_to_params(root, inserted_mechs)
+        print(seg_to_params)
 
-        # Temporarily remove active mechanisms
-        for mech_name in self.mechanisms:
+        # Temporarily remove active mechanisms        
+        for mech_name in inserted_mechs:
+            if mech_name == 'Leak':
+                continue
             for sec in root.subtree:
                 sec.uninsert_mechanism(mech_name)
 
@@ -1371,28 +1383,49 @@ class Model():
         root.disconnect_from_parent()
 
          # Calculate new properties of a reduced subtree
-        ...
+        new_cable_properties = rdc.get_unique_cable_properties(root._ref, reduction_frequency)
+        new_nseg = rdc.calculate_nsegs(new_cable_properties, total_segments_manual)
+        print(new_cable_properties)
+        print(new_nseg)
 
          # Map segment names to their new locations in the reduced cylinder
-        ...
-
-        # Set passive mechanisms for the reduced cylinder:
-        ...
+        seg_to_locs = rdc.map_seg_to_locs(root, reduction_frequency, new_cable_properties)
+        print(seg_to_locs)
 
         # Reconnect
         root.connect_to_parent(parent)
 
-        # Reinsert active mechanisms
-        
-
         # Delete the original subtree
-        children = sec.children[:]
+        children = root.children[:]
         for child_sec in children:
             self.remove_subtree(child_sec)
 
-        # Remove intermediate points
-  
+        # Set passive mechanisms for the reduced cylinder:
+        rdc.apply_params_to_section(root, new_cable_properties, new_nseg)
 
+        
+        # Replace locs with corresponding segs
+        seg_to_reduced_segs = rdc.map_seg_to_reduced_segs(seg_to_locs, root)
+
+        # Map reduced segments to lists of parameters of corresponding original segments
+        # reduced_seg_to_params = rdc.map_reduced_seg_to_params(seg_to_reduced_segs, seg_to_params)
+
+        # Reinsert active mechanisms
+        for mech_name in inserted_mechs:
+            if mech_name == 'Leak':
+                continue
+            for sec in root.subtree:
+                sec.insert_mechanism(mech_name)
+
+        # Set new values of parameters
+        
+
+
+
+        # Remove intermediate points
+        # update point_tree as well
+        
+        return seg_to_params, seg_to_locs, seg_to_reduced_segs
 
             
 
