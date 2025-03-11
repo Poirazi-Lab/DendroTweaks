@@ -38,6 +38,7 @@ class Node():
         self.parent_idx = int(parent_idx)
         self._parent = None
         self.children = []
+        self._tree = None
 
     def __repr__(self):
         class_name = type(self).__name__
@@ -192,6 +193,7 @@ class Tree:
 
     def __init__(self, nodes: list) -> None:
 
+        for node in nodes: node._tree = self
         self._nodes = nodes
         self.root = self._find_root()
 
