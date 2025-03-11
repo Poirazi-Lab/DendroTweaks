@@ -4,6 +4,11 @@ from neuron import h
 import math
 import cmath
 import contextlib
+import collections
+import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 EXCLUDE_MECHANISMS = ['Leak', 'na_ion', 'k_ion', 'ca_ion', 'h_ion']
@@ -17,28 +22,28 @@ def push_section(section):
     yield
     h.pop_section()
 
-def map_seg_to_params(root, mechanisms):
-    seg_to_params = {}
+def map_segs_to_params(root, mechanisms):
+    segs_to_params = {}
     for sec in root.subtree:
         for seg in sec:
-            seg_to_params[seg] = {}
+            segs_to_params[seg] = {}
             for mech_name, mech in mechanisms.items():
                 if mech_name in EXCLUDE_MECHANISMS:
                     continue
-                seg_to_params[seg][mech_name] = {}
+                segs_to_params[seg][mech_name] = {}
                 for param_name in mech.range_params_with_suffix:
-                    seg_to_params[seg][mech_name][param_name] = seg.get_param_value(param_name)
-        return seg_to_params
+                    segs_to_params[seg][mech_name][param_name] = seg.get_param_value(param_name)
+    return segs_to_params
 
 
-def map_seg_to_locs(root, reduction_frequency, new_cable_properties):
+def map_segs_to_locs(root, reduction_frequency, new_cable_properties):
     """Maps segment names of the original subtree 
     to their new locations in the reduced cylinder.
 
     This dictionary is used later to restore 
     the active conductances in the reduced cylinder.
     """
-    seg_to_locs = {}
+    segs_to_locs = {}
 
     imp_obj, subtree_input_impedance = measure_input_impedance_of_subtree(root._ref,
                                                                         reduction_frequency)
@@ -53,9 +58,9 @@ def map_seg_to_locs(root, reduction_frequency, new_cable_properties):
                                                 new_cable_properties.electrotonic_length,
                                                 subtree_q)
 
-            seg_to_locs[seg] = mid_of_segment_loc
+            segs_to_locs[seg] = mid_of_segment_loc
 
-    return seg_to_locs
+    return segs_to_locs
 
 
 def calculate_subtree_q(root, reduction_frequency):
@@ -136,30 +141,49 @@ def compute_zx_polar(Z0, L, q, x):
     return ZX
 
 
-def map_seg_to_reduced_segs(seg_to_locs, root):
+def map_segs_to_reduced_segs(seg_to_locs, root):
     """Replaces the locations (x values) 
     with the corresponding segments of the reduced cylinder i.e. sec(x).
     """
     locs_to_reduced_segs = {loc: root(loc) 
         for loc in seg_to_locs.values()}
-    seg_to_reduced_segs = {seg: locs_to_reduced_segs[loc] 
+    segs_to_reduced_segs = {seg: locs_to_reduced_segs[loc] 
         for seg, loc in seg_to_locs.items()}
-    return seg_to_reduced_segs
+    return segs_to_reduced_segs
+
+
+def map_reduced_segs_to_params(segs_to_reduced_segs, segs_to_params):
+    reduced_segs_to_params = {}
+    for seg, reduced_seg in segs_to_reduced_segs.items():
+        if reduced_seg not in reduced_segs_to_params:
+            reduced_segs_to_params[reduced_seg] = collections.defaultdict(list)
+        for mech_name, mech_params in segs_to_params[seg].items():
+            for param_name, param_value in mech_params.items():
+                reduced_segs_to_params[reduced_seg][param_name].append(param_value)
+    return reduced_segs_to_params
+
 
 def set_avg_params_to_reduced_segs(reduced_segs_to_params):
     for reduced_seg, params in reduced_segs_to_params.items():
         for param_name, param_values in params.items():
-            setattr(reduced_seg, param_name, np.mean(param_values))
+            value = np.mean(param_values)
+            reduced_seg.set_param_value(param_name, value)
 
 
 def interpolate_missing_values(reduced_segs_to_params, root):
-    non_mapped_segs = [seg for seg in root if seg not in reduced_segs_to_params]
-    xs = np.array([seg.x for seg in root])
-    non_mapped_indices = np.where([seg in non_mapped_segs for seg in root])[0]
-    mapped_indices = np.where([seg not in non_mapped_segs for seg in root])[0]
+
+    non_mapped_segs = [seg for seg in root.segments 
+        if seg not in reduced_segs_to_params]
+
+    xs = np.array([seg.x for seg in root.segments])
+
+    non_mapped_indices = np.where([seg in non_mapped_segs for seg in root.segments])[0]
+    mapped_indices = np.where([seg not in non_mapped_segs for seg in root.segments])[0]
+
     print(f'Interpolated for ids {non_mapped_indices}')
+
     for param in list(set([k for val in reduced_segs_to_params.values() for k in val.keys()])):
-        values = np.array([getattr(seg, param) for seg in root])
+        values = np.array([seg.get_param_value(param) for seg in root.segments])
         if np.any(values != 0.) and np.any(values == 0.):
             # Find the indices where param value is zero
             # zero_indices = np.where(values == 0)[0]
@@ -169,4 +193,5 @@ def interpolate_missing_values(reduced_segs_to_params, root):
             print(f'     {param} values: {values}')
             # Set the values
             for x, value in zip(xs, values):
-                setattr(root(x), param, value)
+                seg = root(x)
+                seg.set_param_value(param, value)

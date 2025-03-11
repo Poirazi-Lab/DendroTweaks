@@ -252,4 +252,52 @@ def apply_params_to_section(section: "Section", cable_params: CableParams, nseg:
     section._ref.Ra = cable_params.ra
     section._ref.gbar_Leak = 1.0 / cable_params.rm
     section._ref.e_Leak = cable_params.e_leak
+    remove_intermediate_points(section)
+    update_section_geometry(section)
     
+
+def remove_intermediate_points(sec: "Section") -> None:
+    '''Removes all intermediate points in the section, keeping only start and end points'''
+    point_tree = sec._tree._point_tree
+    
+    first_point, *intermediate_points, last_point = sec.points
+    
+    for point in intermediate_points:
+        point_tree.remove_node(point)
+    
+    point_tree.sort()
+    sec.points = [first_point, last_point]
+
+def update_section_geometry(sec: "Section"):
+    '''Updates section geometry by adjusting the end point to maintain section length and direction'''
+    length = sec.L
+    
+    if len(sec.points) != 2:
+        raise ValueError("Section must have only two points (the start and end points)")
+    
+    first_point, last_point = sec.points
+    
+    # Calculate the vector from first to last point
+    vector = (
+        last_point.x - first_point.x,
+        last_point.y - first_point.y,
+        last_point.z - first_point.z
+    )
+    
+    # Calculate the current distance
+    distance = math.sqrt(sum(component**2 for component in vector))
+    
+    # Scale the vector to match the desired length
+    scale = length / distance
+    
+    # Update last point coordinates
+    last_point.x = first_point.x + vector[0] * scale
+    last_point.y = first_point.y + vector[1] * scale
+    last_point.z = first_point.z + vector[2] * scale
+    
+    # Set radius for all points
+    radius = round(sec.diam / 2, 3)
+    for point in sec.points:
+        point.r = radius
+
+        
