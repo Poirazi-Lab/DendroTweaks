@@ -443,7 +443,7 @@ class Model():
         return [sec for sec in self.sec_tree.sections if filter_function(sec)]
 
 
-    def get_segments(self, group_names):
+    def get_segments(self, group_names=None):
         """
         Get the segments in specified groups.
 
@@ -452,6 +452,8 @@ class Model():
         group_names : List[str]
             The names of the groups to get segments from.
         """
+        if not isinstance(group_names, list):
+            raise ValueError('Group names must be a list.')
         return [seg for group_name in group_names for seg in self.seg_tree.segments if seg in self.groups[group_name]]
         
     # ========================================================================
@@ -1421,10 +1423,36 @@ class Model():
         # Set new values of parameters
         rdc.set_avg_params_to_reduced_segs(reduced_segs_to_params)
         rdc.interpolate_missing_values(reduced_segs_to_params, root)
+
+        # Create new domain
+        # reduced_domains = [domain_name for domain_name in self.domains if domain_name.startswith('reduced')]
+        # new_reduced_domain_name = f'reduced_{len(reduced_domains)}'
+        # self.define_domain(new_reduced_domain_name, [root])
+        # group_name = new_reduced_domain_name
+
+        # # Fit distributions to data for the group
+        # for param_name in self.params:
+        #     self.fit_distribution(param_name, group_name, plot=False)
                
         return segs_to_params, segs_to_locs, segs_to_reduced_segs, reduced_segs_to_params
 
-            
+
+    def fit_distribution(self, param_name, group_name, max_degree=6, tolerance=1e-7, plot=False):
+        from numpy import polyfit, polyval
+        segs = self.get_segments(group_names=[group_name])
+        values = [seg.get_param_value(param_name) for seg in segs]
+        distances = [seg.path_distance() for seg in segs]
+        degrees = range(0, max_degree+1)
+        for degree in degrees:
+            coeffs = polyfit(distances, values, degree)
+            residuals = values - polyval(coeffs, distances)
+            if all(abs(residuals) < tolerance):
+                break
+        self.params[param_name][group_name] = Distribution('polynomial', coeffs=coeffs)
+        if plot:
+            self.plot_param(param_name, show_nan=False)
+            plt.plot(distances, polyval(coeffs, distances), label='Fitted', color='red', linestyle='--')
+            plt.legend()
 
     # ========================================================================
     # PLOTTING

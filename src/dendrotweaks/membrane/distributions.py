@@ -1,6 +1,7 @@
-from typing import Callable, Dict
+from typing import Callable, Dict, List
 from numpy import  ndarray, full_like
-from numpy import exp, sin
+from numpy import exp, sin, polyval
+import warnings
 # Define simple functions and store them alongside their defaults in FUNCTIONS
 def constant(position, value=0):
     """
@@ -149,6 +150,19 @@ def step(distance: float, max_value: float,  min_value: float, start: float, end
     else:
         return min_value
 
+def polynomial(distance: float, coeffs: List[float]) -> float:
+    """
+    Polynomial distribution function.
+
+    Args:
+        distance (float): The distance parameter.
+        coefficients (List[float]): The coefficients of the polynomial.
+
+    Returns:
+        The result of the polynomial equation: sum(coefficients[i] * distance ** i for i in range(len(coefficients))).
+    """
+    return polyval(coeffs, distance)
+
 # aka ParametrizedFunction
 class Distribution:
     """
@@ -184,7 +198,9 @@ class Distribution:
         'sigmoid': {'func': sigmoid, 'defaults': {'vertical_shift': 0, 'scale_factor': 1, 'growth_rate': 1, 'horizontal_shift': 0}},
         'sinusoidal': {'func': sinusoidal, 'defaults': {'amplitude': 1, 'frequency': 1, 'phase': 0}},
         'gaussian': {'func': gaussian, 'defaults': {'amplitude': 1, 'mean': 0, 'std': 1}},
-        'step': {'func': step, 'defaults': {'max_value': 1, 'min_value': 0, 'start': 0, 'end': 1}}
+        'step': {'func': step, 'defaults': {'max_value': 1, 'min_value': 0, 'start': 0, 'end': 1}},
+        'polynomial': {'func': polynomial, 'defaults': {'coeffs': [1, 0]}},
+
     }
 
     @staticmethod
@@ -261,6 +277,21 @@ class Distribution:
         """
         return self.function.__name__
 
+    @property
+    def degree(self):
+        """
+        Returns the degree of the polynomial function (if applicable).
+
+        Returns
+        -------
+        int
+            The degree of the function.
+        """
+        if self.function_name == 'polynomial':
+            return len(self.parameters['coeffs']) - 1
+        else:
+            return None
+
     def update_parameters(self, **new_params):
         """
         Updates the parameters of the function.
@@ -272,6 +303,10 @@ class Distribution:
         """
         valid_params = {k: v for k, v in new_params.items()
                         if k in self.parameters}
+        # if any of the new parameters are invalid, raise an error
+        if len(valid_params) != len(new_params):
+            invalid_params = set(new_params) - set(valid_params)
+            warnings.warn(f'\nIgnoring invalid parameters: {invalid_params}.\nSupported parameters: {list(self.parameters.keys())}')
         self.parameters.update(valid_params)
 
     def to_dict(self):
