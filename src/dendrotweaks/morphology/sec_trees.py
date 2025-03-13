@@ -14,7 +14,7 @@ from bisect import bisect_left
 
 import warnings
 
-from dendrotweaks.utils import DOMAINS_TO_COLORS
+from dendrotweaks.utils import get_domain_color
 
 def custom_warning_formatter(message, category, filename, lineno, file=None, line=None):
     return f"{category.__name__}: {message} ({os.path.basename(filename)}, line {lineno})\n"
@@ -541,7 +541,7 @@ class Section(Node):
         
         # Determine section color based on domain if not provided
         if section_color is None:
-            section_color = DOMAINS_TO_COLORS.get(self.domain, 'gray')
+            section_color = get_domain_color(self.domain)
         
         # Extract coordinates
         xs = np.array([p.x for p in self.points])
@@ -974,7 +974,7 @@ class SectionTree(Tree):
             # Assign colors based on domains or section index
             color = plt.cm.jet(1 - sec.idx / section_count)
             if show_domains:
-                color = DOMAINS_TO_COLORS.get(sec.domain, color)
+                color = get_domain_color(sec.domain)
             if highlight_sections and sec in highlight_sections:
                 color = 'red'
 
@@ -1022,9 +1022,7 @@ class SectionTree(Tree):
         for sec in self.sections:
             if not show_soma and sec.parent is None:
                 continue
-            color = 'gray'
-            if domains:
-                color = DOMAINS_TO_COLORS.get(sec.domain, color)
+            color = get_domain_color(sec.domain)
             if highlight and sec.idx in highlight:
                 ax.plot(
                     [pt.path_distance() for pt in sec.points], 

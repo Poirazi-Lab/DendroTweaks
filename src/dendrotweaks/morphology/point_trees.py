@@ -29,21 +29,7 @@ DOMAIN_TO_ID = {
     v: k for k, v in ID_TO_DOMAIN.items()
 }
 
-DOMAINS_TO_COLORS = {
-    'soma': '#E69F00',       
-    'apic': '#0072B2',       
-    'dend': '#019E73',       
-    'basal': '#31A354',      
-    'axon': '#F0E442',       
-    'trunk': '#56B4E9',
-    'tuft': '#A55194', #'#9467BD',
-    'oblique': '#8C564B',
-    'perisomatic': '#D55E00',
-    # 'custom': '#BDBD22',
-    'custom': '#D62728',
-    'custom2': '#E377C2',
-    'undefined': '#7F7F7F',
-}
+from dendrotweaks.utils import get_domain_color
 
 from contextlib import contextmanager
 import random
@@ -624,10 +610,8 @@ class PointTree(Tree):
 
         # Assign colors based on domains
         if show_domains:
-            domains_to_colors = DOMAINS_TO_COLORS.copy()  # Avoid modifying the global dict
             for pt in points_to_plot:
-                domains_to_colors.setdefault(pt.domain, "#{:02x}{:02x}{:02x}".format(*(int(255 * random.random()),) * 3))
-            colors = [domains_to_colors[pt.domain] for pt in points_to_plot]
+                colors = [get_domain_color(pt.domain) for pt in points_to_plot]
         else:
             colors = 'C0'
 
@@ -662,9 +646,7 @@ class PointTree(Tree):
         for pt in self.points:
             if not show_soma and pt.domain == 'soma':
                 continue
-            color = 'gray'
-            if domains:
-                color = DOMAINS_TO_COLORS.get(pt.domain, color)
+            color = get_domain_color(pt.domain)
             if highlight and pt.idx in highlight:
                 ax.plot(
                     pt.path_distance(), 

@@ -8,22 +8,24 @@ import os
 import zipfile
 import urllib.request
 
-
 DOMAINS_TO_COLORS = {
-    'soma': '#E69F00',       
-    'apic': '#0072B2',       
-    'dend': '#019E73',       
-    'basal': '#31A354',      
-    'axon': '#F0E442',       
+    'soma': '#E69F00',
+    'apic': '#0072B2',
+    'dend': '#019E73',
+    'basal': '#31A354',
+    'axon': '#F0E442',
     'trunk': '#56B4E9',
-    'tuft': '#A55194', #'#9467BD',
+    'tuft': '#A55194',
     'oblique': '#8C564B',
     'perisomatic': '#D55E00',
-    # 'custom': '#BDBD22',
     'custom': '#D62728',
-    'custom2': '#E377C2',
+    'reduced': '#E377C2',
     'undefined': '#7F7F7F',
 }
+
+def get_domain_color(domain):
+    base_domain = domain.split('_')[0]
+    return DOMAINS_TO_COLORS.get(base_domain, '#7F7F7F')
 
 
 

@@ -2,6 +2,7 @@ from typing import List, Union, Callable
 import os
 import json
 import matplotlib.pyplot as plt
+import numpy as np
 
 from dendrotweaks.morphology.point_trees import PointTree
 from dendrotweaks.morphology.sec_trees import Section, SectionTree, Domain
@@ -16,7 +17,7 @@ from dendrotweaks.stimuli.iclamps import IClamp
 from dendrotweaks.membrane.distributions import Distribution
 from dendrotweaks.stimuli.populations import Population
 from dendrotweaks.utils import calculate_lambda_f, dynamic_import
-from dendrotweaks.utils import DOMAINS_TO_COLORS, timeit
+from dendrotweaks.utils import get_domain_color, timeit
 
 from collections import OrderedDict, defaultdict
 from numpy import nan
@@ -32,7 +33,7 @@ import warnings
 POPULATIONS = {'AMPA': {}, 'NMDA': {}, 'AMPA_NMDA': {}, 'GABAa': {}}
 
 def custom_warning_formatter(message, category, filename, lineno, file=None, line=None):
-    return f"{category.__name__}: {message} ({os.path.basename(filename)}, line {lineno})\n"
+    return f"WARNING: {message}\n({os.path.basename(filename)}, line {lineno})\n"
 
 warnings.formatwarning = custom_warning_formatter
 
@@ -664,7 +665,7 @@ class Model():
     # DOMAINS
     # ========================================================================
 
-    def define_domain(self, domain_name: str, sections):
+    def define_domain(self, domain_name: str, sections, distribute=True):
         """
         Adds a new domain to the tree and ensures correct partitioning of
         the section tree graph.
@@ -708,7 +709,7 @@ class Model():
         for sec in sections_to_move:
             domain.add_section(sec)
             for mech_name in self.domains_to_mechs.get(domain.name, set()):
-                sec.insert_mechanism(mech_name)
+                sec.insert_mechanism(mech_name, distribute=distribute)
 
         self._remove_empty()
 
@@ -722,7 +723,7 @@ class Model():
             self.groups['all'].domains.append(domain_name)
         # Create a new group for the domain
         group_name = DOMAIN_TO_GROUP.get(domain_name, domain_name)
-        self.add_group(group_name, [domain_name])
+        self.add_group(group_name, domains=[domain_name])
     
 
     def _remove_empty(self):
@@ -1342,7 +1343,7 @@ class Model():
         self.remove_empty()
 
 
-    def reduce_subtree(self, root, reduction_frequency=0, total_segments_manual=-1):
+    def reduce_subtree(self, root, reduction_frequency=0, total_segments_manual=-1, fit=True):
         """
         Reduce a subtree to a single section.
 
@@ -1350,6 +1351,13 @@ class Model():
         ----------
         root : Section
             The root section of the subtree to reduce.
+        reduction_frequency : float, optional
+            The frequency of the reduction. Default is 0.
+        total_segments_manual : int, optional
+            The number of segments in the reduced subtree. Default is -1 (automatic).
+        fit : bool, optional
+            Whether to create distributions for the reduced subtree by fitting
+            the calculated average values. Default is True.
         """
         # Cannot remove domains
         # Can remove groups
@@ -1359,7 +1367,16 @@ class Model():
         domains_in_subtree = [self.domains[domain_name] 
             for domain_name in set([sec.domain for sec in root.subtree])]
         if len(domains_in_subtree) > 1:
-            raise NotImplementedError('Currently cannot reduce a subtree with multiple domains.')
+            # ensure the domains have the same mechanisms using self.domains_to_mechs
+            domains_to_mechs = {domain_name: mech_names for domain_name, mech_names
+                in self.domains_to_mechs.items() if domain_name in [domain.name for domain in domains_in_subtree]}
+            common_mechs = set.intersection(*domains_to_mechs.values())
+            if not common_mechs:
+                raise ValueError(
+                    'The domains in the subtree have different mechanisms. '
+                    'Please ensure that all domains in the subtree have the same mechanisms. '
+                    'You may need to insert the missing mechanisms and set their conductances to 0 where they are not needed.'
+                )
         
         inserted_mechs = {mech_name: mech for mech_name, mech
             in self.mechanisms.items()
@@ -1389,6 +1406,7 @@ class Model():
         new_nseg = rdc.calculate_nsegs(new_cable_properties, total_segments_manual)
         print(new_cable_properties)
         print(new_nseg)
+        
 
          # Map segment names to their new locations in the reduced cylinder
         segs_to_locs = rdc.map_segs_to_locs(root, reduction_frequency, new_cable_properties)
@@ -1424,35 +1442,71 @@ class Model():
         rdc.set_avg_params_to_reduced_segs(reduced_segs_to_params)
         rdc.interpolate_missing_values(reduced_segs_to_params, root)
 
-        # Create new domain
-        # reduced_domains = [domain_name for domain_name in self.domains if domain_name.startswith('reduced')]
-        # new_reduced_domain_name = f'reduced_{len(reduced_domains)}'
-        # self.define_domain(new_reduced_domain_name, [root])
-        # group_name = new_reduced_domain_name
+        if not fit:
+            return segs_to_params, segs_to_locs, segs_to_reduced_segs, reduced_segs_to_params
 
+        root_segs = [seg for seg in root.segments]
+        params_to_coeffs = {}
+        for param_name in self.params:
+            coeffs = self.fit_distribution(param_name, segments=root_segs, plot=False)
+            params_to_coeffs[param_name] = coeffs
+
+        
+        # Create new domain
+        reduced_domains = [domain_name for domain_name in self.domains if domain_name.startswith('reduced')]
+        new_reduced_domain_name = f'reduced_{len(reduced_domains)}'
+        group_name = new_reduced_domain_name
+        self.define_domain(new_reduced_domain_name, sections=[root], distribute=False)
+        
+
+        # Reinsert active mechanisms after creating the new domain
+        for mech_name in inserted_mechs:
+            root.insert_mechanism(mech_name)
+        self.domains_to_mechs[new_reduced_domain_name] = set(inserted_mechs.keys())
+        print('Leak:', self.params['gbar_Leak']['all'])
+        
+               
         # # Fit distributions to data for the group
-        # for param_name in self.params:
-        #     self.fit_distribution(param_name, group_name, plot=False)
+        for param_name, coeffs in params_to_coeffs.items():
+            self._set_distribution(param_name, group_name, coeffs, plot=True)
+        
+        # # Distribute parameters
+        self.distribute_all()
+
                
         return segs_to_params, segs_to_locs, segs_to_reduced_segs, reduced_segs_to_params
 
 
-    def fit_distribution(self, param_name, group_name, max_degree=6, tolerance=1e-7, plot=False):
+    def fit_distribution(self, param_name, segments, max_degree=6, tolerance=1e-7, plot=False):
         from numpy import polyfit, polyval
-        segs = self.get_segments(group_names=[group_name])
-        values = [seg.get_param_value(param_name) for seg in segs]
-        distances = [seg.path_distance() for seg in segs]
+        values = [seg.get_param_value(param_name) for seg in segments]
+        distances = [seg.path_distance() for seg in segments]
+        sorted_pairs = sorted(zip(distances, values))
+        distances, values = zip(*sorted_pairs)
         degrees = range(0, max_degree+1)
         for degree in degrees:
             coeffs = polyfit(distances, values, degree)
             residuals = values - polyval(coeffs, distances)
             if all(abs(residuals) < tolerance):
                 break
-        self.params[param_name][group_name] = Distribution('polynomial', coeffs=coeffs)
-        if plot:
+        if not all(abs(residuals) < tolerance):
+            warnings.warn(f'Fitting failed for parameter {param_name} with the provided tolerance.\nUsing the last valid fit (degree={degree}). Maximum residual: {max(abs(residuals))}')
+        if plot and degree > 0:
             self.plot_param(param_name, show_nan=False)
             plt.plot(distances, polyval(coeffs, distances), label='Fitted', color='red', linestyle='--')
             plt.legend()
+        return coeffs
+
+    def _set_distribution(self, param_name, group_name, coeffs, plot=False):
+        # Set the distribution based on the degree of the polynomial fit
+        coeffs = np.where(np.round(coeffs) == 0, coeffs, np.round(coeffs, 10))
+        if len(coeffs) == 1:
+            self.params[param_name][group_name] = Distribution('constant', value=coeffs[0])
+        elif len(coeffs) == 2:
+            self.params[param_name][group_name] = Distribution('linear', slope=coeffs[0], intercept=coeffs[1])
+        else:
+            self.params[param_name][group_name] = Distribution('polynomial', coeffs=coeffs)
+            
 
     # ========================================================================
     # PLOTTING
@@ -1478,7 +1532,7 @@ class Model():
             warnings.warn(f'Parameter {param_name} not found.')
 
         values = [(seg.path_distance(), seg.get_param_value(param_name)) for seg in self.seg_tree]
-        colors = [DOMAINS_TO_COLORS[seg.domain] for seg in self.seg_tree]
+        colors = [get_domain_color(seg.domain) for seg in self.seg_tree]
 
         valid_values = [(x, y) for (x, y), color in zip(values, colors) if not pd.isna(y)]
         nan_values = [(x, 0) for (x, y), color in zip(values, colors) if pd.isna(y)]
