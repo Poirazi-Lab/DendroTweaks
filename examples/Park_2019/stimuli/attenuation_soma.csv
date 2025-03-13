@@ -1,8 +1,8 @@
-type,idx,sec_idx,loc,n_per_seg
-recording,0.0,0,0.5,1.0
-recording,1.0,9,0.5,1.0
-recording,2.0,17,0.5,1.0
-recording,3.0,18,0.5,1.0
-recording,4.0,21,0.5,1.0
-recording,5.0,22,0.5,1.0
-iclamp,0.0,22,0.5,1.0
+type,idx,sec_idx,loc
+recording,0.0,0,0.5
+recording,1.0,9,0.5
+recording,2.0,17,0.5
+recording,3.0,18,0.5
+recording,4.0,21,0.5
+recording,5.0,22,0.5
+iclamp,0.0,22,0.5

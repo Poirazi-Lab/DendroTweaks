@@ -174,7 +174,7 @@ class Population():
             for x in np.linspace(0, 1, 1001) 
             if sec(x) not in self._excluded_segments]
         
-        syn_locs = [np.random.choice(valid_locs) for _ in range(self.N)]
+        syn_locs = [valid_locs[np.random.choice(len(valid_locs))] for _ in range(self.N)]
         
         return syn_locs
 
