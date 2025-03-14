@@ -31,7 +31,6 @@ class Cell():
         imported_cell.instantiate(self)
 
     def set_geom_nseg(self, d_lambda=0.1, f=100):
-        if self.segments: del self.segments
         for sec in self.all:
             sec.nseg = int((sec.L/(d_lambda*h.lambda_f(f, sec=sec)) + 0.9)/2)*2 + 1
         
@@ -40,8 +39,28 @@ class Cell():
             from_seg = self.soma[0](0.5)
         return h.distance(from_seg, seg)
 
+    def domain_distance(self, seg):
+        parent = self._find_parent_with_different_domain(seg.sec)
+        if parent:
+            return h.distance(parent(1), seg)
+        return 0
+    
+    def _find_parent_with_different_domain(self, sec):
+        parentseg = sec.parentseg()
+        if not parentseg:
+            return None
+        parent = parentseg.sec
+        while parent:
+            if get_domain(parent(0.5)) != get_domain(sec(0.5)):
+                return parent
+            parentseg = parent.parentseg()
+            if not parentseg:
+                return None
+            parent = parentseg.sec
+        return None
+
     @property
-    def all_segments():
+    def all_segments(self):
         return [seg for sec in self.all for seg in sec]
 
     def insert_mechanisms(self):
@@ -97,10 +116,29 @@ class Cell():
             {% endfor -%}
             {% endfor %}
 
-
     def add_stimuli(self):
         self.add_iclamps()
         self.add_synapses()
+
+    def add_recordings(self):
+        recordings = {}
+        {% for seg, rec in recordings.items() %}
+        rec = h.Vector()
+        rec.record(self.{{seg._section.domain}}[{{seg._section.domain_idx}}]({{seg.x}})._ref_v)
+        recordings[{{seg}}] = rec
+        {% endfor %}
+        return recordings
+
+    def add_iclamps(self):
+        iclamps = {}
+        {% for seg, iclamp in iclamps.items() %}
+        iclamp = h.IClamp(self.{{seg._section.domain}}[{{seg._section.domain_idx}}]({{seg.x}}))
+        iclamp.delay = {{ iclamp.delay }}
+        iclamp.dur = {{ iclamp.dur }}
+        iclamp.amp = {{ iclamp.amp }}
+        iclamps[{{seg}}] = iclamp
+        {% endfor %}
+        return iclamps
 
 
 def get_domain(seg):
@@ -114,3 +152,22 @@ def linear(x, slope=0, intercept=0):
 
 def sinusoidal(x, amplitude=0, frequency=1, phase=0):
     return amplitude * np.sin(2 * np.pi * frequency * x + phase)
+
+
+def init_simulation(cvode=False, temperature=37, dt=0.025, v_init=-70):
+    h.CVode().active(cvode)
+    h.celsius = temperature
+    h.dt = dt
+    h.stdinit()
+    h.init()
+    h.finitialize(v_init)
+    if h.cvode.active():
+        h.cvode.re_init()
+    else:
+        h.fcurrent()
+    h.frecord_init()
+
+
+def run(duration=300):
+    init_simulation()
+    h.continuerun(duration)

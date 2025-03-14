@@ -31,7 +31,6 @@ class Cell():
         imported_cell.instantiate(self)
 
     def set_geom_nseg(self, d_lambda=0.1, f=100):
-        if self.segments: del self.segments
         for sec in self.all:
             sec.nseg = int((sec.L/(d_lambda*h.lambda_f(f, sec=sec)) + 0.9)/2)*2 + 1
         
@@ -40,48 +39,67 @@ class Cell():
             from_seg = self.soma[0](0.5)
         return h.distance(from_seg, seg)
 
+    def domain_distance(self, seg):
+        parent = self._find_parent_with_different_domain(seg.sec)
+        if parent:
+            return h.distance(parent(1), seg)
+        return 0
+    
+    def _find_parent_with_different_domain(self, sec):
+        parentseg = sec.parentseg()
+        if not parentseg:
+            return None
+        parent = parentseg.sec
+        while parent:
+            if get_domain(parent(0.5)) != get_domain(sec(0.5)):
+                return parent
+            parentseg = parent.parentseg()
+            if not parentseg:
+                return None
+            parent = parentseg.sec
+        return None
+
     @property
-    def all_segments():
+    def all_segments(self):
         return [seg for sec in self.all for seg in sec]
 
     def insert_mechanisms(self):
         
-        
         for sec in self.apic:
             
-                sec.insert('Ka')
-                sec.insert('Km')
-                sec.insert('Na')
-                sec.insert('KCa')
-                sec.insert('CaLVA')
                 sec.insert('Kv')
                 sec.insert('CaHVA')
-                sec.insert('CaDyn')
                 sec.insert('Leak')
+                sec.insert('Na')
+                sec.insert('Km')
+                sec.insert('CaLVA')
+                sec.insert('Ka')
+                sec.insert('KCa')
+                sec.insert('CaDyn')
         
         for sec in self.soma:
             
-                sec.insert('Ka')
-                sec.insert('Km')
-                sec.insert('Na')
-                sec.insert('KCa')
-                sec.insert('CaLVA')
                 sec.insert('Kv')
                 sec.insert('CaHVA')
-                sec.insert('CaDyn')
                 sec.insert('Leak')
+                sec.insert('Na')
+                sec.insert('Km')
+                sec.insert('CaLVA')
+                sec.insert('Ka')
+                sec.insert('KCa')
+                sec.insert('CaDyn')
         
         for sec in self.dend:
             
-                sec.insert('Ka')
-                sec.insert('Km')
-                sec.insert('Na')
-                sec.insert('KCa')
-                sec.insert('CaLVA')
                 sec.insert('Kv')
                 sec.insert('CaHVA')
-                sec.insert('CaDyn')
                 sec.insert('Leak')
+                sec.insert('Na')
+                sec.insert('Km')
+                sec.insert('CaLVA')
+                sec.insert('Ka')
+                sec.insert('KCa')
+                sec.insert('CaDyn')
         
         for sec in self.axon:
             
@@ -325,10 +343,29 @@ class Cell():
                 
             
 
-
     def add_stimuli(self):
         self.add_iclamps()
         self.add_synapses()
+
+    def add_recordings(self):
+        recordings = {}
+        
+        rec = h.Vector()
+        rec.record(self.soma[0](0.5)._ref_v)
+        recordings[Segment(idx=0)] = rec
+        
+        return recordings
+
+    def add_iclamps(self):
+        iclamps = {}
+        
+        iclamp = h.IClamp(self.soma[0](0.5))
+        iclamp.delay = 50.0
+        iclamp.dur = 900.0
+        iclamp.amp = 0.162
+        iclamps[Segment(idx=0)] = iclamp
+        
+        return iclamps
 
 
 def get_domain(seg):
@@ -342,3 +379,22 @@ def linear(x, slope=0, intercept=0):
 
 def sinusoidal(x, amplitude=0, frequency=1, phase=0):
     return amplitude * np.sin(2 * np.pi * frequency * x + phase)
+
+
+def init_simulation(cvode=False, temperature=37, dt=0.025, v_init=-70):
+    h.CVode().active(cvode)
+    h.celsius = temperature
+    h.dt = dt
+    h.stdinit()
+    h.init()
+    h.finitialize(v_init)
+    if h.cvode.active():
+        h.cvode.re_init()
+    else:
+        h.fcurrent()
+    h.frecord_init()
+
+
+def run(duration=300):
+    init_simulation()
+    h.continuerun(duration)
