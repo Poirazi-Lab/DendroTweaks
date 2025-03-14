@@ -125,7 +125,7 @@ Besides automatic validation, we can visualize the tree using the :code:`plot` m
 
     >>> fig, ax = plt.subplots(figsize=(10, 10))
     >>> model.sec_tree.plot(ax, show_points=True, show_lines=True, 
-    ...             annotate=True, projection='XY', domains=True)
+    ...             annotate=True, projection='XY', show_domains=True)
 
 .. figure:: ../_static/sec_tree.png
     :align: center
