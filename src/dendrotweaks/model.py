@@ -1359,8 +1359,6 @@ class Model():
             Whether to create distributions for the reduced subtree by fitting
             the calculated average values. Default is True.
         """
-        # Cannot remove domains
-        # Can remove groups
 
         domain_name = root.domain
         parent = root.parent
@@ -1382,8 +1380,6 @@ class Model():
             in self.mechanisms.items()
             if mech_name in self.domains_to_mechs[domain_name]
         }
-        print(domains_in_subtree)
-        print(inserted_mechs)
 
         subtree_without_root = [sec for sec in root.subtree if sec is not root]
 
@@ -1405,7 +1401,6 @@ class Model():
         new_cable_properties = rdc.get_unique_cable_properties(root._ref, reduction_frequency)
         new_nseg = rdc.calculate_nsegs(new_cable_properties, total_segments_manual)
         print(new_cable_properties)
-        print(new_nseg)
         
 
          # Map segment names to their new locations in the reduced cylinder
@@ -1443,7 +1438,7 @@ class Model():
         rdc.interpolate_missing_values(reduced_segs_to_params, root)
 
         if not fit:
-            return segs_to_params, segs_to_locs, segs_to_reduced_segs, reduced_segs_to_params
+            return
 
         root_segs = [seg for seg in root.segments]
         params_to_coeffs = {}
@@ -1473,9 +1468,6 @@ class Model():
         # # Distribute parameters
         self.distribute_all()
 
-               
-        return segs_to_params, segs_to_locs, segs_to_reduced_segs, reduced_segs_to_params
-
 
     def fit_distribution(self, param_name, segments, max_degree=6, tolerance=1e-7, plot=False):
         from numpy import polyfit, polyval
@@ -1496,6 +1488,7 @@ class Model():
             plt.plot(distances, polyval(coeffs, distances), label='Fitted', color='red', linestyle='--')
             plt.legend()
         return coeffs
+
 
     def _set_distribution(self, param_name, group_name, coeffs, plot=False):
         # Set the distribution based on the degree of the polynomial fit
@@ -1548,9 +1541,6 @@ class Model():
         ax.set_xlabel('Path distance')
         ax.set_ylabel(param_name)
         ax.set_title(f'{param_name} distribution')
-
-        
-        
 
 
     # ========================================================================

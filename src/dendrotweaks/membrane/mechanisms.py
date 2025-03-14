@@ -123,7 +123,7 @@ class IonChannel(Mechanism):
         reference_temp = self.params.get("temp", temperature)
         self.tadj = q10 ** ((temperature - reference_temp) / 10)
 
-    def get_data(self, x=None, temperature: float = 37) -> Dict[str, Dict[str, float]]:
+    def get_data(self, x=None, temperature: float = 37, verbose=True) -> Dict[str, Dict[str, float]]:
         """
         Get the data for the channel kinetics as a dictionary. The data
         includes the steady state values and time constants of the channel,
@@ -169,7 +169,7 @@ class IonChannel(Mechanism):
                                      self.states)
         }
         data.update({'x': x})
-        print(f'Got data for {self.independent_var_name} '
+        if verbose: print(f'Got data for {self.independent_var_name} '
                f'in range {x[0]} to {x[-1]} at {temperature}°C')
         return data
 
