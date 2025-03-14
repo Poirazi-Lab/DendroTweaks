@@ -5,6 +5,11 @@ from dendrotweaks.morphology.sec_trees import SectionTree
 import numpy as np
 import warnings
 
+# def custom_warning_formatter(message, category, filename, lineno, file=None, line=None):
+#     return f"WARNING: {message}\n({os.path.basename(filename)}, line {lineno})\n"
+
+# warnings.formatwarning = custom_warning_formatter
+
 
 def validate_tree(tree):
     """
@@ -19,15 +24,12 @@ def validate_tree(tree):
     check_unique_ids(tree)
     check_unique_root(tree)
     check_unique_children(tree)
-    print(f"Tree has a unique root node {tree.root}")
+    
 
     # Check for connectivity
     check_connections(tree)
-    print("Tree is well connected")
     check_loops(tree)
-    print("Tree has no loops")
     check_bifurcations(tree)
-    print("Tree is binary (not considering the root node)")
     # validate_order(self.tree)
 
     if isinstance(tree, PointTree):
@@ -37,10 +39,11 @@ def validate_tree(tree):
         validate_section_tree(tree)
 
     # Check if the tree is sorted
+    print("Checking if the tree is sorted...")
     if not tree.is_sorted:
         warnings.warn("Tree is not sorted")
-    else:
-        print("Tree is sorted")
+    
+    print("***Validation complete.***")
 
 
 # -----------------------------------------------------------------------------
@@ -48,12 +51,14 @@ def validate_tree(tree):
 # -----------------------------------------------------------------------------
 
 def check_unique_ids(tree):
+    print("Checking for unique node ids...")
     node_ids = {node.idx for node in tree._nodes}
     if len(node_ids) != len(tree._nodes):
         warnings.warn(f"Tree contains {len(tree._nodes) - len(node_ids)} duplicate node ids.")
 
 
 def check_unique_children(tree):
+    print("Checking for duplicate children...")
     for node in tree._nodes:
         children = node.children
         if len(children) != len(set(children)):
@@ -61,12 +66,13 @@ def check_unique_children(tree):
 
 
 def check_unique_root(tree):
+    print("Checking for unique root node...")
     root_nodes = {node for node in tree._nodes
         if node.parent is None or node.parent_idx in {None, -1, '-1'}
     }
     if len(root_nodes) > 1:
         warnings.warn(f"Found {len(root_nodes)} root nodes.")
-    if len(root_nodes) == 0:
+    elif len(root_nodes) == 0:
         warnings.warn("Tree does not contain a root node.")
 
 
@@ -81,7 +87,7 @@ def check_connections(tree):
     1. Ensure that every node is listed as a child of its parent.
     2. Ensure that the parent of each child matches the node.
     """
-
+    print("Checking tree connectivity...")
     if not tree.is_connected:
         not_connected = set(tree._nodes) - set(tree.root.subtree)
         warnings.warn(f"The following nodes are not connected to the root node: {not_connected}")
@@ -107,19 +113,19 @@ def check_connections(tree):
 
 
 def check_loops(tree):
-    # Check for loops
+    print("Checking for loops...")
     for node in tree._nodes:
         for descendant in node.subtree:
             if node in descendant.children:
                 warnings.warn(f"Node {node} is a descendant of itself. Loop detected at node {descendant}.")
 
-
 def check_bifurcations(tree):
+    print("Checking for bifurcations with more than 2 children...")
     bifurcation_issues = {node: len(node.children) for node in tree.bifurcations if len(node.children) > 2 and node is not tree.root}
     if bifurcation_issues:
         issues_str = "\n".join([f"Node {node.idx:<6} has {count} children" for node, count in bifurcation_issues.items()])
         warnings.warn(f"Tree contains bifurcations with more than 2 children:\n{issues_str}")
-
+    
 
 # =============================================================================
 # Point-specific validation
@@ -136,11 +142,13 @@ def validate_point_tree(point_tree):
     """
 
     # Check for NaN values in the DataFrame
+    print("Checking for NaN values...")
     nan_counts = point_tree.df.isnull().sum()
     if nan_counts.sum() > 0:
         warnings.warn(f"Found {nan_counts} NaN values in the DataFrame")
 
     # Check for bifurcations in the soma
+    print("Checking for bifurcations in the soma...")
     bifurcations_without_root = [pt for pt in point_tree.bifurcations 
         if pt is not point_tree.root]
     bifurcations_within_soma = [pt for pt in bifurcations_without_root
@@ -148,7 +156,9 @@ def validate_point_tree(point_tree):
     if bifurcations_within_soma:
         warnings.warn(f"Soma must be non-branching. Found bifurcations: {bifurcations_within_soma}")
 
+
     if point_tree._is_extended:
+        print("The point tree is extended. Checking for geometric continuity...")
         non_overlapping_children = [
             (pt, child) for pt in bifurcations_without_root for child in pt.children
             if not child.overlaps_with(pt)
@@ -172,16 +182,20 @@ def validate_section_tree(section_tree):
         The section tree to validate.
     """
 
+    print("Checking that all points in a section belong to the same domain...")
     for sec in section_tree:
         if not all(pt.domain == sec.domain for pt in sec.points):
             warnings.warn('All points in a section must belong to the same domain.')
 
+    print("Checking that all sections have a non-zero length...")
     if any(sec.length == 0 for sec in section_tree):
-        warnings.warn('All sections must have a non-zero length.')
+        warnings.warn('Found sections with zero length.')
 
+    print("Checking that all sections (except soma) have 0 or 2 children...")
     if any(len(sec.children) not in {0, 2} and sec is not section_tree.root for sec in section_tree):
-        warnings.warn('All sections must have 0 or 2 children.')
+        warnings.warn('Found sections with an incorrect number of children.')
 
+    print("Checking that the root section has domain soma...")
     if not section_tree.root.domain == 'soma':
         warnings.warn('Root section must have domain soma.')
 

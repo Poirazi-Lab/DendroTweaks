@@ -370,16 +370,19 @@ class Tree:
             )
 
     @timeit
-    def sort(self, sort_children=True):
+    def sort(self, sort_children=False, force=False):
         """
         Sort the nodes in the tree using a stack-based depth-first traversal.
 
         Parameters
+        ----------
         sort_children : bool, optional
             Whether to sort the children of each node 
             based on the number of bifurcations in their subtrees. Defaults to True.
+        force : bool, optional
+            Whether to force the sorting of the tree even if it is already sorted. Defaults to False.
         """
-        if self.is_sorted:
+        if self.is_sorted and not force:
             print('Tree already sorted.')
             return
 

@@ -50,6 +50,7 @@ class Section(Node):
 
     def __init__(self, idx: str, parent_idx: str, points: List[Node]) -> None:
         super().__init__(idx, parent_idx)
+        self.domain_idx = None
         self.points = points
         self.segments = []
         self._ref = None
@@ -820,14 +821,22 @@ class SectionTree(Tree):
         return pd.DataFrame(data)
 
 
-    def sort(self):
+    def sort(self, **kwargs):
         """
         Sort the sections in the tree using a depth-first traversal.
+
+        Parameters
+        ----------
+        sort_children : bool, optional
+            Whether to sort the children of each node 
+            based on the number of bifurcations in their subtrees. Defaults to True.
+        force : bool, optional
+            Whether to force the sorting of the tree even if it is already sorted. Defaults to False.
         """
-        super().sort()
-        self._point_tree.sort()
+        super().sort(**kwargs)
+        self._point_tree.sort(**kwargs)
         if self._seg_tree:
-            self._seg_tree.sort()
+            self._seg_tree.sort(**kwargs)
 
 
     # STRUCTURE METHODS

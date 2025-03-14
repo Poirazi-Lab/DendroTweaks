@@ -64,6 +64,7 @@ class Domain:
             warnings.warn(f'Section {sec} already in domain {self.name}.')
             return
         sec.domain = self.name
+        sec.domain_idx = len(self._sections)
         self._sections.append(sec)
 
 
@@ -83,6 +84,7 @@ class Domain:
             warnings.warn(f'Section {sec} not in domain {self.name}.')
             return
         sec.domain = None
+        sec.domain_idx = None
         self._sections.remove(sec)
 
 

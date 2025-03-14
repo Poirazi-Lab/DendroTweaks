@@ -359,7 +359,7 @@ class Model():
     # MORPHOLOGY
     # ========================================================================
 
-    def load_morphology(self, file_name, soma_notation='3PS', align=True) -> None:
+    def load_morphology(self, file_name, soma_notation='3PS', align=True, sort_children=False) -> None:
         """
         Read an SWC file and build the SWC and section trees.
 
@@ -368,9 +368,14 @@ class Model():
         file_name : str
             The name of the SWC file to read.
         soma_notation : str, optional
-            The notation of the soma in the SWC file. Can be '3PS' or '1PS'. Default is '3PS'.
+            The notation of the soma in the SWC file. Can be '3PS' (three-point soma) or '1PS'. Default is '3PS'.
         align : bool, optional
-            Whether to align the morphology to the soma center and align the apical dendrite.
+            Whether to align the morphology to the soma center and align the apical dendrite (if present).
+        sort_children : bool, optional
+            Whether to sort the children of each node by increasing subtree size
+            in the tree sorting algorithms. If True, the traversal visits 
+            children with shorter subtrees first and assigns them lower indices. If False, children
+            are visited in their original SWC file order (matching NEURON's behavior).
         """
         # self.name = file_name.split('.')[0]
         self.morphology_name = file_name.replace('.swc', '')
@@ -398,6 +403,9 @@ class Model():
 
         d_lambda = self.d_lambda
         self.set_segmentation(d_lambda=d_lambda)
+
+        if sort_children:
+            self.sec_tree.sort(sort_children, force=True)
         
               
 
