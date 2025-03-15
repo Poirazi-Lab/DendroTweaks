@@ -1856,4 +1856,37 @@ class Model():
                 self._add_population(pop)
 
 
+    def export_to_NEURON(self, file_name, **kwargs):
+        """
+        Export the model to a python file using NEURON.
+
+        Parameters
+        ----------
+        file_name : str
+            The name of the file to write to.
+        """
+        from dendrotweaks.export.export_model import render_template
+        from dendrotweaks.export.export_model import get_params_to_valid_domains
+
+        params_to_valid_domains = get_params_to_valid_domains(self)
+
+        output = render_template(
+        {
+            'param_dict': self.params, 
+            'groups_dict': self.groups,
+            'params_to_mechs': self.params_to_mechs,
+            'domains_to_mechs': self.domains_to_mechs,
+            'iclamps': self.iclamps,
+            'recordings': self.simulator.recordings,
+            'params_to_valid_domains': params_to_valid_domains,
+            'use_kinetics': False,
+        })
+
+        if not file_name.endswith('.py'):
+            file_name += '.py'
+        path_to_model = self.path_manager.path_to_model
+        output_path = os.path.join(path_to_model, file_name)
+        with open(output_path, 'w') as f:
+            f.write(output)
+
         

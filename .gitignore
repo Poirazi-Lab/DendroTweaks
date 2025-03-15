@@ -12,3 +12,5 @@ examples/Default/
 examples/Templates/
 *.egg-info
 dist/
+**temp_mod/
+*.npy
