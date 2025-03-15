@@ -469,7 +469,7 @@ class Model():
     # SEGMENTATION
     # ========================================================================
 
-    def set_segmentation(self, d_lambda=0.1, f=100, use_neuron=False):
+    def set_segmentation(self, d_lambda=0.1, f=100):
         """
         Set the number of segments in each section based on the geometry.
 
@@ -479,8 +479,6 @@ class Model():
             The lambda value to use.
         f : float
             The frequency value to use.
-        use_neuron : bool
-            Whether to use NEURON's lambda_f function.
         """
         self.d_lambda = d_lambda
 
@@ -490,12 +488,9 @@ class Model():
 
         # Calculate lambda_f for each section and set nseg
         for sec in self.sec_tree.sections:
-            if use_neuron:
-                from neuron import h
-                lambda_f = h.lambda_f(f, sec=sec._ref)
-            else:
-                lambda_f = calculate_lambda_f(sec._ref.diam, sec._ref.Ra, sec._ref.cm, f)
-            nseg = int((sec._ref.L / (d_lambda * lambda_f) + 0.9) / 2) * 2 + 1
+            lambda_f = calculate_lambda_f(sec.distances, sec.diameters, sec.Ra, sec.cm, f)
+            nseg = int((sec.L / (d_lambda * lambda_f) + 0.9) / 2) * 2 + 1
+            # TODO: Set sec._nseg instead
             sec._ref.nseg = nseg
         # Rebuild the segment tree
         self.seg_tree = create_segment_tree(self.sec_tree)
@@ -896,7 +891,7 @@ class Model():
         domains : list[str]
             The domains to include in the group.
         select_by : str, optional
-            The parameter to select the sections by. Can be 'diam', 'absolute_distance', 'domain_distance'.
+            The parameter to select the sections by. Can be 'diam', 'distance', 'domain_distance'.
         min_value : float, optional
             The minimum value of the parameter.
         max_value : float, optional

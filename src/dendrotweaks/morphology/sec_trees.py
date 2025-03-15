@@ -166,6 +166,14 @@ class Section(Node):
 
 
     @property
+    def cm(self):
+        """
+        Specific membrane capacitance of the section (from NEURON).
+        """
+        return self._ref.cm
+
+
+    @property
     def Ra(self):
         """
         Axial resistance of the section (from NEURON).
@@ -222,6 +230,14 @@ class Section(Node):
         Radii of the points in the section.
         """
         return [pt.r for pt in self.points]
+
+
+    @property
+    def diameters(self):
+        """
+        Diameters of the points in the section.
+        """
+        return [2 * pt.r for pt in self.points]
 
 
     @property
@@ -347,6 +363,7 @@ class Section(Node):
             else:
                 self._ref.connect(self.parent._ref(1))
         # Add 3D points to the section
+        self._ref.pt3dclear()
         for pt in self.points:
             diam = 2*pt.r
             diam = round(diam, 16)
@@ -443,8 +460,7 @@ class Section(Node):
             node = node.parent
             factor = 1
             
-        return distance
-        
+        return distance       
 
     
     def disconnect_from_parent(self):

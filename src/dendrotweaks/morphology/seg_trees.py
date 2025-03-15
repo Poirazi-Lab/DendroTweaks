@@ -89,7 +89,7 @@ class Segment(Node):
 
 
     @property
-    def absolute_distance(self):
+    def distance(self):
         return self.path_distance(within_domain=False)
 
 

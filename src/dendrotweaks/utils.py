@@ -39,45 +39,47 @@ def timeit(func):
     return wrapper
 
 
-import numpy as np
-
-def calculate_lambda_f(diameter, Ra, Cm, frequency=100):
+def calculate_lambda_f(distances, diameters, Ra=35.4, Cm=1, frequency=100):
     """
-    Calculate the characteristic length constant (lambda_f) at which an e-fold (1/e) attenuation
-    of voltage occurs along a neuronal cable, given the properties of the cable and signal frequency.
+    Calculate the frequency-dependent length constant (lambda_f) according to NEURON's implementation,
+    using 3D point data for accurate representation of varying diameter frusta.
     
     Args:
-        diameter (float): Diameter of the neuronal segment in micrometers (µm).
-        Ra (float): Axial (internal) resistance in ohm*cm.
-        Cm (float): Membrane capacitance per unit area in microfarads per square centimeter (µF/cm²).
-        frequency (float): Frequency of the signal in hertz (Hz). Default is 100 Hz.
+        distances (list/array): Cumulative euclidean distances between 3D points along the section from 0 to section length
+        diameters (list/array): Corresponding diameters at each position in micrometers
+        Ra (float): Axial resistance in ohm*cm
+        Cm (float): Specific membrane capacitance in µF/cm²
+        frequency (float): Frequency in Hz
     
     Returns:
-        float: The length constant (lambda_f) in micrometers (µm) at which voltage attenuation 
-               reaches approximately 37% of its initial value.
-
-    Notes:
-        - This formula is valid in the high-frequency approximation, where the membrane resistance (Rm) 
-          can be ignored (e.g., for high-frequency signals where capacitive effects dominate).
-
-    References:
-        - Hines & Carnevale (2001) NEURON: A Tool for Neuroscientists.
+        float: Lambda_f in micrometers
     """
-    # Convert diameter from micrometers to centimeters
-    diameter_cm = diameter * 1e-4  # 1 µm = 1e-4 cm
+    if len(distances) < 2 or len(diameters) < 2:
+        raise ValueError("At least 2 points are required for 3D calculation")
     
-    # Ensure input values are positive
-    if diameter_cm <= 0 or Ra <= 0 or Cm <= 0 or frequency <= 0:
-        raise ValueError("All input values must be positive and non-zero.")
+    if len(distances) != len(diameters):
+        raise ValueError("distances and diameters must have the same length")
     
-    # Calculate lambda_f using the formula in centimeters
-    lambda_f_cm = 0.5 * np.sqrt(diameter_cm / (np.pi * frequency * Ra * Cm))
+    # Initialize variables
+    lam = 0
+    section_L = distances[-1]
     
-    # Convert the result back to micrometers and apply a factor of 1000 for scaling
-    lambda_f_um = lambda_f_cm * 1e4 * 1000  # Adjust by factor of 1000 to match NEURON's output
+    # Calculate the contribution of each frustum
+    for i in range(1, len(distances)):
+        # Frustum length
+        frustum_length = distances[i] - distances[i-1]
+        # Average of diameters at endpoints
+        d1 = diameters[i-1]
+        d2 = diameters[i]
+        
+        # Add frustum contribution to lambda calculation
+        lam += frustum_length / np.sqrt(d1 + d2)
     
-    return lambda_f_um
-
+    # Apply the frequency-dependent factor
+    lam *= np.sqrt(2) * 1e-5 * np.sqrt(4 * np.pi * frequency * Ra * Cm)
+    
+    # Return section_L/lam (electrotonic length of the section)
+    return section_L / lam
 
 if (__name__ == '__main__'):
     print('Executing as standalone script')

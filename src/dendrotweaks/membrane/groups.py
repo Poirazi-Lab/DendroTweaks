@@ -25,7 +25,7 @@ class SegmentGroup:
         The property to select the segments by. Can be:
         - 'diam': the diameter of the segment.
         - 'section_diam': the diameter of the section the segment belongs to.
-        - 'absolute_distance': the absolute distance of the segment from the root.
+        - 'distance': the distance of the segment from the root.
         - 'domain_distance': the distance of the segment from the root within the domain.
     min_value : Optional[float]
         The minimum value of the property.
@@ -56,7 +56,7 @@ class SegmentGroup:
             return segment.diam
         elif self.select_by == 'section_diam':
             return segment._section._ref.diam
-        elif self.select_by == 'absolute_distance':
+        elif self.select_by == 'distance':
             return segment.path_distance()
         elif self.select_by == 'domain_distance':
             return segment.path_distance(within_domain=True)
