@@ -365,7 +365,7 @@ class Model():
     # MORPHOLOGY
     # ========================================================================
 
-    def load_morphology(self, file_name, soma_notation='3PS', align=True, sort_children=False) -> None:
+    def load_morphology(self, file_name, soma_notation='3PS', align=True, sort_children=False, force=False) -> None:
         """
         Read an SWC file and build the SWC and section trees.
 
@@ -389,7 +389,7 @@ class Model():
         point_tree = create_point_tree(path_to_swc_file)
         # point_tree.remove_overlaps()
         point_tree.change_soma_notation(soma_notation)
-        point_tree.sort()
+        point_tree.sort(sort_children=sort_children, force=force)
         if align:    
             point_tree.shift_coordinates_to_soma_center()
             point_tree.align_apical_dendrite()
@@ -397,7 +397,7 @@ class Model():
         self.point_tree = point_tree
 
         sec_tree = create_section_tree(point_tree)
-        sec_tree.sort()
+        sec_tree.sort(sort_children=sort_children, force=force)
         self.sec_tree = sec_tree
 
         self.create_and_reference_sections_in_simulator()
@@ -408,11 +408,7 @@ class Model():
         self._initialize_domains_to_mechs()
 
         d_lambda = self.d_lambda
-        self.set_segmentation(d_lambda=d_lambda)
-
-        if sort_children:
-            self.sec_tree.sort(sort_children, force=True)
-        
+        self.set_segmentation(d_lambda=d_lambda)        
               
 
     def create_and_reference_sections_in_simulator(self):

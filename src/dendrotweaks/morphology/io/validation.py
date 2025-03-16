@@ -158,7 +158,7 @@ def validate_point_tree(point_tree):
 
 
     if point_tree._is_extended:
-        print("The point tree is extended. Checking for geometric continuity...")
+        print("Checking the extended tree for geometric continuity...")
         non_overlapping_children = [
             (pt, child) for pt in bifurcations_without_root for child in pt.children
             if not child.overlaps_with(pt)
