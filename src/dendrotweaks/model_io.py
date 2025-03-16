@@ -2,21 +2,19 @@ import jinja2
 import os
 from collections import defaultdict
 
-PATH_TO_TEMPLATE = os.path.join(os.path.dirname(__file__), 'template.py')
 
-def render_template(context, template_path=None):
+def render_template(path_to_template, context):
     """
     Render a Jinja2 template.
 
     Parameters
     ----------
-    template_path : str
+    path_to_template : str
         The path to the Jinja2 template.
     context : dict
         The context to render the template with.
     """
-    template_path = template_path or PATH_TO_TEMPLATE
-    with open(template_path, 'r') as f:
+    with open(path_to_template, 'r') as f:
         template = jinja2.Template(f.read())
     return template.render(context)
 
@@ -32,3 +30,26 @@ def get_params_to_valid_domains(model):
             params_to_valid_domains[param][group_name] = valid_domains
 
     return dict(params_to_valid_domains)
+
+
+def filter_params(model):
+    """
+    Filter out kinetic parameters from the model.
+
+    Parameters
+    ----------
+    model : Model
+        The model to filter.
+
+    Returns
+    -------
+    Model
+        The model with kinetic parameters filtered out.
+    """
+    filtered_params = {
+        param: {
+            group_name: distribution 
+            for group_name, distribution in distributions.items() 
+            if param in list(model.conductances.keys()) + ['cm', 'Ra', 'ena', 'ek', 'eca']} 
+            for param, distributions in model.params.items()}
+    return filtered_params

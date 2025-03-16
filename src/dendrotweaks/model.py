@@ -3,6 +3,7 @@ import os
 import json
 import matplotlib.pyplot as plt
 import numpy as np
+import quantities as pq
 
 from dendrotweaks.morphology.point_trees import PointTree
 from dendrotweaks.morphology.sec_trees import Section, SectionTree, Domain
@@ -125,6 +126,11 @@ class Model():
         self.params = {
             'cm': {'all': Distribution('constant', value=1)}, # uF/cm2
             'Ra': {'all': Distribution('constant', value=35.4)}, # Ohm cm
+        }
+
+        self.params_to_units = {
+            'cm': pq.uF/pq.cm**2,
+            'Ra': pq.ohm*pq.cm,
         }
 
         # Groups
@@ -1856,7 +1862,7 @@ class Model():
                 self._add_population(pop)
 
 
-    def export_to_NEURON(self, file_name, **kwargs):
+    def export_to_NEURON(self, file_name, include_kinetic_params=True):
         """
         Export the model to a python file using NEURON.
 
@@ -1865,21 +1871,23 @@ class Model():
         file_name : str
             The name of the file to write to.
         """
-        from dendrotweaks.export.export_model import render_template
-        from dendrotweaks.export.export_model import get_params_to_valid_domains
+        from dendrotweaks.model_io import render_template
+        from dendrotweaks.model_io import get_params_to_valid_domains
+        from dendrotweaks.model_io import filter_params
 
         params_to_valid_domains = get_params_to_valid_domains(self)
+        params = self.params if include_kinetic_params else filter_params(self)
+        path_to_template = self.path_manager.get_file_path('templates', 'NEURON_template', extension='py')
 
-        output = render_template(
+        output = render_template(path_to_template,
         {
-            'param_dict': self.params, 
+            'param_dict': params,
             'groups_dict': self.groups,
             'params_to_mechs': self.params_to_mechs,
             'domains_to_mechs': self.domains_to_mechs,
             'iclamps': self.iclamps,
             'recordings': self.simulator.recordings,
             'params_to_valid_domains': params_to_valid_domains,
-            'use_kinetics': False,
         })
 
         if not file_name.endswith('.py'):
