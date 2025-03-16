@@ -1,3 +1,10 @@
+"""
+This module contains functions for reducing dendritic subtrees into single cylinders.
+The module incorporates code from neuron_reduce, which implements the algorithm described in:
+Amsalem, O., Eyal, G., Rogozinski, N. et al. An efficient analytical reduction of detailed nonlinear neuron models. Nat Commun 11, 288 (2020). https://doi.org/10.1038/s41467-019-13932-6
+The original code can be found at: https://github.com/orena1/neuron_reduce. Licensed under MIT License.
+"""
+
 def calculate_nsegs(new_cable_properties, total_segments_manual):
 
     new_cable_properties = [new_cable_properties]
@@ -31,7 +38,6 @@ def calculate_nsegs(new_cable_properties, total_segments_manual):
     return new_cables_nsegs[0]
 
 
-# calculate_nsegs_from_manual_arg
 def calculate_nsegs_from_manual_arg(new_cable_properties, total_segments_wanted):
     '''Calculates the number of segments for each section in the reduced model
     according to the given total_segments_wanted and the given
@@ -61,7 +67,6 @@ def calculate_nsegs_from_manual_arg(new_cable_properties, total_segments_wanted)
     return dends_nsegs
     
 
-# calculate_nsegs_from_lambda
 def calculate_nsegs_from_lambda(new_cable_properties):
     '''calculate the number of segments for each section in the reduced model
     according to the length (in microns) and space constant (= lambda - in

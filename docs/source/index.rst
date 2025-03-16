@@ -52,6 +52,7 @@ If you find DendroTweaks helpful for building your models, please consider citin
    self
    installation
    changelog
+   support
 
 .. toctree::
    :maxdepth: 1
@@ -79,4 +80,3 @@ If you find DendroTweaks helpful for building your models, please consider citin
       
    glossary
    literature
-   support

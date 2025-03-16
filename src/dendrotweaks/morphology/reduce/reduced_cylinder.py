@@ -1,3 +1,10 @@
+"""
+This module contains functions for reducing dendritic subtrees into single cylinders.
+The module incorporates code from neuron_reduce, which implements the algorithm described in:
+Amsalem, O., Eyal, G., Rogozinski, N. et al. An efficient analytical reduction of detailed nonlinear neuron models. Nat Commun 11, 288 (2020). https://doi.org/10.1038/s41467-019-13932-6
+The original code can be found at: https://github.com/orena1/neuron_reduce. Licensed under MIT License.
+"""
+
 import collections
 import neuron
 from neuron import h
@@ -30,14 +37,12 @@ h('''obfunc lowest_impedance_recursive() { local lowest_impedance, lowest_phase,
     return lowest_imp_vec
 }''')
 
-# CableParams
+
 CableParams = collections.namedtuple('CableParams',
                                      'length, diam, space_const,'
                                      'cm, rm, ra, e_leak, electrotonic_length')
 
 
-
-# reduce_subtree as get_unique_cable_properties
 def get_unique_cable_properties(subtree_root: h.Section, frequency: float) -> CableParams:
     '''Reduces the subtree  from the original_cell into one single section (cable).
     The reduction is done by finding the length and diameter of the cable (a
@@ -88,6 +93,7 @@ def get_unique_cable_properties(subtree_root: h.Section, frequency: float) -> Ca
                        e_leak=e_leak,
                        electrotonic_length=new_cable_electrotonic_length)
 
+
 def _get_subtree_biophysical_properties(subtree_root_ref, frequency):
     ''' gets the biophysical cable properties (Rm, Ra, Rc) and q
     for the subtree to be reduced according to the properties of the root section of the subtree
@@ -109,6 +115,7 @@ def _get_subtree_biophysical_properties(subtree_root_ref, frequency):
             section.Ra,  # in ohm * cm
             section.e_Leak,
             q)
+
 
 def measure_input_impedance_of_subtree(subtree_root_section, frequency):
     '''measures the input impedance of the subtree with the given root section
@@ -132,6 +139,7 @@ def measure_input_impedance_of_subtree(subtree_root_section, frequency):
     root_input_impedance = cmath.rect(root_input_impedance, root_input_phase)
     return imp_obj, root_input_impedance
 
+
 def find_lowest_subtree_impedance(subtree_root_ref, imp_obj):
     '''
     finds the segment in the subtree with the lowest transfer impedance in
@@ -145,7 +153,7 @@ def find_lowest_subtree_impedance(subtree_root_ref, imp_obj):
     curr_lowest_subtree_imp = cmath.rect(lowest_impedance.x[0] * 1000000, lowest_impedance.x[1])
     return curr_lowest_subtree_imp
 
-# Length 
+
 def find_subtree_new_electrotonic_length(root_input_impedance, lowest_subtree_impedance, q):
     ''' finds the subtree's reduced cable's electrotonic length
     based on the following equation:
@@ -163,6 +171,7 @@ def find_subtree_new_electrotonic_length(root_input_impedance, lowest_subtree_im
 
     L = find_best_real_L(root_input_impedance, lowest_subtree_impedance, q)
     return L
+
 
 def find_best_real_L(Z0, ZL_goal, q, max_L=10.0, max_depth=50):
     '''finds the best real L
@@ -185,6 +194,7 @@ def find_best_real_L(Z0, ZL_goal, q, max_L=10.0, max_depth=50):
         logger.info("The difference between L and the goal L is larger than 0.001")
     return current_L
 
+
 def compute_zl_polar(Z0, L, q):
     '''
     given Z0 , L and q computes the polar represntation of ZL (equation 2.9 in Gals thesis)
@@ -193,6 +203,7 @@ def compute_zl_polar(Z0, L, q):
     ZL = cmath.polar(ZL)
     return ZL
 
+
 def compute_zx_polar(Z0, L, q, x):
     '''computes the polar represntation of Zx (equation 2.8 in Gals thesis)
     '''
@@ -200,7 +211,7 @@ def compute_zx_polar(Z0, L, q, x):
     ZX = cmath.polar(ZX)
     return ZX
 
-# Diam 
+
 def _find_subtree_new_diam_in_cm(root_input_impedance, electrotonic_length_as_complex, rm, ra, q):
     '''finds the subtree's new cable's diameter (in cm)
     according to the given complex input impedance at the segment in the
@@ -229,7 +240,7 @@ def _find_subtree_new_diam_in_cm(root_input_impedance, electrotonic_length_as_co
     new_subtree_dend_diam_in_cm = cmath.polar(diam_in_cm)[0]
     return new_subtree_dend_diam_in_cm
 
-# Space Const
+
 def find_space_const_in_cm(diameter, rm, ra):
     ''' returns space constant (lambda) in cm, according to: space_const = sqrt(rm/(ri+r0)) '''
     # rm = Rm/(PI * diam), diam is in cm and Rm is in ohm * cm^2
@@ -267,6 +278,7 @@ def remove_intermediate_points(sec: "Section") -> None:
     
     point_tree.sort()
     sec.points = [first_point, last_point]
+
 
 def update_section_geometry(sec: "Section"):
     '''Updates section geometry by adjusting the end point to maintain section length and direction'''
