@@ -103,48 +103,45 @@ class Cell():
 
     def insert_mechanisms(self):
         
+        for sec in self.apic:
+            
+                sec.insert('Kv')
+                sec.insert('CaLVA')
+                sec.insert('KCa')
+                sec.insert('Leak')
+                sec.insert('CaHVA')
+                sec.insert('Ka')
+                sec.insert('Na')
+                sec.insert('Km')
+                sec.insert('CaDyn')
+        
         for sec in self.axon:
             
                 sec.insert('Leak')
         
         for sec in self.dend:
             
-                sec.insert('CaLVA')
-                sec.insert('CaDyn')
-                sec.insert('Leak')
-                sec.insert('Km')
-                sec.insert('sNa')
-                sec.insert('CaHVA')
-                sec.insert('Na')
-                sec.insert('KCa')
-                sec.insert('Ka')
                 sec.insert('Kv')
+                sec.insert('CaLVA')
+                sec.insert('KCa')
+                sec.insert('Leak')
+                sec.insert('CaHVA')
+                sec.insert('Ka')
+                sec.insert('Na')
+                sec.insert('Km')
+                sec.insert('CaDyn')
         
         for sec in self.soma:
             
-                sec.insert('CaLVA')
-                sec.insert('CaDyn')
-                sec.insert('Leak')
-                sec.insert('Km')
-                sec.insert('sNa')
-                sec.insert('CaHVA')
-                sec.insert('Na')
-                sec.insert('KCa')
-                sec.insert('Ka')
                 sec.insert('Kv')
-        
-        for sec in self.apic:
-            
                 sec.insert('CaLVA')
-                sec.insert('CaDyn')
-                sec.insert('Leak')
-                sec.insert('Km')
-                sec.insert('sNa')
-                sec.insert('CaHVA')
-                sec.insert('Na')
                 sec.insert('KCa')
+                sec.insert('Leak')
+                sec.insert('CaHVA')
                 sec.insert('Ka')
-                sec.insert('Kv')
+                sec.insert('Na')
+                sec.insert('Km')
+                sec.insert('CaDyn')
         
 
     ### Parameter distribution methods ###
@@ -173,7 +170,7 @@ class Cell():
             section_diam = seg.sec.diam
 
             
-            if domain in ['axon', 'dend', 'soma', 'apic']:
+            if domain in ['apic', 'axon', 'dend', 'soma']:
                 self.set_param(seg, "cm", "Independent", 2)
                     
                 
@@ -182,7 +179,7 @@ class Cell():
                     
                 
             
-            if domain in ['axon', 'dend', 'soma', 'apic']:
+            if domain in ['apic', 'axon', 'dend', 'soma']:
                 self.set_param(seg, "Ra", "Independent", 100)
                     
                 
@@ -199,237 +196,37 @@ class Cell():
             section_diam = seg.sec.diam
 
             
-            if domain in ['axon', 'dend', 'soma', 'apic']:
+            if domain in ['apic', 'axon', 'dend', 'soma']:
                 self.set_param(seg, "gbar_Leak", "Leak", 9.09090909090909e-05)
                     
                 
             
-            if domain in ['axon', 'dend', 'soma', 'apic']:
+            if domain in ['apic', 'axon', 'dend', 'soma']:
                 self.set_param(seg, "e_Leak", "Leak", -79)
                     
                 
             
-            if domain in ['dend', 'soma', 'apic']:
+            if domain in ['apic', 'dend', 'soma']:
                 self.set_param(seg, "depth_CaDyn", "CaDyn", 0.1)
                     
                 
             
-            if domain in ['dend', 'soma', 'apic']:
+            if domain in ['apic', 'dend', 'soma']:
                 self.set_param(seg, "tau_CaDyn", "CaDyn", 50)
                     
                 
             
-            if domain in ['dend', 'soma', 'apic']:
+            if domain in ['apic', 'dend', 'soma']:
                 self.set_param(seg, "cainf_CaDyn", "CaDyn", 0.0001)
                     
                 
             
-            if domain in ['dend', 'soma', 'apic']:
+            if domain in ['apic', 'dend', 'soma']:
                 self.set_param(seg, "gamma_CaDyn", "CaDyn", 1)
                     
                 
             
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "vhalf_m_sNa", "sNa", -32.571)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "sigma_m_sNa", "sNa", 9.8)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "k_m_sNa", "sNa", 1.882)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "delta_m_sNa", "sNa", 0.541)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "tau0_m_sNa", "sNa", 0.065)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "vhalf_h_sNa", "sNa", -60.0)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "sigma_h_sNa", "sNa", -6.2)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "k_h_sNa", "sNa", 0.018)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "delta_h_sNa", "sNa", 0.395)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "tau0_h_sNa", "sNa", 0.797)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "gbar_sNa", "sNa", 0.0)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "q10_sNa", "sNa", 2.3)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "temp_sNa", "sNa", 23)
-                    
-                
-            
-            if domain in ['axon', 'dend', 'soma', 'apic']:
-                self.set_param(seg, "ena", "Independent", 60)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "gbar_Na", "Na", 0.0)
-                    
-                
-            if domain in ['soma']:
-                self.set_param(seg, "gbar_Na", "Na", 0.0505)
-                    
-                
-            if domain in ['dend', 'apic']:
-                self.set_param(seg, "gbar_Na", "Na", 0.0303)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "Rma_Na", "Na", 0.182)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "Rmb_Na", "Na", 0.14)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "v12m_Na", "Na", -30)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "qm_Na", "Na", 9.8)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "Rhb_Na", "Na", 0.0091)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "Rha_Na", "Na", 0.024)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "v12ha_Na", "Na", -45)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "v12hb_Na", "Na", -70)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "qh_Na", "Na", 5)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "v12hinf_Na", "Na", -60)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "qhinf_Na", "Na", 6.2)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "gbar_KCa", "KCa", 0.0)
-                    
-                
-            if domain in ['soma']:
-                self.set_param(seg, "gbar_KCa", "KCa", 0.00021)
-                    
-                
-            if domain in ['dend', 'apic']:
-                self.set_param(seg, "gbar_KCa", "KCa", 0.00021)
-                    
-                
-            
-            if domain in ['axon', 'dend', 'soma', 'apic']:
-                self.set_param(seg, "ek", "Independent", -80)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "gbar_Kv", "Kv", 0.0)
-                    
-                
-            if domain in ['soma']:
-                self.set_param(seg, "gbar_Kv", "Kv", 0.005)
-                    
-                
-            if domain in ['dend', 'apic']:
-                self.set_param(seg, "gbar_Kv", "Kv", 0.00015)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "v12_Kv", "Kv", 25)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "q_Kv", "Kv", 9)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "gbar_Ka", "Ka", 0.0)
-                    
-                
-            if domain in ['soma']:
-                self.set_param(seg, "gbar_Ka", "Ka", 0.0054)
-                    
-                
-            if domain in ['dend', 'apic']:
-                if 0 < section_diam <= 0.8:
-                
-                    self.set_param(seg, "gbar_Ka", "Ka", 0.108)
-                    
-                
-            if domain in ['dend', 'apic']:
-                if 0.8 < section_diam:
-                
-                    self.set_param(seg, "gbar_Ka", "Ka", 0.0108)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
+            if domain in ['apic', 'dend', 'soma']:
                 self.set_param(seg, "gbar_CaHVA", "CaHVA", 0.0)
                     
                 
@@ -454,35 +251,12 @@ class Cell():
                     
                 
             
-            if domain in ['axon', 'dend', 'soma', 'apic']:
+            if domain in ['apic', 'axon', 'dend', 'soma']:
                 self.set_param(seg, "eca", "Independent", 140)
                     
                 
             
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "gbar_Km", "Km", 0.0)
-                    
-                
-            if domain in ['soma']:
-                self.set_param(seg, "gbar_Km", "Km", 0.0002794)
-                    
-                
-            if domain in ['dend', 'apic']:
-                self.set_param(seg, "gbar_Km", "Km", 0.000127)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "v12_Km", "Km", -30)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
-                self.set_param(seg, "q_Km", "Km", 9)
-                    
-                
-            
-            if domain in ['dend', 'soma', 'apic']:
+            if domain in ['apic', 'dend', 'soma']:
                 self.set_param(seg, "gbar_CaLVA", "CaLVA", 0.0)
                     
                 
@@ -504,6 +278,164 @@ class Cell():
                 if 260 < distance:
                 
                     self.set_param(seg, "gbar_CaLVA", "CaLVA", 1.2e-05)
+                    
+                
+            
+            if domain in ['apic', 'dend', 'soma']:
+                self.set_param(seg, "gbar_KCa", "KCa", 0.0)
+                    
+                
+            if domain in ['soma']:
+                self.set_param(seg, "gbar_KCa", "KCa", 0.00021)
+                    
+                
+            if domain in ['dend', 'apic']:
+                self.set_param(seg, "gbar_KCa", "KCa", 0.00021)
+                    
+                
+            
+            if domain in ['apic', 'axon', 'dend', 'soma']:
+                self.set_param(seg, "ek", "Independent", -80)
+                    
+                
+            
+            if domain in ['apic', 'dend', 'soma']:
+                self.set_param(seg, "gbar_Ka", "Ka", 0.0)
+                    
+                
+            if domain in ['soma']:
+                self.set_param(seg, "gbar_Ka", "Ka", 0.0054)
+                    
+                
+            if domain in ['dend', 'apic']:
+                if 0 < section_diam <= 0.8:
+                
+                    self.set_param(seg, "gbar_Ka", "Ka", 0.108)
+                    
+                
+            if domain in ['dend', 'apic']:
+                if 0.8 < section_diam:
+                
+                    self.set_param(seg, "gbar_Ka", "Ka", 0.0108)
+                    
+                
+            
+            if domain in ['apic', 'dend', 'soma']:
+                self.set_param(seg, "gbar_Km", "Km", 0.0)
+                    
+                
+            if domain in ['soma']:
+                self.set_param(seg, "gbar_Km", "Km", 0.0002794)
+                    
+                
+            if domain in ['dend', 'apic']:
+                self.set_param(seg, "gbar_Km", "Km", 0.000127)
+                    
+                
+            
+            if domain in ['apic', 'dend', 'soma']:
+                self.set_param(seg, "v12_Km", "Km", -30)
+                    
+                
+            
+            if domain in ['apic', 'dend', 'soma']:
+                self.set_param(seg, "q_Km", "Km", 9)
+                    
+                
+            
+            if domain in ['apic', 'dend', 'soma']:
+                self.set_param(seg, "gbar_Kv", "Kv", 0.0)
+                    
+                
+            if domain in ['soma']:
+                self.set_param(seg, "gbar_Kv", "Kv", 0.005)
+                    
+                
+            if domain in ['dend', 'apic']:
+                self.set_param(seg, "gbar_Kv", "Kv", 0.00015)
+                    
+                
+            
+            if domain in ['apic', 'dend', 'soma']:
+                self.set_param(seg, "v12_Kv", "Kv", 25)
+                    
+                
+            
+            if domain in ['apic', 'dend', 'soma']:
+                self.set_param(seg, "q_Kv", "Kv", 9)
+                    
+                
+            
+            if domain in ['apic', 'dend', 'soma']:
+                self.set_param(seg, "gbar_Na", "Na", 0.0)
+                    
+                
+            if domain in ['soma']:
+                self.set_param(seg, "gbar_Na", "Na", 0.0505)
+                    
+                
+            if domain in ['dend', 'apic']:
+                self.set_param(seg, "gbar_Na", "Na", 0.0303)
+                    
+                
+            
+            if domain in ['apic', 'dend', 'soma']:
+                self.set_param(seg, "Rma_Na", "Na", 0.182)
+                    
+                
+            
+            if domain in ['apic', 'dend', 'soma']:
+                self.set_param(seg, "Rmb_Na", "Na", 0.14)
+                    
+                
+            
+            if domain in ['apic', 'dend', 'soma']:
+                self.set_param(seg, "v12m_Na", "Na", -30)
+                    
+                
+            
+            if domain in ['apic', 'dend', 'soma']:
+                self.set_param(seg, "qm_Na", "Na", 9.8)
+                    
+                
+            
+            if domain in ['apic', 'dend', 'soma']:
+                self.set_param(seg, "Rhb_Na", "Na", 0.0091)
+                    
+                
+            
+            if domain in ['apic', 'dend', 'soma']:
+                self.set_param(seg, "Rha_Na", "Na", 0.024)
+                    
+                
+            
+            if domain in ['apic', 'dend', 'soma']:
+                self.set_param(seg, "v12ha_Na", "Na", -45)
+                    
+                
+            
+            if domain in ['apic', 'dend', 'soma']:
+                self.set_param(seg, "v12hb_Na", "Na", -70)
+                    
+                
+            
+            if domain in ['apic', 'dend', 'soma']:
+                self.set_param(seg, "qh_Na", "Na", 5)
+                    
+                
+            
+            if domain in ['apic', 'dend', 'soma']:
+                self.set_param(seg, "v12hinf_Na", "Na", -60)
+                    
+                
+            
+            if domain in ['apic', 'dend', 'soma']:
+                self.set_param(seg, "qhinf_Na", "Na", 6.2)
+                    
+                
+            
+            if domain in ['apic', 'axon', 'dend', 'soma']:
+                self.set_param(seg, "ena", "Independent", 60)
                     
                 
             
