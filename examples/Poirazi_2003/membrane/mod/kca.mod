@@ -68,6 +68,7 @@ ASSIGNED {
         tadj    (1)
         celsius (degC)
 }
+
 BREAKPOINT { 
         SOLVE states METHOD cnexp
         g = gbar * m * m * m     
@@ -76,12 +77,12 @@ BREAKPOINT {
 }
 
 DERIVATIVE states { 
-        rates(v, cai)
+        rates(cai)
         m' = (m_inf - m) / tau_m
 }
 
 INITIAL {
-        rates(v, cai)
+        rates(cai)
         m = m_inf
 }
 
