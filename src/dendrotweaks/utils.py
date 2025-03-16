@@ -7,6 +7,7 @@ import numpy as np
 import os
 import zipfile
 import urllib.request
+import matplotlib.pyplot as plt
 
 DOMAINS_TO_COLORS = {
     'soma': '#E69F00',
@@ -147,7 +148,7 @@ def read_file(path_to_file):
 
 def download_example_data(path_to_destination):
     """
-    Download the examples from the dendrotweaks GitHub repository.
+    Download the examples subfolder from the DendroTweaks GitHub repository.
 
     Parameters
     ----------
@@ -157,7 +158,7 @@ def download_example_data(path_to_destination):
     if not os.path.exists(path_to_destination):
         os.makedirs(path_to_destination)
 
-    repo_url = "https://github.com/Poirazi-Lab/dendrotweaks/archive/refs/heads/main.zip"
+    repo_url = "https://github.com/Poirazi-Lab/DendroTweaks/archive/refs/heads/main.zip"
     zip_path = os.path.join(path_to_destination, "examples.zip")
 
     print(f"Downloading examples from {repo_url}...")
@@ -165,7 +166,38 @@ def download_example_data(path_to_destination):
 
     print(f"Extracting examples to {path_to_destination}")
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-        zip_ref.extractall(path_to_destination)
+        for member in zip_ref.namelist():
+            if member.startswith("DendroTweaks-main/examples/"):
+                # Extract the file with the correct path
+                member_path = os.path.relpath(member, "DendroTweaks-main/examples")
+                target_path = os.path.join(path_to_destination, member_path)
+                if member.endswith('/'):
+                    os.makedirs(target_path, exist_ok=True)
+                else:
+                    os.makedirs(os.path.dirname(target_path), exist_ok=True)
+                    with zip_ref.open(member) as source, open(target_path, 'wb') as target:
+                        target.write(source.read())
 
     os.remove(zip_path)  # Clean up the zip file
     print(f"Examples downloaded successfully to {path_to_destination}/.")
+
+
+
+def apply_dark_theme():
+    """
+    Apply a dark theme to matplotlib plots.
+    """
+    # dark theme
+    plt.style.use('dark_background')
+
+    # customize the style
+    plt.rcParams.update({
+        'figure.facecolor': '#131416',
+        'axes.facecolor': '#131416',
+        'axes.edgecolor': 'white',
+        'axes.labelcolor': 'white',
+        'xtick.color': 'white',
+        'ytick.color': 'white',
+        'text.color': 'white',
+        'axes.prop_cycle': plt.cycler(color=plt.cm.tab10.colors),  # use standard matplotlib colors
+    })

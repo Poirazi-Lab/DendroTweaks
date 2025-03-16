@@ -7,3 +7,4 @@ from dendrotweaks.path_manager import PathManager
 from dendrotweaks.stimuli import Synapse, Population, IClamp
 
 from dendrotweaks.utils import download_example_data
+from dendrotweaks.utils import apply_dark_theme
