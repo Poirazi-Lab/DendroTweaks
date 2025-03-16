@@ -387,7 +387,7 @@ class Model():
         self.morphology_name = file_name.replace('.swc', '')
         path_to_swc_file = self.path_manager.get_file_path('morphology', file_name, extension='swc')
         point_tree = create_point_tree(path_to_swc_file)
-        point_tree.remove_overlaps()
+        # point_tree.remove_overlaps()
         point_tree.change_soma_notation(soma_notation)
         point_tree.sort()
         if align:    
@@ -1284,6 +1284,7 @@ class Model():
             The variable to record. Default is 'v'.
         """
         self.simulator.add_recording(sec, loc, var)
+        print(f'Recording added to sec {sec} at loc {loc}.')
 
 
     def remove_recording(self, sec, loc):

@@ -203,7 +203,7 @@ class Tree:
     # MAGIC METHODS
 
     def __repr__(self):
-        return f'Tree {self._nodes}'
+        return f"Tree(root={self.root!r}, num_nodes={len(self._nodes)})"
 
     def __getitem__(self, idx):
         return self._nodes[idx]
@@ -369,7 +369,7 @@ class Tree:
                 reverse=False
             )
 
-    @timeit
+    # @timeit
     def sort(self, sort_children=False, force=False):
         """
         Sort the nodes in the tree using a stack-based depth-first traversal.
@@ -383,7 +383,6 @@ class Tree:
             Whether to force the sorting of the tree even if it is already sorted. Defaults to False.
         """
         if self.is_sorted and not force:
-            print('Tree already sorted.')
             return
 
         if sort_children:
@@ -399,6 +398,7 @@ class Tree:
 
         if not self.is_sorted:
             raise ValueError('Tree is not sorted.')
+        print(f'Sorted {self}.')
 
     # INSERTION AND REMOVAL METHODS
 

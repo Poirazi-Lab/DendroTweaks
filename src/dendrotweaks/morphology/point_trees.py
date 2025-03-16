@@ -214,6 +214,11 @@ class PointTree(Tree):
         self._sections = []
         self._is_extended = False
 
+
+    def __repr__(self):
+        return f"PointTree(root={self.root!r}, num_nodes={len(self._nodes)})"
+
+
     # PROPERTIES
 
     @property
@@ -317,7 +322,6 @@ class PointTree(Tree):
         Convert the soma to 3PS notation.
         """
         if self.soma_notation == notation:
-            print(f'Soma is already in {notation} notation.')
             return
 
         if self.soma_notation == '1PS':
@@ -503,7 +507,8 @@ class PointTree(Tree):
 
         self._is_extended = False
         nodes_after = len(self.points)
-        print(f'Removed {nodes_before - nodes_after} overlapping nodes.')
+        if nodes_before != nodes_after:
+            print(f'Removed {nodes_before - nodes_after} overlapping nodes.')
 
 
     def extend_sections(self):

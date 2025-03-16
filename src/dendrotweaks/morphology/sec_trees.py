@@ -760,6 +760,10 @@ class SectionTree(Tree):
         self._seg_tree = None
 
 
+    def __repr__(self):
+        return f"SectionTree(root={self.root!r}, num_nodes={len(self._nodes)})"
+
+
     def _create_domains(self):
         """
         Create domains using the data from the sections (from the points in the sections).

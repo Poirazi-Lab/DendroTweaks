@@ -145,6 +145,10 @@ class SegmentTree(Tree):
     def __init__(self, segments: list[Segment]) -> None:
         super().__init__(segments)
 
+    def __repr__(self):
+        return f"SegmentTree(root={self.root!r}, num_nodes={len(self._nodes)})"
+
+
     @property
     def segments(self):
         """
