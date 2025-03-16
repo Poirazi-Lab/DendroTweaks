@@ -82,7 +82,7 @@ def standardize_channel(channel: IonChannel,
     temperature is specified, the default temperature of 23 degrees
     Celsius is used.
     """
-    standard_channel = StandardIonChannel(name=channel.name, 
+    standard_channel = StandardIonChannel(name=f"std{channel.name}", 
                                           state_powers=channel._state_powers, 
                                           ion=channel.ion)
 

@@ -8,6 +8,8 @@
 docs/build/
 examples/*/membrane/mod/*/
 !examples/*/membrane/mod/*.mod
+examples/*/membrane/mod/std*.mod
+examples/*/membrane/python/std*.py
 examples/Default/
 examples/Templates/
 *.egg-info

@@ -356,7 +356,7 @@ class StandardIonChannel(IonChannel):
 
 
     def __init__(self, name, state_powers, ion=None):
-        super().__init__('s' + name)
+        super().__init__(name)
         
         self.ion = ion
         self.independent_var_name = 'v'

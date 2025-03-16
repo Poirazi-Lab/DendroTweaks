@@ -257,5 +257,5 @@ class PathManager:
         return {
             # **self.get_channel_paths(mechanism_name, python_template_name),
             'path_to_mod_template': self.get_file_path('templates', mod_template_name, 'mod'),
-            'path_to_standard_mod_file': self.get_file_path('mod', f"s{mechanism_name}", 'mod'),
+            'path_to_standard_mod_file': self.get_file_path('mod', f"std{mechanism_name}", 'mod'),
         }
