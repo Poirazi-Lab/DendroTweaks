@@ -48,7 +48,7 @@ class AbstracSyntaxTree():
 
     @property
     def title(self):
-        return self['TITLE'].strip()
+        return ''.join(self['TITLE']).strip()
 
     @property
     def comment(self):
