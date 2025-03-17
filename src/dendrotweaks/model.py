@@ -1533,13 +1533,17 @@ class Model():
         values = [(seg.path_distance(), seg.get_param_value(param_name)) for seg in self.seg_tree]
         colors = [get_domain_color(seg.domain) for seg in self.seg_tree]
 
-        valid_values = [(x, y) for (x, y), color in zip(values, colors) if not pd.isna(y)]
+        valid_values = [(x, y) for (x, y), color in zip(values, colors) if not pd.isna(y) and y != 0]
+        zero_values = [(x, y) for (x, y), color in zip(values, colors) if y == 0]
         nan_values = [(x, 0) for (x, y), color in zip(values, colors) if pd.isna(y)]
-        valid_colors = [color for (x, y), color in zip(values, colors) if not pd.isna(y)]
+        valid_colors = [color for (x, y), color in zip(values, colors) if not pd.isna(y) and y != 0]
+        zero_colors = [color for (x, y), color in zip(values, colors) if y == 0]
         nan_colors = [color for (x, y), color in zip(values, colors) if pd.isna(y)]
 
         if valid_values:
             ax.scatter(*zip(*valid_values), c=valid_colors)
+        if zero_values:
+            ax.scatter(*zip(*zero_values), edgecolors=zero_colors, facecolors='none', marker='.')
         if nan_values and show_nan:
             ax.scatter(*zip(*nan_values), c=nan_colors, marker='x', alpha=0.5, zorder=0)
         plt.axhline(y=0, color='k', linestyle='--')
