@@ -1,7 +1,9 @@
+TITLE Decay of internal calcium concentration
+
 NEURON {
     SUFFIX CaDyn
     USEION ca READ ica, cai WRITE cai
-    RANGE depth, tau, cainf, gamma
+    RANGE depth, taur, cainf, gamma, kt, kd
 }
 
 UNITS {
@@ -15,22 +17,23 @@ UNITS {
 
 PARAMETER {
     depth = 0.1    (um)    : Depth of calcium shell
-    tau = 80       (ms)    : Time constant for calcium removal
-    cainf = 1e-4   (mM)    : Steady-state calcium concentration
-    gamma = 0.05           : Fraction of free calcium (not buffered)
+    taur = 700     (ms)    : Time constant for calcium removal
+    cainf = 1e-8   (mM)    : Steady-state calcium concentration
+    gamma = 1              : Fraction of free calcium (not buffered)
+    kt = 1         (mM/ms) : Michaelis-Menten rate (not used by default)
+    kd = 5e-4      (mM)    : Michaelis-Menten dissociation constant (not used by default)
 }
 
-STATE { ca (mM) }
+STATE { cai (mM) }
 
 ASSIGNED {
     ica           (mA/cm2)
     drive_channel (mM/ms)
-    cai           (mM)
+    drive_pump    (mM/ms)
 }
 
 INITIAL {
-    ca = cainf
-    cai = ca
+    cai = cainf
 }
 
 BREAKPOINT {
@@ -44,6 +47,8 @@ DERIVATIVE state {
         drive_channel = 0. 
     }   : Prevent inward pumping
 
-    ca' = drive_channel - (ca - cainf) / tau
-    cai = ca
+    drive_pump = - kt * cai / (cai + kd) : Michaelis-Menten removal
+
+    cai' = drive_channel + drive_pump + (cainf - cai) / taur
+    
 }

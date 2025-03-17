@@ -558,13 +558,17 @@ class CaDynamics(Mechanism):
         super().__init__('CaDyn')
         self.params = {
             'depth': 0.1,  # um: Depth of calcium shell
-            'tau': 80,    # ms: Time constant for calcium removal
+            'taur': 80,    # ms: Time constant for calcium removal
             'cainf': 1e-4, # mM: Steady-state calcium concentration
-            'gamma': 0.05
+            'gamma': 0.05,
+            'kt': 0.0,
+            'kd': 0.0
         }
         self.range_params = {
             'depth': 0.1,
-            'tau': 80,
+            'taur': 80,
             'cainf': 1e-4,
-            'gamma': 0.05
+            'gamma': 0.05,
+            'kt': 0.0,
+            'kd': 0.0
         }
