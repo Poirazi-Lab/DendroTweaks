@@ -58,6 +58,8 @@ class Cell():
     def load_morphology(self, path_to_swc_file: str) -> None:
         if path_to_swc_file.endswith('.swc'):
             self._load_swc(path_to_swc_file)
+        elif path_to_swc_file.endswith('.asc'):
+            self._load_asc(path_to_swc_file)
         else:
             raise ValueError(f"File type not supported: {path_to_swc_file}")
 
@@ -66,6 +68,13 @@ class Cell():
         swc_importer = h.Import3d_SWC_read()
         swc_importer.input(path_to_swc_file)
         imported_cell = h.Import3d_GUI(swc_importer, False)
+        imported_cell.instantiate(self)
+
+    def _load_asc(self, path_to_asc_file: str) -> None:
+        h.load_file('import3d.hoc')
+        asc_importer = h.Import3d_Neurolucida3()
+        asc_importer.input(path_to_asc_file)
+        imported_cell = h.Import3d_GUI(asc_importer, False)
         imported_cell.instantiate(self)
 
     def distance(self, seg, from_seg=None):
