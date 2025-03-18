@@ -161,7 +161,7 @@ class Cell():
                     {% elif distribution.function_name == "linear" -%}
                     self.set_param(seg, "{{ param }}", "{{ mech }}", linear(distance, slope={{ distribution.parameters.slope }}, intercept={{ distribution.parameters.intercept }}))
                     {% elif distribution.function_name == "polynomial" -%}
-                    self.set_param(seg, "{{ param }}", "{{ mech }}", polyval(distance, coeffs={{ distribution.parameters.coeffs }}))
+                    self.set_param(seg, "{{ param }}", "{{ mech }}", polyval([{% for coeff in distribution.parameters.coeffs %}{{ coeff }}{% if not loop.last %}, {% endif %}{% endfor %}], distance))
                     {% else -%}
                     self.set_param(seg, "{{ param }}", "{{ mech }}", {{ distribution.function_name }}(distance, **{{ distribution.parameters }}))
                     {% endif %}
@@ -171,7 +171,7 @@ class Cell():
                     {% elif distribution.function_name == "linear" -%}
                     self.set_param(seg, "{{ param }}", "{{ mech }}", linear(distance, slope={{ distribution.parameters.slope }}, intercept={{ distribution.parameters.intercept }}))
                     {% elif distribution.function_name == "polynomial" -%}
-                    self.set_param(seg, "{{ param }}", "{{ mech }}", polyval(distance, coeffs={{ distribution.parameters.coeffs }}))
+                    self.set_param(seg, "{{ param }}", "{{ mech }}", polyval([{% for coeff in distribution.parameters.coeffs %}{{ coeff }}{% if not loop.last %}, {% endif %}{% endfor %}], distance))
                     {% else -%}
                     self.set_param(seg, "{{ param }}", "{{ mech }}", {{ distribution.function_name }}(distance, **{{ distribution.parameters }}))
                     {% endif %}
@@ -208,7 +208,7 @@ class Cell():
                     {% elif distribution.function_name == "linear" -%}
                     self.set_param(seg, "{{ param }}", "{{ mech }}", linear(distance, slope={{ distribution.parameters.slope }}, intercept={{ distribution.parameters.intercept }}))
                     {% elif distribution.function_name == "polynomial" -%}
-                    self.set_param(seg, "{{ param }}", "{{ mech }}", polyval(distance, coeffs={{ distribution.parameters.coeffs }}))
+                    self.set_param(seg, "{{ param }}", "{{ mech }}", polyval([{% for coeff in distribution.parameters.coeffs %}{{ coeff }}{% if not loop.last %}, {% endif %}{% endfor %}], distance))
                     {% else -%}
                     self.set_param(seg, "{{ param }}", "{{ mech }}", {{ distribution.function_name }}(distance, **{{ distribution.parameters }}))
                     {% endif %}
@@ -218,7 +218,7 @@ class Cell():
                     {% elif distribution.function_name == "linear" -%}
                     self.set_param(seg, "{{ param }}", "{{ mech }}", linear(distance, slope={{ distribution.parameters.slope }}, intercept={{ distribution.parameters.intercept }}))
                     {% elif distribution.function_name == "polynomial" -%}
-                    self.set_param(seg, "{{ param }}", "{{ mech }}", polyval(distance, coeffs={{ distribution.parameters.coeffs }}))
+                    self.set_param(seg, "{{ param }}", "{{ mech }}", polyval([{% for coeff in distribution.parameters.coeffs %}{{ coeff }}{% if not loop.last %}, {% endif %}{% endfor %}], distance))
                     {% else -%}
                     self.set_param(seg, "{{ param }}", "{{ mech }}", {{ distribution.function_name }}(distance, **{{ distribution.parameters }}))
                     {% endif %}

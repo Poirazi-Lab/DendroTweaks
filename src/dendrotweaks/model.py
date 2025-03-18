@@ -747,7 +747,10 @@ class Model():
             warnings.warn(f'Domain {domain.name} is empty and will be removed.')
             self.domains.pop(domain.name)
             self.domains_to_mechs.pop(domain.name)
-            self.groups['all'].domains.remove(domain.name)
+            for group in self._groups:
+                if domain.name in group.domains:
+                    group.domains.remove(domain.name)
+            # self.groups['all'].domains.remove(domain.name)
 
 
     def _remove_uninserted_mechanisms(self):
@@ -1465,7 +1468,6 @@ class Model():
         for mech_name in inserted_mechs:
             root.insert_mechanism(mech_name)
         self.domains_to_mechs[new_reduced_domain_name] = set(inserted_mechs.keys())
-        print('Leak:', self.params['gbar_Leak']['all'])
         
                
         # # Fit distributions to data for the group
@@ -1474,6 +1476,16 @@ class Model():
         
         # # Distribute parameters
         self.distribute_all()
+
+        return {
+            'domain_name': new_reduced_domain_name, 
+            'group_name': group_name,
+            'segs_to_params': segs_to_params,
+            'segs_to_locs': segs_to_locs,
+            'segs_to_reduced_segs': segs_to_reduced_segs,
+            'reduced_segs_to_params': reduced_segs_to_params,
+            'params_to_coeffs': params_to_coeffs
+        }
 
 
     def fit_distribution(self, param_name, segments, max_degree=6, tolerance=1e-7, plot=False):
