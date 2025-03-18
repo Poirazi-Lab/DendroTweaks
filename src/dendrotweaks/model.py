@@ -365,7 +365,8 @@ class Model():
     # MORPHOLOGY
     # ========================================================================
 
-    def load_morphology(self, file_name, soma_notation='3PS', align=True, sort_children=False, force=False) -> None:
+    def load_morphology(self, file_name, soma_notation='3PS', 
+        align=True, sort_children=True, force=False) -> None:
         """
         Read an SWC file and build the SWC and section trees.
 
@@ -1875,6 +1876,7 @@ class Model():
         from dendrotweaks.model_io import render_template
         from dendrotweaks.model_io import get_params_to_valid_domains
         from dendrotweaks.model_io import filter_params
+        from dendrotweaks.model_io import get_neuron_domain
 
         params_to_valid_domains = get_params_to_valid_domains(self)
         params = self.params if include_kinetic_params else filter_params(self)
@@ -1889,6 +1891,7 @@ class Model():
             'iclamps': self.iclamps,
             'recordings': self.simulator.recordings,
             'params_to_valid_domains': params_to_valid_domains,
+            'domains_to_NEURON': {domain: get_neuron_domain(domain) for domain in self.domains},
         })
 
         if not file_name.endswith('.py'):

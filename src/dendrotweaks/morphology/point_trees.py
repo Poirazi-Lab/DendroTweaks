@@ -9,26 +9,7 @@ from dendrotweaks.utils import timeit
 from dendrotweaks.morphology.trees import Node, Tree
 
 from dendrotweaks.utils import timeit
-
-ID_TO_DOMAIN = {
-    0: 'undefined',
-    1: 'soma',
-    2: 'axon',
-    3: 'dend',
-    31: 'basal',
-    4: 'apic',
-    41: 'trunk',
-    42: 'tuft',
-    43: 'oblique',
-    5: 'custom',
-    6: 'neurite',
-    7: 'glia',
-}
-
-DOMAIN_TO_ID = {
-    v: k for k, v in ID_TO_DOMAIN.items()
-}
-
+from dendrotweaks.utils import get_swc_idx, get_domain_name
 from dendrotweaks.utils import get_domain_color
 
 from contextlib import contextmanager
@@ -91,12 +72,15 @@ class Point(Node):
         """
         The morphological or functional domain of the node.
         """
-        return ID_TO_DOMAIN.get(self.type_idx, f"custom_{int(self.type_idx)}")
+        return get_domain_name(self.type_idx)
 
 
     @domain.setter
     def domain(self, value):
-        self.type_idx = DOMAIN_TO_ID.get(value, 0)
+        if isinstance(value, str):
+            self.type_idx = get_swc_idx(value)
+        elif value is None:
+            self.type_idx = None
 
 
     @property
@@ -158,7 +142,7 @@ class Point(Node):
         """
         info = (
             f"Node {self.idx}:\n"
-            f"  Type: {ID_TO_DOMAIN.get(self.type_idx, 'unknown')}\n"
+            f"  Type: {get_domain_name(self.type_idx)}\n"
             f"  Coordinates: ({self.x}, {self.y}, {self.z})\n"
             f"  Radius: {self.r}\n"
             f"  Parent: {self.parent_idx}\n"

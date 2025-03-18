@@ -370,7 +370,7 @@ class Tree:
             )
 
     # @timeit
-    def sort(self, sort_children=False, force=False):
+    def sort(self, sort_children=True, force=False):
         """
         Sort the nodes in the tree using a stack-based depth-first traversal.
 

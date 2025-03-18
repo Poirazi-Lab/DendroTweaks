@@ -9,6 +9,42 @@ import zipfile
 import urllib.request
 import matplotlib.pyplot as plt
 
+SWC_ID_TO_DOMAIN = {
+    0: 'undefined',
+    1: 'soma',
+    11: 'perisomatic',
+    2: 'axon',
+    3: 'dend',
+    31: 'basal',
+    4: 'apic',
+    41: 'trunk',
+    42: 'tuft',
+    43: 'oblique',
+    5: 'custom',
+    6: 'neurite',
+    7: 'glia',
+    8: 'reduced',
+}
+
+DOMAIN_TO_SWC_ID = {
+    v: k for k, v in SWC_ID_TO_DOMAIN.items()
+}
+
+def get_swc_idx(domain_name):
+    base_domain, _, idx = domain_name.partition('_')
+    if base_domain == 'reduced':
+        return int(f'8{idx}')
+    elif base_domain == 'custom':
+        return int(f'5{idx}')
+    return DOMAIN_TO_SWC_ID.get(base_domain, 0)
+
+def get_domain_name(swc_idx):
+    if str(swc_idx).startswith('8'):
+        return 'reduced_' + str(swc_idx)[1:]
+    elif str(swc_idx).startswith('5'):
+        return 'custom_' + str(swc_idx)[1:]
+    return SWC_ID_TO_DOMAIN.get(swc_idx, 'undefined')
+
 DOMAINS_TO_COLORS = {
     'soma': '#E69F00',
     'apic': '#0072B2',
@@ -24,8 +60,8 @@ DOMAINS_TO_COLORS = {
     'undefined': '#7F7F7F',
 }
 
-def get_domain_color(domain):
-    base_domain = domain.split('_')[0]
+def get_domain_color(domain_name):
+    base_domain, _, idx = domain_name.partition('_')
     return DOMAINS_TO_COLORS.get(base_domain, '#7F7F7F')
 
 

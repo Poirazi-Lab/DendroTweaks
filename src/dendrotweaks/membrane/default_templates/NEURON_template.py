@@ -112,7 +112,7 @@ class Cell():
 
     def insert_mechanisms(self):
         {% for domain, mechanisms in domains_to_mechs.items() %}
-        for sec in self.{{ domain }}:
+        for sec in self.{{ domains_to_NEURON[domain] }}:
             {% for mechanism in mechanisms %}
                 sec.insert('{{ mechanism }}')
             {%- endfor %}
