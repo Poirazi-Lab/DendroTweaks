@@ -10,24 +10,15 @@ from neuron import h
 
 import math
 import cmath
-import contextlib
 import collections
 import numpy as np
-import logging
 
-logger = logging.getLogger(__name__)
-
+from neuron_reduce.reducing_methods import push_section
+from neuron_reduce.reducing_methods import measure_input_impedance_of_subtree
+from neuron_reduce.reducing_methods import find_best_real_X
 
 EXCLUDE_MECHANISMS = ['Leak', 'na_ion', 'k_ion', 'ca_ion', 'h_ion']
 
-from dendrotweaks.morphology.reduce.reduced_cylinder import measure_input_impedance_of_subtree
-
-@contextlib.contextmanager
-def push_section(section):
-    '''push a section onto the top of the NEURON stack, pop it when leaving the context'''
-    section.push()
-    yield
-    h.pop_section()
 
 def map_segs_to_params(root, mechanisms):
     segs_to_params = {}
@@ -86,8 +77,6 @@ def reduce_segment(seg,
                    new_cable_electrotonic_length,
                    subtree_q):
 
-    # measures the original transfer impedance from the synapse to the
-    # somatic-proximal end in the subtree root section
     sec = seg.sec
 
     with push_section(sec):
@@ -96,11 +85,6 @@ def reduce_segment(seg,
         # creates a complex Impedance value with the given polar coordinates
         orig_transfer_impedance = cmath.rect(
             orig_transfer_imp, orig_transfer_phase)
-
-    # synapse location could be calculated using:
-    # X = L - (1/q) * arcosh( (Zx,0(f) / ZtreeIn(f)) * cosh(q*L) ),
-    # derived from Rall's cable theory for dendrites (Gal Eliraz)
-    # but we chose to find the X that will give the correct modulus. See comment about L values
 
     new_electrotonic_location = find_best_real_X(root_input_impedance,
                                                  orig_transfer_impedance,
@@ -113,39 +97,6 @@ def reduce_segment(seg,
         new_relative_loc_in_section = 0.999999
 
     return new_relative_loc_in_section
-
-
-# find_best_real_X
-def find_best_real_X(Z0, ZX_goal, q, L, max_depth=50):
-    '''finds the best location of a synapse (X)
-    s.t. the modulus part of the impedance of ZX in eq 2.8 will be correct.
-    Since the modulus is a decreasing function of L, it is easy to find it using binary search.
-    '''
-    min_x, max_x = 0.0, L
-    current_x = (min_x + max_x) / 2.0
-
-    ZX_goal = cmath.polar(ZX_goal)[0]
-
-    for _ in range(max_depth):
-        Z_current_X_A = compute_zx_polar(Z0, L, q, current_x)[0]
-
-        if abs(ZX_goal - Z_current_X_A) <= 0.001:
-            break
-        elif ZX_goal > Z_current_X_A:
-            current_x, max_x = (min_x + current_x) / 2.0, current_x
-        else:
-            current_x, min_x = (max_x + current_x) / 2.0, current_x
-    else:
-        logger.info("The difference between X and the goal X is larger than 0.001")
-
-    return current_x
-
-def compute_zx_polar(Z0, L, q, x):
-    '''computes the polar represntation of Zx (equation 2.8 in Gals thesis)
-    '''
-    ZX = Z0 * cmath.cosh(q * (L - x)) / cmath.cosh(q * L)
-    ZX = cmath.polar(ZX)
-    return ZX
 
 
 def map_segs_to_reduced_segs(seg_to_locs, root):
