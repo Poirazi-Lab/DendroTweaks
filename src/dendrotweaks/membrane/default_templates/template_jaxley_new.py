@@ -98,8 +98,11 @@ class {{ class_name }}(Channel):
     def init_state(self, states, v, params, delta_t):
         {{ procedure_calls}}
         return {
-            {% for state in state_vars.keys() %}"{{class_name}}_{{state}}": {{state}}Inf {% if not loop.last %},
-            {% endif %}{% endfor %}
+            {% for state in state_vars.keys() -%}
+            "{{class_name}}_{{state}}": {{state}}Inf 
+                {%- if not loop.last %},
+                {%- endif %}
+            {% endfor -%}
         }
 
 
