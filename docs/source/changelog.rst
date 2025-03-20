@@ -1,6 +1,11 @@
 Changelog
 =============
 
+Version 0.3.1
+--------------
+    This release includes a minor update to resolve issues encountered during the distribution upload process to PyPI.
+
+
 Version 0.3.0
 --------------
 
