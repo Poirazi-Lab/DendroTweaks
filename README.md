@@ -1,6 +1,6 @@
 # DendroTweaks
 
-<img src="docs/source/_static/logo_dark.png" width="25%">
+<img src="https://dendrotweaks.readthedocs.io/en/latest/_static/logo.png" width="25%">
 <p>
 
 **DendroTweaks** is a Python toolbox designed for creating and validating single-cell biophysical models with active dendrites. 

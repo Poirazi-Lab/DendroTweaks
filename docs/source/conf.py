@@ -47,7 +47,7 @@ copybutton_only_copy_prompt_lines = True
 
 html_theme_options = {
     'sidebar_hide_name': True,
-    'light_logo': 'logo_light.png',
-    'dark_logo': 'logo_dark.png',
+    'light_logo': 'logo.png',
+    'dark_logo': 'logo.png',
 }
 html_favicon = '_static/favicon.png'
