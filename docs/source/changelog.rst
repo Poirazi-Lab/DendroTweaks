@@ -1,6 +1,26 @@
 Changelog
 =============
 
+Version 0.3.0
+--------------
+
+    This release focuses on extending and reorganizing examples, and addressing minor bugs.
+
+    Key Updates:
+
+    - Reorganized example notebooks and a new example model (Hay 2011).
+    - Utility function for downloading examples from the repository.
+    - Default MOD files and templates included in the distribution.
+
+    Minor Updates:
+
+    - Replaced the prefix for standard channels.
+    - Fixed the issue with parsing MOD files without TITLE.
+    - Updated the standard CaDyn MOD file.
+    - Improved SWC-to-domain mapping, resolving domains mismatched during export to NEURON.
+    - Refined the template for exporting models to plain NEURON code.
+    - Removed Jupyter from the dependencies.
+
 
 Version 0.2.0
 --------------

@@ -25,8 +25,8 @@ DendroTweaks is included in the Python package index: https://pypi.org/project/d
 
 .. code-block:: bash
 
-   git clone https://github.com/Poirazi-Lab/dendrotweaks.git
-   cd dendrotweaks
+   git clone https://github.com/Poirazi-Lab/DendroTweaks.git
+   cd DendroTweaks
    pip install .
 
 4. Once installed, you can import the package in your Python scripts or Jupyter notebooks:
@@ -38,6 +38,12 @@ DendroTweaks is included in the Python package index: https://pypi.org/project/d
 
 If the installation was successful, this command will return the version number of the package.
 
+If you want to use the package in Jupyter notebooks, you will need to install Jupyter:
+
+.. code-block:: bash
+
+   pip install jupyter
+
 Development
 ---------------
 
@@ -46,8 +52,8 @@ the development dependencies. To do this, clone the repository and run the follo
 
 .. code-block:: bash
 
-   git clone https://github.com/Poirazi-Lab/dendrotweaks.git
-   cd dendrotweaks
+   git clone https://github.com/Poirazi-Lab/DendroTweaks.git
+   cd DendroTweaks
    pip install -e .[dev]
 
 

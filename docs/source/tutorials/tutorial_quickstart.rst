@@ -19,7 +19,14 @@ Within this directory, create a unique subfolder for each model you plan to deve
         ├── UserModel1/
         ├── UserModel2/
         ...
-            
+
+To follow along with this tutorial, you can download the example models from the DendroTweaks repository:
+
+.. code-block:: python
+
+    >>> import dendrotweaks as dd
+    >>> dd.download_example_data('path/to/data/')
+
 For each model, we will need two essential components: the neuronal morphology (in SWC format) 
 stored in the :code:`morphology/` folder, and the membrane mechanisms (ion channels defined 
 as MOD files) placed in the :code:`membrane/mod/` folder.
@@ -50,7 +57,6 @@ membrane mechanisms, and stimuli.
 
 .. code-block:: python
 
-    >>> import dendrotweaks as dd
     >>> model = dd.Model(path_to_model='path/to/data/UserModel1/')
 
 When we instantiate the model by specifying the path to our model directory, DendroTweaks 
@@ -152,8 +158,8 @@ Next, we will add these user-defined mechanisms to the model:
 
 .. code-block:: python
 
-    >>> for mech in model.list_mechanisms():
-    >>>     model.add_mechanism(mech, recompile=True)
+    >>> for mech_name in ['Nav', 'Kv']:
+    >>>     model.add_mechanism(mech_name, recompile=True)
 
 With these commands, we create Python objects from MOD files and add them to :code:`mechanisms`.
 We also compile and load the MOD files, making them available in NEURON.
@@ -190,15 +196,14 @@ We can view the global parameters of the model with the :code:`params` attribute
     {'cm': {'all': constant({'value': 1})},
      'Ra': {'all': constant({'value': 35.4})}}
 
-We should interpret the output as follows: the specific membrane capacitance :code:`cm` is set to a constant value of 1 uF/cm^2,
-and the axial resistance :code:`Ra` is set to 35.4 Ohm*cm for all segments of the cell. We will discuss how to update these parameters shortly.
-We will learn more about segment groups and parameter distributions in the
-:doc:`tutorial</tutorials/tutorial_distributions>` on distributing parameters across the cell.
+We should interpret the output as follows: the specific membrane capacitance :code:`cm` is set to a constant value of 1 :math:`\mu F/cm^2`,
+and the axial resistance :code:`Ra` is set to 35.4 :math:`Ohm \cdot cm` for all segments of the cell. We will discuss how to update these parameters shortly.
+
 
 .. warning::
 
     Note that so far we have only loaded the mechanisms without actually inserting them 
-    into the membrane. Therefore, the parameters of these mechanisms are not yet included in the :code:`params` dictionary.
+    into the membrane. Therefore, the parameters of these mechanisms are not yet included in the :code:`model.params` dictionary.
     In the next step, we will insert the mechanisms into the membrane.
 
 
@@ -299,7 +304,7 @@ As an example, let's set the conductance of the leak channel to 0.0001 S/cm^2.
 
     >>> model.set_param('gbar_Leak', value=0.0001) # S/cm^2
 
-In real neurons, properties such as ion channel conductance vary across different regions of the cell. 
+In real neurons, properties such as ion channel density vary across different regions of the cell. 
 To distribute parameters across the cell, we need to specify **where** and **how** the parameter will be distributed.
 
 To select the segments **where** a given distribution will be applied, we use segment groups.
@@ -330,13 +335,13 @@ specifying the group name and the distribution type.
     
 We can use a more concise notation if a parameter doesn't vary across the cell.
 If we don't provide a group name, the parameter will be set for all segments.
-If we don't provide a distribution type, a constant distribution is used.
+If we don't provide a distribution type, a constant distribution will be used.
 These two examples are equivalent:
 
 .. code-block:: python
 
-    >>> model.set_param('gbar_Leak', value=0.0001) # S/cm^2
     >>> model.set_param('gbar_Leak', group_name='all', distr_type='constant', value=0.0001) # S/cm^2
+    >>> model.set_param('gbar_Leak', value=0.0001) # S/cm^2
 
 We can also set other parameters, such as reversal potentials, temperature, and initial membrane potential.
 
@@ -389,8 +394,7 @@ We will first select the soma section from the model using the special attribute
 
     >>> soma = model.sec_tree.soma
 
-To observe the neuron's activity, we need to place a recording electrode at a specific location. 
-In real experiments, this would be an electrode measuring voltage changes:
+To observe the neuron's activity, we need to place a recording electrode at a specific location:
 
 We add a recording point at the center of the soma. 
 The :code:`loc` parameter specifies the location along the section 
@@ -406,7 +410,7 @@ Now we will apply a current step stimulus to drive the neuron to fire action pot
 This mimics the experimental technique where constant current is injected into a neuron:
 
 We specify the duration of the stimulus in ms, the delay before the stimulus starts, and the amplitude of the stimulus
-in pikoAmperes.
+in nanoamperes.
 
 .. code-block:: python
 
@@ -423,18 +427,17 @@ With our recording and stimulus in place, we can now run the simulation:
 
     >>> model.run(1000) # ms
 
-This runs the simulation for 1000 milliseconds (1 second), which gives us time 
-to observe 
+This runs the simulation for 1000 milliseconds (1 second).
 After the simulation completes, the voltage data is stored in 
 :code:`simulator.vs` and the corresponding time points in :code:`simulator.t`. 
 
 
-For more complex stimuli, such as synaptic inputs, refer to the :doc:`tutorial</tutorials/tutorial_synapses>`.
+For more complex stimuli, such as synaptic inputs, refer to the :doc:`tutorial</tutorials/tutorial_synapses>` on adding synaptic inputs.
 
 Analyzing the results
 ------------------------------------------
 
-Finally, we can analyze the results of the simulation using some of the built-in functions in DendroTweaks.
+Finally, we can analyze the results of the simulation using some of the built-in functions.
 
 
 We will use built-in DendroTweaks functions to plot the voltage trace and extract spike metrics:
@@ -466,7 +469,7 @@ The output metrics provide important physiological information:
 
     *Figure 3: Voltage trace with detected spikes*
 
-You can learn more about analyzing simulation results
+You can learn more 
 in the :doc:`tutorial</tutorials/tutorial_validation>` on analyzing simulation results.
 
 

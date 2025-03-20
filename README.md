@@ -3,25 +3,28 @@
 <img src="docs/source/_static/logo_dark.png" width="25%">
 <p>
 
-**DendroTweaks** is a Python toolbox designed to facilitate the creation and validation of single-cell biophysical models with active dendrites.
+**DendroTweaks** is a Python toolbox designed for creating and validating single-cell biophysical models with active dendrites. 
 
-It features both a standalone Python library and an interactive web-based GUI.
+It is available both as a standalone Python package and a web-based application.
 
-This repository contains the code for the standalone version. Please find out more in the official documentation [dendrotweaks.readthedocs.io/latest/](https://dendrotweaks.readthedocs.io/en/latest/index.html).
+## Learn More
 
-You can access the GUI online at our platform at [dendrotweaks.dendrites.gr](https://dendrotweaks.dendrites.gr).
+- **Standalone Library**: Explore the [official documentation](https://dendrotweaks.readthedocs.io/en/latest/index.html) for detailed tutorials and API reference.
+- **Web Application**: Access the GUI online via our platform at [dendrotweaks.dendrites.gr](https://dendrotweaks.dendrites.gr).
+- **Quick Overview**: Check out our [e-poster](https://doi.org/10.57736/abba-7149), including a video demonstration, presented at the FENS Forum 2024 in Vienna.
 
-For a quick overview of the toolbox, including a video demonstration, you can visit our [e-poster](https://doi.org/10.57736/abba-7149) presented at the FENS Forum 2024 in Vienna.
+## Publication
 
-To learn more about the toolbox, you can read our publication in eLife:
+For an in-depth understanding of DendroTweaks, refer to our publication in *eLife*:
 
-> Roman Makarov, Spyridon Chavlis, Panayiota Poirazi (2024) DendroTweaks: An interactive approach for unraveling dendritic dynamics. eLife 13:RP103324. https://doi.org/10.7554/eLife.103324.1
+> Roman Makarov, Spyridon Chavlis, Panayiota Poirazi (2024).  
+> *DendroTweaks: An interactive approach for unraveling dendritic dynamics.*  
+> eLife 13:RP103324. [https://doi.org/10.7554/eLife.103324.1](https://doi.org/10.7554/eLife.103324.1)
 
-If you find DendroTweaks helpful for building your models, please consider citing our work.
+If you find DendroTweaks helpful for your research, please consider citing our work:
 
-```
-@article{
-    Makarov2024,
+```bibtex
+@article{Makarov2024,
     title={DendroTweaks: An interactive approach for unraveling dendritic dynamics},
     author={Makarov, Roman and Chavlis, Spyridon and Poirazi, Panayiota},
     journal={eLife},
@@ -30,30 +33,4 @@ If you find DendroTweaks helpful for building your models, please consider citin
     year={2024},
     doi={10.7554/eLife.103324.1}
 }
-```
-
-## Repository Structure
-The repository is organized as follows:
-
-```
-dendrotweaks/
-├── docs/                # Sphinx documentation
-├── examples/            # Example models
-└── src/                 
-    ├── dendrotweaks/
-    │   ├── analysis/      # Morphometric and ephys analysis
-    │   ├── membrane/      # Membrane mechanisms
-    │   │   └── io/        # MOD file management
-    │   ├── morphology/    # Tree graphs representing morphology
-    │   │   └── io/        # SWC file management
-    │   ├── stimuli/       # Current clamps and synapses
-    │   ├── __init__.py
-    │   ├── model.py       # Main interface class
-    │   ├── simulators.py  # Available simulators
-    │   └── utils.py 
-    ├── LICENSE
-    ├── MANIFEST.in
-    ├── README.md
-    ├── pyproject.toml
-    └── setup.cfg
 ```
