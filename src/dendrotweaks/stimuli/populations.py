@@ -123,6 +123,17 @@ class Population():
                 spike_times[syn].extend(syn.spike_times)
         return dict(spike_times)
 
+    @property
+    def n_per_seg(self):
+        """
+        Return the number of synapses per segment.
+        """
+        n_per_seg = {seg: 0 for seg in self.segments}
+        for (sec, loc), syns in self.synapses.items():
+            seg = sec(loc)
+            n_per_seg[seg] += len(syns)
+        return dict(n_per_seg)
+            
 
     def update_kinetic_params(self, **params):
         """
