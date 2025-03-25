@@ -1688,12 +1688,17 @@ class Model():
             Whether to recompile the mechanisms after loading. Default is True.
         """
         self.add_default_mechanisms()
-        self.add_mechanisms('mod', recompile=recompile)
+        
 
         path_to_json = self.path_manager.get_file_path('membrane', file_name, extension='json')
 
         with open(path_to_json, 'r') as f:
             data = json.load(f)
+
+        for mech_name in {mech for mechs in data['domains'].values() for mech in mechs}:
+            if mech_name in ['Leak', 'CaDyn', 'Independent']:
+                continue
+            self.add_mechanism(mech_name, dir_name='mod', recompile=recompile)            
 
         self.from_dict(data)
 
@@ -1826,6 +1831,10 @@ class Model():
         df_stimuli = pd.read_csv(path_to_stimuli_csv)
 
         self.simulator.from_dict(data['simulation'])
+
+        # Clear all stimuli and recordings
+        self.remove_all_stimuli()
+        self.remove_all_recordings()
 
         # Recordings ---------------------------------------------------------
 
