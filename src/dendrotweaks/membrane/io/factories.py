@@ -86,10 +86,12 @@ def standardize_channel(channel: IonChannel,
                                           state_powers=channel._state_powers, 
                                           ion=channel.ion)
 
-    standard_channel.params.update({'q10': channel.params.get('q10'),
-                                    'temp': channel.params.get('temp')})
+    if 'q10' in channel.params:
+        standard_channel.params['q10'] = channel.params['q10']
+    if 'temp' in channel.params:
+        standard_channel.params['temp'] = channel.params['temp']
 
-    fit_temperature = channel.params.get('temp') or 23
+    fit_temperature = channel.params.get('temp')
 
     standard_channel.set_tadj(fit_temperature)
     # Fit the standard channel to the data

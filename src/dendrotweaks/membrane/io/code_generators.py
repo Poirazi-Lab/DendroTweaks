@@ -296,10 +296,15 @@ class NMODLCodeGenerator(CodeGenerator):
         variables = {
             'suffix': channel.name,
             'ion': channel.ion,
-            'range_params': [
+            'params': [
                 (param, channel.params[param], get_unit(param))
                 for param in channel.params
             ],
+            'range_params': [
+                (param, channel.range_params[param], get_unit(param))
+                for param in channel.range_params
+            ],
+            'has_tadj': ('q10' in channel.params and 'temp' in channel.params),
             'state_vars': {
                 var: params['power'] for var, params in channel._state_powers.items()
             },

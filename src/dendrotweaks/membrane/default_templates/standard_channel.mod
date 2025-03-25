@@ -23,7 +23,7 @@ UNITS {
 }
 
 PARAMETER {
-    {% for key, value, unit in range_params %}{{ "%-7s"|format(key) }} = {{ value }} ({{ unit }}){% if not loop.last %}
+    {% for key, value, unit in params %}{{ "%-7s"|format(key) }} = {{ value }} ({{ unit }}){% if not loop.last %}
     {% endif %}{% endfor %}
 }
 
@@ -57,7 +57,11 @@ DERIVATIVE states {
 }
 
 INITIAL {
+    {%- if has_tadj%}
     tadj = q10^((celsius - temp)/10(degC))
+    {%- else %}
+    tadj = 1
+    {%- endif %}
     rates(v)
     {% for state in state_vars %}{{ state }} = {{ state }}_inf
     {% endfor %}

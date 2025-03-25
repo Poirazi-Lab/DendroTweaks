@@ -119,9 +119,12 @@ class IonChannel(Mechanism):
         where q10 is the temperature coefficient and reference_temp is the
         temperature at which the channel kinetics were measured.
         """
-        q10 = self.params.get("q10", 2.3)
-        reference_temp = self.params.get("temp", temperature)
-        self.tadj = q10 ** ((temperature - reference_temp) / 10)
+        q10 = self.params.get("q10")
+        reference_temp = self.params.get("temp")
+        if q10 is None or reference_temp is None:
+            self.tadj = 1
+        else:
+            self.tadj = q10 ** ((temperature - reference_temp) / 10)
 
     def get_data(self, x=None, temperature: float = 37, verbose=True) -> Dict[str, Dict[str, float]]:
         """
@@ -367,14 +370,14 @@ class StandardIonChannel(IonChannel):
         #             for param in self.STANDARD_PARAMS]
 
         self.params = {
+            'gbar': 0.0,
+            **{
             f'{param}_{state}': None
             for state in state_powers
             for param in self.STANDARD_PARAMS
+            }
         }
-        self.params.update({
-            'gbar': 0.0,
-        })
-        self.range_params = self.params.copy()
+        self.range_params = {k:v for k, v in self.params.items()}
 
         self.temperature = 37
 
@@ -474,9 +477,9 @@ class StandardIonChannel(IonChannel):
                 fit_result.params = {key: round(value, round_params) for key, value in fit_result.params.items()}
 
             for param in ['k', 'delta', 'tau0', 'vhalf', 'sigma']:
-                self.params[f'{param}_{state}'] = fit_result.params[param]
-
-        self.range_params = self.params.copy()
+                value = fit_result.params[param]
+                self.params[f'{param}_{state}'] = value
+                self.range_params[f'{param}_{state}'] = value
     
     
     def to_dict(self):
