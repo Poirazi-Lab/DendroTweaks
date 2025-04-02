@@ -2,7 +2,7 @@
 
 
 NEURON	{
-	SUFFIX Ca_HVA
+	SUFFIX CaHVA
 	USEION ca READ eca WRITE ica
 	RANGE gbar, g, ica 
 }

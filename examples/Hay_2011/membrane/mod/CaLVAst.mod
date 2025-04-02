@@ -4,7 +4,7 @@
 
 
 NEURON	{
-	SUFFIX Ca_LVAst
+	SUFFIX CaLVAst
 	USEION ca READ eca WRITE ica
 	RANGE gbar, g, ica
 }

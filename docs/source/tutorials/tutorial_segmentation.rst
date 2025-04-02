@@ -15,7 +15,7 @@ as it was done in the previous :doc:`tutorial</tutorials/tutorial_distributions>
 
 
 
-The :code:`set_segmentation` method is used to set the spatial discretization coefficient. The spatial discretization coefficient determines the number of segments in a section. The number of segments is calculated based on the frequency-dependent length constant and the spatial discretization coefficient.
+The :code:`set_segmentation` method is used to set the spatial discretization. The spatial discretization coefficient determines the number of segments in a section. The number of segments is calculated based on the frequency-dependent length constant and the spatial discretization coefficient.
 
 .. code-block:: python
     

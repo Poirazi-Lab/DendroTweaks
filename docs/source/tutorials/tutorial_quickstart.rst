@@ -481,5 +481,5 @@ in the :doc:`tutorial</tutorials/tutorial_validation>` on analyzing simulation r
     </div>
 
 We've covered the fundamental steps to create and simulate a 
-single-cell biophysical neuronal models using DendroTweaks and you are now ready to build more complex models.
+single-cell biophysical neuronal model using DendroTweaks and you are now ready to build more complex models.
 For more advanced features and detailed explanations, refer to the other tutorials in the documentation.

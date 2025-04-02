@@ -770,7 +770,7 @@ class SectionTree(Tree):
         """
 
         unique_domain_names = set([sec.domain for sec in self.sections])
-        self.domains = {name: Domain(name) for name in unique_domain_names}
+        self.domains = {name: Domain(name) for name in sorted(unique_domain_names)}
 
         for sec in self.sections:
             self.domains[sec.domain].add_section(sec)
