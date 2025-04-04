@@ -14,8 +14,8 @@ class Segment(Node):
         The index of the segment.
     parent_idx : int
         The index of the parent segment.
-    neuron_seg : h.Segment
-        The NEURON segment.
+    sim_seg : h.Segment
+        The segment object from a simulator (e.g. NEURON).
     section : Section
         The section to which the segment belongs.
 
@@ -24,13 +24,13 @@ class Segment(Node):
     _section : Section
         The section to which the segment belongs.
     _ref : h.Segment
-        The NEURON segment.
+        The segment object from a simulator (e.g. NEURON).
     """
 
-    def __init__(self, idx, parent_idx, neuron_seg, section) -> None:
+    def __init__(self, idx, parent_idx, sim_seg, section) -> None:
         super().__init__(idx, parent_idx)
         self._section = section
-        self._ref = neuron_seg
+        self._ref = sim_seg
 
 
     # PROPERTIES
@@ -41,30 +41,6 @@ class Segment(Node):
         The morphological or functional domain of the segment.
         """
         return self._section.domain
-
-
-    @property
-    def x(self):
-        """
-        The position of the segment along the normalized section length (from NEURON).
-        """
-        return self._ref.x
-
-
-    @property
-    def area(self):
-        """
-        The area of the segment (from NEURON).
-        """
-        return self._ref.area()
-
-
-    @property
-    def diam(self):
-        """
-        The diameter of the segment (from NEURON).
-        """
-        return self._ref.diam
 
 
     @property
@@ -135,6 +111,78 @@ class Segment(Node):
             return getattr(self._ref, param_name)
         else:
             return np.nan
+
+
+# ------------------------------------------------------
+# NEURON SEGMENT
+# ------------------------------------------------------
+
+class NeuronSegment(Segment):
+    """
+    A class representing a segment for the Jaxley simulator.
+    """
+
+    def __init__(self, idx, parent_idx, sim_seg, section) -> None:
+        super().__init__(idx, parent_idx, sim_seg, section)
+
+    @property
+    def x(self):
+        """
+        The position of the segment along the normalized section length (from NEURON).
+        """
+        return self._ref.x
+
+
+    @property
+    def area(self):
+        """
+        The area of the segment (from NEURON).
+        """
+        return self._ref.area()
+
+
+    @property
+    def diam(self):
+        """
+        The diameter of the segment (from NEURON).
+        """
+        return self._ref.diam
+
+# ------------------------------------------------------
+# JAXLEY SEGMENT
+# ------------------------------------------------------
+
+class JaxleySegment(Segment):
+    """
+    A class representing a segment for the Jaxley simulator.
+    """
+
+    def __init__(self, idx, parent_idx, sim_seg, section) -> None:
+        super().__init__(idx, parent_idx, sim_seg, section)
+
+    def set_param_value(self, param_name, value):
+        PARAM_JAXLEY = {
+            'cm': 'capacitance',
+            'Ra': 'axial_resistance',
+        }
+        if param_name in PARAM_JAXLEY:
+            param_name = PARAM_JAXLEY[param_name]
+        self._ref.set(param_name, value)
+
+    def get_param_value(self, param_name):
+        return self._ref.nodes[param_name].iloc[0]
+
+    @property
+    def x(self):
+        seg_idx = np.where([s == self for s in self._section.segments])[0][0]
+        seg_centers = [c/self._section.L for c in self._section.seg_centers]
+        return seg_centers[seg_idx]
+
+
+
+# ===========================================================
+# SEGMENT TREE
+# ===========================================================
 
 
 class SegmentTree(Tree):

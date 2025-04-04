@@ -7,10 +7,11 @@ import quantities as pq
 
 from dendrotweaks.morphology.point_trees import PointTree
 from dendrotweaks.morphology.sec_trees import Section, SectionTree, Domain
-from dendrotweaks.morphology.seg_trees import Segment, SegmentTree
-from dendrotweaks.simulators import NEURONSimulator
+from dendrotweaks.morphology.seg_trees import Segment, NeuronSegment, JaxleySegment, SegmentTree
+from dendrotweaks.simulators import NeuronSimulator, JaxleySimulator
 from dendrotweaks.membrane.groups import SegmentGroup
 from dendrotweaks.membrane.mechanisms import Mechanism, LeakChannel, CaDynamics
+from dendrotweaks.membrane.jaxley_mechanisms import JaxleyLeakChannel
 from dendrotweaks.membrane.io import create_channel, standardize_channel, create_standard_channel
 from dendrotweaks.membrane.io import MODFileLoader
 from dendrotweaks.morphology.io import create_point_tree, create_section_tree, create_segment_tree
@@ -149,7 +150,7 @@ class Model():
 
         # Simulator
         if simulator_name == 'NEURON':
-            self.simulator = NEURONSimulator()
+            self.simulator = NeuronSimulator()
         elif simulator_name == 'Jaxley':
             self.simulator = JaxleySimulator()
         else:
@@ -231,9 +232,9 @@ class Model():
         The dictionary mapping mechanisms to domains where they are inserted.
         """
         mechs_to_domains = defaultdict(set)
-        for domain, mechs in self.domains_to_mechs.items():
-            for mech in mechs:
-                mechs_to_domains[mech].add(domain)
+        for domain_name, mech_names in self.domains_to_mechs.items():
+            for mech_name in mech_names:
+                mechs_to_domains[mech_name].add(domain_name)
         return dict(mechs_to_domains)
 
 
@@ -397,12 +398,12 @@ class Model():
             point_tree.round_coordinates(8)
         self.point_tree = point_tree
 
-        sec_tree = create_section_tree(point_tree)
+        sec_tree = create_section_tree(point_tree, self.simulator_name)
         sec_tree.sort(sort_children=sort_children, force=force)
         self.sec_tree = sec_tree
 
         self.create_and_reference_sections_in_simulator()
-        seg_tree = create_segment_tree(sec_tree)
+        seg_tree = create_segment_tree(sec_tree, self.simulator_name)
         self.seg_tree = seg_tree
 
         self._add_default_segment_groups()
@@ -418,7 +419,7 @@ class Model():
         """
         if self.verbose: print(f'Building sections in {self.simulator_name}...')
         for sec in self.sec_tree.sections:
-            sec.create_and_reference(self.simulator_name)
+            sec.create_and_reference()
         n_sec = len([sec._ref for sec in self.sec_tree.sections 
                     if sec._ref is not None])
         if self.verbose: print(f'{n_sec} sections created.')
@@ -439,9 +440,10 @@ class Model():
             # TODO: Check that domains match
             if not domain_name in self.domains_to_mechs: 
                 self.domains_to_mechs[domain_name] = set()
-        for domain_name, mechs in self.domains_to_mechs.items():
-            for mech_name in mechs:
-                self.insert_mechanism(mech_name, domain_name)
+        for domain_name, mech_names in self.domains_to_mechs.items():
+            for mech_name in mech_names:
+                mech = self.mechanisms[mech_name]
+                self.insert_mechanism(mech, domain_name)
 
 
     def get_sections(self, filter_function):
@@ -496,7 +498,7 @@ class Model():
             # TODO: Set sec._nseg instead
             sec._ref.nseg = nseg
         # Rebuild the segment tree
-        self.seg_tree = create_segment_tree(self.sec_tree)
+        self.seg_tree = create_segment_tree(self.sec_tree, self.simulator_name)
 
         # Redistribute parameters
         self.distribute_all()
@@ -522,6 +524,21 @@ class Model():
         self.mechanisms[cadyn.name] = cadyn
 
         self.load_mechanisms('default_mod', recompile=recompile)
+
+    def add_default_jaxley_mechanisms(self):
+        """
+        Add Jaxley mechanisms to the model.
+
+        Parameters
+        ----------
+        recompile : bool, optional
+            Whether to recompile the mechanisms.
+        """
+        leak = JaxleyLeakChannel()
+        self.mechanisms[leak.name] = leak
+
+        # cadyn = JaxleyCaDynamics()
+        # self.mechanisms[cadyn.name] = cadyn
 
 
     def add_mechanisms(self, dir_name:str = 'mod', recompile=True) -> None:
@@ -631,8 +648,8 @@ class Model():
 
         # Get data to transfer
         channel = self.mechanisms[channel_name]
-        channel_domain_names = [domain_name for domain_name, mechs 
-            in self.domains_to_mechs.items() if channel_name in mechs]
+        channel_domain_names = [domain_name for domain_name, mech_names 
+            in self.domains_to_mechs.items() if channel_name in mech_names]
         gbar_name = f'gbar_{channel_name}'
         gbar_distributions = self.params[gbar_name]
         # Kinetic variables cannot be transferred
@@ -709,13 +726,15 @@ class Model():
             for mech_name in self.domains_to_mechs[old_domain.name]:
                 # TODO: What if section is already in domain? Can't be as
                 # we use a filtered list of sections.
-                sec.uninsert_mechanism(mech_name)
+                mech = self.mechanisms[mech_name]
+                sec.uninsert_mechanism(mech)
             
 
         for sec in sections_to_move:
             domain.add_section(sec)
             for mech_name in self.domains_to_mechs.get(domain.name, set()):
-                sec.insert_mechanism(mech_name, distribute=distribute)
+                mech = self.mechanisms[mech_name]
+                sec.insert_mechanism(mech, distribute=distribute)
 
         self._remove_empty()
 
@@ -797,7 +816,7 @@ class Model():
         # domain.insert_mechanism(mech)
         self.domains_to_mechs[domain_name].add(mech.name)
         for sec in domain.sections:
-            sec.insert_mechanism(mech.name)
+            sec.insert_mechanism(mech)
         self._add_mechanism_params(mech)
 
         # TODO: Redistribute parameters if any group contains this domain

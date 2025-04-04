@@ -1,7 +1,7 @@
 __version__ = "0.3.1"
 
 from dendrotweaks.model import Model
-from dendrotweaks.simulators import NEURONSimulator
+from dendrotweaks.simulators import NeuronSimulator, JaxleySimulator
 from dendrotweaks.membrane.distributions import Distribution
 from dendrotweaks.path_manager import PathManager
 from dendrotweaks.stimuli import Synapse, Population, IClamp

@@ -1,7 +1,7 @@
 from dendrotweaks.morphology.trees import Node, Tree
 from dendrotweaks.morphology.point_trees import Point, PointTree
-from dendrotweaks.morphology.sec_trees import Section, SectionTree
-from dendrotweaks.morphology.seg_trees import Segment, SegmentTree
+from dendrotweaks.morphology.sec_trees import NeuronSection, JaxleySection, Section, SectionTree
+from dendrotweaks.morphology.seg_trees import NeuronSegment, JaxleySegment, Segment, SegmentTree
 
 from dendrotweaks.morphology.io.reader import SWCReader
 
@@ -45,7 +45,7 @@ def create_point_tree(source: Union[str, DataFrame]) -> PointTree:
     return point_tree
 
 
-def create_section_tree(point_tree: PointTree):
+def create_section_tree(point_tree: PointTree, simulator_name: str = 'NEURON') -> SectionTree:
     """
     Create a section tree from a point tree.
 
@@ -63,7 +63,7 @@ def create_section_tree(point_tree: PointTree):
     point_tree.extend_sections()
     point_tree.sort()
 
-    sections = _split_to_sections(point_tree)
+    sections = _split_to_sections(point_tree, simulator_name)
 
     sec_tree = SectionTree(sections)
     sec_tree._point_tree = point_tree
@@ -71,7 +71,7 @@ def create_section_tree(point_tree: PointTree):
     return sec_tree
 
 
-def _split_to_sections(point_tree: PointTree) -> List[Section]:
+def _split_to_sections(point_tree: PointTree, simulator_name: str) -> List[Section]:
     """
     Split the point tree into sections.
     """
@@ -86,7 +86,12 @@ def _split_to_sections(point_tree: PointTree) -> List[Section]:
 
     # Assign a section to each bifurcation child
     for i, child in enumerate(bifurcation_children):
-        section = Section(idx=i, parent_idx=-1, points=[child])
+        if simulator_name == 'NEURON':
+            section = NeuronSection(idx=i, parent_idx=-1, points=[child])
+        elif simulator_name == 'Jaxley':
+            section = JaxleySection(idx=i, parent_idx=-1, points=[child])
+        else:
+            raise ValueError(f"Unknown simulator name: {simulator_name}")
         sections.append(section)
         child._section = section
         # Propagate the section to the children until the next 
@@ -147,7 +152,7 @@ def _merge_soma(sections: List[Section], point_tree: PointTree):
     return sections
 
 
-def create_segment_tree(sec_tree):
+def create_segment_tree(sec_tree, simulator_name: str = 'NEURON') -> SegmentTree:
     """
     Create a segment tree from a section tree.
 
@@ -162,7 +167,7 @@ def create_segment_tree(sec_tree):
         The segment tree representing spatial discretization of the neuron morphology for numerical simulations.
     """
 
-    segments = _create_segments(sec_tree)
+    segments = _create_segments(sec_tree, simulator_name)
 
     seg_tree = SegmentTree(segments)
     sec_tree._seg_tree = seg_tree
@@ -170,7 +175,7 @@ def create_segment_tree(sec_tree):
     return seg_tree
 
 
-def _create_segments(sec_tree) -> List[Segment]:
+def _create_segments(sec_tree, simulator_name: str) -> List[Segment]:
     """
     Create a list of Segment objects from a SectionTree object.
     """
@@ -181,8 +186,12 @@ def _create_segments(sec_tree) -> List[Segment]:
         segs = {seg: idx + idx_counter for idx, seg in enumerate(sec._ref)}
         sec.segments = []
         for seg, idx in segs.items():
-            segment = Segment(
-                idx=idx, parent_idx=parent_idx, neuron_seg=seg, section=sec)
+            if simulator_name == 'NEURON':
+                segment = NeuronSegment(idx=idx, parent_idx=parent_idx, sim_seg=seg, section=sec)
+            elif simulator_name == 'Jaxley':
+                segment = JaxleySegment(idx=idx, parent_idx=parent_idx, sim_seg=seg, section=sec)
+            else:
+                raise ValueError(f"Unknown simulator name: {simulator_name}")
             segments.append(segment)
             sec.segments.append(segment)
 

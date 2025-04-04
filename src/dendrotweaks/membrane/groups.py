@@ -1,8 +1,7 @@
 from typing import List, Callable, Dict
 
 from dendrotweaks.morphology.trees import Node
-from dendrotweaks.morphology.sec_trees import Section
-from dendrotweaks.morphology.seg_trees import Segment
+from dendrotweaks.morphology.seg_trees import JaxleySegment, NeuronSegment, Segment
 from dendrotweaks.membrane.mechanisms import Mechanism
 from dendrotweaks.membrane.distributions import Distribution
 from dendrotweaks.utils import timeit

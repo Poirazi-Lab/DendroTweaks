@@ -9,6 +9,9 @@ h.load_file('stdrun.hoc')
 # h.load_file('import3d.hoc')
 # h.load_file('nrngui.hoc')
 # h.load_file('import3d')
+import jaxley as jx
+import jax.numpy as jnp
+import numpy as np
 
 import contextlib
 
@@ -28,7 +31,11 @@ def reset_neuron():
         with push_section(sec):
             h.delete_section()
 
-reset_neuron()            
+reset_neuron()
+
+# -------------------------------------------
+# SIMULATOR
+# -------------------------------------------
 
 class Simulator:
     """
@@ -55,9 +62,14 @@ class Simulator:
         # ax.set_ylim(-100, 60)
         ax.set_xlabel('Time (ms)')
         ax.set_ylabel('Voltage (mV)')
-        
 
-class NEURONSimulator(Simulator):
+
+# -------------------------------------------
+# NEURON SIMULATOR
+# -------------------------------------------
+
+
+class NeuronSimulator(Simulator):
     """
     A class to represent the NEURON simulator.
 
@@ -223,13 +235,45 @@ class NEURONSimulator(Simulator):
         self._duration = data['duration']
 
 
+
+# -------------------------------------------
+# JAXLEY SIMULATOR
+# -------------------------------------------
+
 class JaxleySimulator(Simulator):
     """
     A class to represent a Jaxley simulator.
     """
 
-    def __init__(self):
+    def __init__(self, temperature=37, v_init=-70, dt=0.025, voltage_solver='jax.sparse'):
         super().__init__()
-        ...
+
+        self.temperature = temperature
+        self.v_init = v_init * mV
+        self._duration = 300
+        self.dt = dt
+
+        self.voltage_solver = voltage_solver
+
+    def add_iclamp(self, sec, loc, dur, delay, amp):
+        current = jx.step_current(i_delay=delay, i_dur=dur, i_amp=amp, delta_t=self.dt, t_max=300.0)
+        sec._ref.loc(0.5).stimulate(current)
+
+    def add_recording(self, sec, loc, var='v'):
+
+        sec._ref.loc(loc).record(var)
+
+
+    def run(self, duration=300, sec=None):
+        """
+        Run a simulation.
+
+        Parameters
+        \----------
+        duration : float
+            The duration of the simulation in milliseconds.
+        """
+        self.t = np.arange(0, duration + 2*self.dt, self.dt)
+        self.vs = jx.integrate(sec._ref, voltage_solver=self.voltage_solver).block_until_ready()
 
     
