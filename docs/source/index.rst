@@ -69,7 +69,7 @@ If you find DendroTweaks helpful for building your models, please consider citin
 
    genindex
    api/morphology
-   api/membrane
+   api/biophys
    api/stimuli
    api/core
    api/analysis

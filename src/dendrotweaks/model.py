@@ -9,13 +9,13 @@ from dendrotweaks.morphology.point_trees import PointTree
 from dendrotweaks.morphology.sec_trees import Section, SectionTree, Domain
 from dendrotweaks.morphology.seg_trees import Segment, SegmentTree
 from dendrotweaks.simulators import NEURONSimulator
-from dendrotweaks.membrane.groups import SegmentGroup
-from dendrotweaks.membrane.mechanisms import Mechanism, LeakChannel, CaDynamics
-from dendrotweaks.membrane.io import create_channel, standardize_channel, create_standard_channel
-from dendrotweaks.membrane.io import MODFileLoader
+from dendrotweaks.biophys.groups import SegmentGroup
+from dendrotweaks.biophys.mechanisms import Mechanism, LeakChannel, CaDynamics
+from dendrotweaks.biophys.io import create_channel, standardize_channel, create_standard_channel
+from dendrotweaks.biophys.io import MODFileLoader
 from dendrotweaks.morphology.io import create_point_tree, create_section_tree, create_segment_tree
 from dendrotweaks.stimuli.iclamps import IClamp
-from dendrotweaks.membrane.distributions import Distribution
+from dendrotweaks.biophys.distributions import Distribution
 from dendrotweaks.stimuli.populations import Population
 from dendrotweaks.utils import calculate_lambda_f, dynamic_import
 from dendrotweaks.utils import get_domain_color, timeit
@@ -343,11 +343,11 @@ class Model():
         """
         return self.path_manager.list_files('morphology', extension=extension)
 
-    def list_membrane_configs(self, extension='json'):
+    def list_biophys(self, extension='json'):
         """
-        List the membrane configurations available for the model.
+        List the biophysical configurations available for the model.
         """
-        return self.path_manager.list_files('membrane', extension=extension)
+        return self.path_manager.list_files('biophys', extension=extension)
 
     def list_mechanisms(self, extension='mod'):
         """
@@ -355,7 +355,7 @@ class Model():
         """
         return self.path_manager.list_files('mod', extension=extension)
 
-    def list_stimuli_configs(self, extension='json'):
+    def list_stimuli(self, extension='json'):
         """
         List the stimuli configurations available for the model.
         """
@@ -1657,9 +1657,9 @@ class Model():
             
 
 
-    def export_membrane(self, file_name, **kwargs):
+    def export_biophys(self, file_name, **kwargs):
         """
-        Export the membrane properties of the model to a JSON file.
+        Export the biophysical properties of the model to a JSON file.
 
         Parameters
         ----------
@@ -1669,16 +1669,18 @@ class Model():
             Additional keyword arguments to pass to `json.dump`.
         """        
         
-        path_to_json = self.path_manager.get_file_path('membrane', file_name, extension='json')
+        path_to_json = self.path_manager.get_file_path('biophys', file_name, extension='json')
+        if not kwargs.get('indent'):
+            kwargs['indent'] = 4
 
         data = self.to_dict()
         with open(path_to_json, 'w') as f:
             json.dump(data, f, **kwargs)
 
 
-    def load_membrane(self, file_name, recompile=True):
+    def load_biophys(self, file_name, recompile=True):
         """
-        Load the membrane properties of the model from a JSON file.
+        Load the biophysical properties of the model from a JSON file.
 
         Parameters
         ----------
@@ -1690,7 +1692,7 @@ class Model():
         self.add_default_mechanisms()
         
 
-        path_to_json = self.path_manager.get_file_path('membrane', file_name, extension='json')
+        path_to_json = self.path_manager.get_file_path('biophys', file_name, extension='json')
 
         with open(path_to_json, 'r') as f:
             data = json.load(f)
@@ -1802,6 +1804,8 @@ class Model():
 
         data = self.stimuli_to_dict()
 
+        if not kwargs.get('indent'):
+            kwargs['indent'] = 4
         with open(path_to_json, 'w') as f:
             json.dump(data, f, **kwargs)
 

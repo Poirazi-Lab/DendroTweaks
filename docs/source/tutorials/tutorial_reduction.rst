@@ -134,7 +134,7 @@ We can access the coefficients of this polynomial fit in the model's parameters:
     polynomial({'coeffs': array([-4.88293485e-20,  1.16592185e-16, -1.07986828e-13,  4.85483580e-11,
         -1.06540269e-08,  9.35371031e-07,  4.53180944e-06])})
 
-This compact representation means we can modify the distribution, update the segmentation later, and export/import the membrane configuration of the reduced model just as with any other model.
+This compact representation means we can modify the distribution, update the segmentation later, and export/import the biophysical configuration of the reduced model just as with any other model.
 
 How Does It Work?
 ------------------

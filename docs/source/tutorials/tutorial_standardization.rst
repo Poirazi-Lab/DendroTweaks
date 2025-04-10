@@ -15,7 +15,7 @@ using the specified template.
 
 .. code-block:: python
 
-    >>> from dendrotweaks.membrane.io import create_standard_channel
+    >>> from dendrotweaks.biophys.io import create_standard_channel
     >>> std_nav = create_standard_channel(
     ...     path_to_mod_file='path/to/original/mod/file',
     ...     path_to_python_file='path/to/python/file',
@@ -29,7 +29,7 @@ want to standardize it, we can use the :code:`standardize_channel` function.
 
 .. code-block:: python
 
-    >>> from dendrotweaks.membrane.io import standardize_channel
+    >>> from dendrotweaks.biophys.io import standardize_channel
     >>> standardize_channel(
     ...     custom_channel,
     ...     path_to_mod_template='path/to/mod/template',

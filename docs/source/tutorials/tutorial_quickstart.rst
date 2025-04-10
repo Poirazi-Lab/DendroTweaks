@@ -29,7 +29,7 @@ To follow along with this tutorial, you can download the example models from the
 
 For each model, we will need two essential components: the neuronal morphology (in SWC format) 
 stored in the :code:`morphology/` folder, and the membrane mechanisms (ion channels defined 
-as MOD files) placed in the :code:`membrane/mod/` folder.
+as MOD files) placed in the :code:`biophys/mod/` folder.
 
 .. code-block:: bash
 
@@ -38,7 +38,7 @@ as MOD files) placed in the :code:`membrane/mod/` folder.
         └── UserModel1/
             ├── morphology/
             |  └── cell.swc
-            └── membrane/
+            └── biophys/
                └── mod/
                   ├── Nav.mod
                   └── Kv.mod
@@ -63,7 +63,7 @@ When we instantiate the model by specifying the path to our model directory, Den
 automatically sets up additional required folders. It creates a :code:`Default` folder containing 
 standard mechanisms and a :code:`Templates` folder with templates for converting MOD files to Python classes. 
 These folders are created only once and are shared across all models. Within your model folder, it generates a :code:`stimuli` 
-directory for stimulation protocols and a :code:`membrane/python` folder for storing Python files generated from MOD files.
+directory for stimulation protocols and a :code:`biophys/python` folder for storing Python files generated from MOD files.
 
 .. code-block:: bash
 
@@ -80,7 +80,7 @@ directory for stimulation protocols and a :code:`membrane/python` folder for sto
         └── UserModel1/
             ├── morphology/
             │   └── cell.swc
-            ├── membrane/
+            ├── biophys/
             │   ├── mod/
             │   │   ├── Nav.mod
             │   │   └── Kv.mod

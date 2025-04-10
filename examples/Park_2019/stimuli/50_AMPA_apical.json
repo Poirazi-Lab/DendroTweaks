@@ -1,1 +1,40 @@
-{"metadata": {"name": "Park_2019"}, "simulation": {"temperature": 37, "v_init": -79, "dt": 0.025, "duration": 1000}, "stimuli": {"iclamps": [], "populations": {"AMPA": [{"name": "AMPA_0", "syn_type": "AMPA", "N": 50, "input_params": {"rate": 30, "noise": 1, "start": 100, "end": 800, "weight": 1, "delay": 0}, "kinetic_params": {"gmax": 0.001, "tau_rise": 0.1, "tau_decay": 2.5, "e": 0}}], "NMDA": [], "AMPA_NMDA": [], "GABAa": []}}}
+{
+    "metadata": {
+        "name": "Park_2019"
+    },
+    "simulation": {
+        "temperature": 37,
+        "v_init": -79,
+        "dt": 0.025,
+        "duration": 1000
+    },
+    "stimuli": {
+        "iclamps": [],
+        "populations": {
+            "AMPA": [
+                {
+                    "name": "AMPA_0",
+                    "syn_type": "AMPA",
+                    "N": 50,
+                    "input_params": {
+                        "rate": 30,
+                        "noise": 1,
+                        "start": 100,
+                        "end": 800,
+                        "weight": 1,
+                        "delay": 0
+                    },
+                    "kinetic_params": {
+                        "gmax": 0.001,
+                        "tau_rise": 0.1,
+                        "tau_decay": 2.5,
+                        "e": 0
+                    }
+                }
+            ],
+            "NMDA": [],
+            "AMPA_NMDA": [],
+            "GABAa": []
+        }
+    }
+}

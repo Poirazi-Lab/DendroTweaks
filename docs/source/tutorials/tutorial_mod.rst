@@ -67,7 +67,7 @@ The :code:`MODFileConverter` class conveniently encapsulates the process of conv
 
 .. code-block:: python
 
-  >>> from dendrotweaks.membrane.io import MODFileConverter
+  >>> from dendrotweaks.biophys.io import MODFileConverter
   >>> converter = MODFileConverter()
   >>> converter.convert('path/to/mod_file.mod', 'path/to/output.py', 'path/to/template.py')
 
@@ -79,7 +79,7 @@ The :code:`MODReader` class reads these files, performs basic preprocessing step
 
 .. code-block:: python
 
-  >>> from dendrotweaks.membrane import MODReader
+  >>> from dendrotweaks.biophys import MODReader
   >>> reader = MODReader()
   >>> reader.read('path/to/mod_file.mod')
   >>> reader.preprocess()
@@ -89,11 +89,11 @@ Parsing MOD files
 ------------------------------------------
 
 The MOD files are parsed using the `PyParsing library <https://pyparsing-docs.readthedocs.io/en/latest/index.html>`_.
-The grammar used for parsing can be found in the :code:`dendrotweaks/membrane/grammar.py` file.
+The grammar used for parsing can be found in the :code:`dendrotweaks/biophys/grammar.py` file.
 
 .. code-block:: python
 
-  >>> from dendrotweaks.membrane import MODParser
+  >>> from dendrotweaks.biophys import MODParser
   >>> parser = MODParser()
   >>> parser.parse(blocks)
   >>> parser.postprocess()
@@ -129,7 +129,7 @@ The :code:`PythonCodeGenerator` class generates Python code from the AST using a
 
 .. code-block:: python
 
-  >>> from dendrotweaks.membrane import PythonCodeGenerator
+  >>> from dendrotweaks.biophys import PythonCodeGenerator
   >>> generator = PythonCodeGenerator()
   >>> generator.generate(ast, 'path/to/template.py')
   >>> generator.write('path/to/output.py')
@@ -155,7 +155,7 @@ It utilizes the :code:`neuron.load_mechanisms` `method <https://nrn.readthedocs.
 
 .. code-block:: python
 
-  >>> from dendrotweaks.membrane.io.loader import MODFileLoader
+  >>> from dendrotweaks.biophys.io.loader import MODFileLoader
   >>> loader = MODFileLoader()
   >>> loader.load_mechanism("path/to/mod_file.mod")
 
@@ -171,7 +171,7 @@ Additionally, we can choose to load the channel immediately into the NEURON simu
 
 .. code-block:: python
 
-  >>> from dendrotweaks.membrane.io import create_channel
+  >>> from dendrotweaks.biophys.io import create_channel
   >>> nav = create_channel(
   ...     path_to_mod_file="path/to/mod_file.mod",
   ...     path_to_python_file='path/to/python_file.py',

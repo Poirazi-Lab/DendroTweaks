@@ -1,6 +1,6 @@
 include README.md
 include LICENSE
-include src/dendrotweaks/membrane/default_mod/*.mod
-include src/dendrotweaks/membrane/default_templates/*.jinja
-include src/dendrotweaks/membrane/default_templates/*.mod
-include src/dendrotweaks/membrane/default_templates/*.py
+include src/dendrotweaks/biophys/default_mod/*.mod
+include src/dendrotweaks/biophys/default_templates/*.jinja
+include src/dendrotweaks/biophys/default_templates/*.mod
+include src/dendrotweaks/biophys/default_templates/*.py

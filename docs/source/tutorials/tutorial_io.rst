@@ -26,7 +26,7 @@ DendroTweaks organizes these components in a structured directory:
             ├── morphology/
             │   ├── cell1.swc
             │   └── cell2.swc
-            ├── membrane/  
+            ├── biophys/  
             │   ├── config1.json
             │   ├── config2.json
             |   ├── mod/
@@ -43,7 +43,7 @@ DendroTweaks organizes these components in a structured directory:
 
 Each folder contains specific components of the model:
 
-- :code:`membrane/`: JSON files defining the distribution and properties of ion channels and other membrane mechanisms
+- :code:`biophys/`: JSON files defining the distribution and properties of ion channels and other membrane mechanisms
 - :code:`mod/`: NEURON mechanism files (MOD) that implement specific ion channel kinetics and other biophysical processes
 - :code:`python/`: Python classes automatically generated from MOD files
 - :code:`morphology/`: SWC files describing the morphological structure of the neuron
@@ -80,16 +80,16 @@ We can load a specific morphology using the :code:`load_morphology` method:
 
     >>> model.load_morphology('cell1')
 
-Next, we will add membrane properties to the model.
+Next, we will add biophysical properties to the model.
 
 .. code-block:: python
 
-    >>> model.list_membrane_configurations()
+    >>> model.list_biophys()
     ['config1', 'config2']
 
 .. code-block:: python
 
-    >>> model.load_membrane('config1')
+    >>> model.load_biophys('config1')
 
 Finally, we will set up the stimulation and recording protocols:
 
@@ -108,21 +108,21 @@ Switching between configurations
 ------------------------------------------
 
 One of the key advantages of computational modeling is the ability to rapidly test different scenarios. 
-For instance, we can change the stimulation pattern while keeping the same morphology and membrane properties:
+For instance, we can change the stimulation pattern while keeping the same morphology and biophysical properties:
 
 .. code-block:: python
 
     >>> model.load_stimuli('stim2')
 
-We can switch to a different membrane configuration while keeping the same morphology and stimulation pattern:
+We can switch to a different biophysical configuration while keeping the same morphology and stimulation pattern:
 
 .. code-block:: python
 
-    >>> model.load_membrane('config2')
+    >>> model.load_biophys('config2')
 
-It is also possible to apply the same membrane configuration to a different morphology.
-This is possible because the membrane properties are defined on the domain level, independent of the specific morphological structure.
-Therefore, as long as the morphologies come from the same cell type and have the same domains, the membrane configuration can be applied to any of them.
+It is also possible to apply the same biophysical configuration to a different morphology.
+This is possible because the biophysical properties are defined on the domain level, independent of the specific morphological structure.
+Therefore, as long as the morphologies come from the same cell type and have the same domains, the biophysical configuration can be applied to any of them.
 
 .. warning::
 
@@ -146,7 +146,7 @@ After developing your model, you can export components for sharing or future use
 .. code-block:: python
 
     >>> model.export_stimuli(file_name='stim3')
-    >>> model.export_membrane(file_name='config3')
+    >>> model.export_biophys(file_name='config3')
     >>> model.export_morphology(file_name='cell3')
 
 

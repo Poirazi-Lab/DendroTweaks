@@ -26,9 +26,9 @@ class PathManager:
             'default_mod': os.path.join(self.path_to_data, 'Default'),
             'templates': os.path.join(self.path_to_data, 'Templates'),
             'morphology': os.path.join(self.path_to_model, 'morphology'),
-            'membrane': os.path.join(self.path_to_model, 'membrane'),
-            'mod': os.path.join(self.path_to_model, 'membrane', 'mod'),
-            'python': os.path.join(self.path_to_model, 'membrane', 'python'),
+            'biophys': os.path.join(self.path_to_model, 'biophys'),
+            'mod': os.path.join(self.path_to_model, 'biophys', 'mod'),
+            'python': os.path.join(self.path_to_model, 'biophys', 'python'),
             'stimuli': os.path.join(self.path_to_model, 'stimuli'),
         }
         self._ensure_paths_exist()
@@ -61,8 +61,7 @@ class PathManager:
         """
         Copy default mod files to the data directory.
         """
-        # __file__ + 'membrane' + 'default_mod'
-        DEFAULT_MOD_DIR = os.path.join(os.path.dirname(__file__), 'membrane', 'default_mod')
+        DEFAULT_MOD_DIR = os.path.join(os.path.dirname(__file__), 'biophys', 'default_mod')
         for file_name in os.listdir(DEFAULT_MOD_DIR):
             source = os.path.join(DEFAULT_MOD_DIR, file_name)
             destination = os.path.join(self.paths['default_mod'], file_name)
@@ -72,8 +71,7 @@ class PathManager:
         """
         Copy template files to the data directory.
         """
-        # __file__ + 'membrane' + 'templates'
-        TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), 'membrane', 'default_templates')
+        TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), 'biophys', 'default_templates')
         for file_name in os.listdir(TEMPLATES_DIR):
             source = os.path.join(TEMPLATES_DIR, file_name)
             destination = os.path.join(self.paths['templates'], file_name)
@@ -169,16 +167,16 @@ class PathManager:
         return self.list_files('stimuli', extension=extension)
 
 
-    def list_membrane(self):
+    def list_biophys(self):
         """
-        List all membrane files.
+        List all biophysics files.
         
         Returns
         -------
         List[str]
-            A list of membrane file
+            A list of biophysics file names.
         """
-        return self.list_files('membrane', extension='.json')
+        return self.list_files('biophys', extension='.json')
 
 
     def print_directory_tree(self, subfolder=None) -> None:

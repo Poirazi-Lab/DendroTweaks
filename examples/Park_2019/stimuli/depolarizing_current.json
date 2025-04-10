@@ -1,1 +1,27 @@
-{"metadata": {"name": "Park_2019"}, "simulation": {"temperature": 37, "v_init": -79, "dt": 0.025, "duration": 1000}, "stimuli": {"iclamps": [{"name": "iclamp_0", "amp": 0.162, "delay": 50.0, "dur": 900.0}], "populations": {"AMPA": [], "NMDA": [], "AMPA_NMDA": [], "GABAa": []}}}
+{
+    "metadata": {
+        "name": "Park_2019"
+    },
+    "simulation": {
+        "temperature": 37,
+        "v_init": -79,
+        "dt": 0.025,
+        "duration": 1000
+    },
+    "stimuli": {
+        "iclamps": [
+            {
+                "name": "iclamp_0",
+                "amp": 0.162,
+                "delay": 50.0,
+                "dur": 900.0
+            }
+        ],
+        "populations": {
+            "AMPA": [],
+            "NMDA": [],
+            "AMPA_NMDA": [],
+            "GABAa": []
+        }
+    }
+}
