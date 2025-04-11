@@ -21,6 +21,9 @@ DendroTweaks is included in the Python package index: https://pypi.org/project/d
 
    pip install dendrotweaks
 
+If you are working on Windows, you will need to separately install NEURON according to the official instructions: 
+https://nrn.readthedocs.io/en/8.2.6/install/install_instructions.html#windows
+
 3. (Alternative) If you want to install the package from source, you can clone the repository and run the following command:
 
 .. code-block:: bash
