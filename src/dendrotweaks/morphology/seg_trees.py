@@ -170,7 +170,15 @@ class JaxleySegment(Segment):
         self._ref.set(param_name, value)
 
     def get_param_value(self, param_name):
-        return self._ref.nodes[param_name].iloc[0]
+        # return self._ref.nodes[param_name].iloc[0]
+        PARAM_JAXLEY = {
+            'cm': 'capacitance',
+            'Ra': 'axial_resistance',
+        }
+        if param_name in PARAM_JAXLEY:
+            param_name = PARAM_JAXLEY[param_name]
+        idx = np.where([s == self for s in self._section.segments])[0][0]
+        return self._section._ref[idx].get(param_name)
 
     @property
     def x(self):
