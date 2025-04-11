@@ -1,16 +1,21 @@
 import os
+import sys
 import shutil
 import subprocess
 import neuron
 from neuron import h
 
-from pprint import pprint
 
 class MODFileLoader():
 
     def __init__(self):
         self._loaded_mechanisms = set()
         self.verbose = False
+
+    def _log(self, message):
+        """Print a message if verbose mode is enabled."""
+        if self.verbose:
+            print(message)
               
     # LOADING METHODS
 
@@ -30,7 +35,19 @@ class MODFileLoader():
         """
         mechanism_name = os.path.basename(path_to_mod_file).replace('.mod', '')
         parent_dir = os.path.dirname(path_to_mod_file)
-        return os.path.join(parent_dir, mechanism_name)
+        if sys.platform.startswith('win'):
+            return os.path.join(parent_dir, mechanism_name, mechanism_name)
+        else:
+            return os.path.join(parent_dir, mechanism_name)
+
+    def _clean_mechanism_dir(self, mechanism_dir: str) -> None:
+        
+        if sys.platform.startswith('win'):
+            parent_dir = os.path.dirname(mechanism_dir)
+            shutil.rmtree(parent_dir)
+        else:
+            shutil.rmtree(mechanism_dir)
+
 
     def load_mechanism(self, path_to_mod_file: str, 
                        recompile: bool = False) -> None:
@@ -49,26 +66,48 @@ class MODFileLoader():
             Force recompilation even if already compiled.
         """
         mechanism_name = os.path.basename(path_to_mod_file).replace('.mod', '')
-        mechanism_dir = self._get_mechanism_dir(path_to_mod_file)
-        x86_64_dir = os.path.join(mechanism_dir, 'x86_64')
+        mechanism_dir = self._get_mechanism_dir(path_to_mod_file)      
 
-        if self.verbose: print(f"{'=' * 60}\nLoading mechanism {mechanism_name} to NEURON...\n{'=' * 60}")
+        if self.verbose: print(f"{'=' * 60}\nLoading mechanism {mechanism_name} to NEURON...")
 
+        # Check if the mechanism is already loaded
         if mechanism_name in self._loaded_mechanisms:
-            if self.verbose: print(f'Mechanism "{mechanism_name}" already loaded')
+            self._log(f'Mechanism "{mechanism_name}" already loaded')
             return
 
         if recompile and os.path.exists(mechanism_dir):
-            shutil.rmtree(mechanism_dir)
+            self._clean_mechanism_dir(mechanism_dir)
 
-        if not os.path.exists(x86_64_dir):
-            if self.verbose: print(f'Compiling mechanism "{mechanism_name}"...')
-            os.makedirs(mechanism_dir, exist_ok=True)
-            shutil.copy(path_to_mod_file, mechanism_dir)
-            self._compile_files(mechanism_dir)
+        self._separate_and_compile(mechanism_name, mechanism_dir, path_to_mod_file)
+
+        # Load the mechanism
+        self._load_mechanism(mechanism_name, mechanism_dir)
+
+
+    # HELPER METHODS
+
+    def _separate_and_compile(self, mechanism_name, mechanism_dir, path_to_mod_file):
+
+        if sys.platform.startswith('win'):
+            dll_file = os.path.join(os.path.dirname(mechanism_dir), 'nrnmech.dll')
+            if not os.path.exists(dll_file):
+                self._log(f'Compiling mechanism "{mechanism_name}"...')
+                os.makedirs(mechanism_dir, exist_ok=True)
+                shutil.copy(path_to_mod_file, mechanism_dir)
+                self._compile_files(mechanism_dir, ["mknrndll"])
+        else:
+            x86_64_dir = os.path.join(mechanism_dir, 'x86_64')
+            if not os.path.exists(x86_64_dir):
+                self._log(f'Compiling mechanism "{mechanism_name}"...')
+                os.makedirs(mechanism_dir, exist_ok=True)
+                shutil.copy(path_to_mod_file, mechanism_dir)
+                self._compile_files(mechanism_dir, ["nrnivmodl"])
+
+
+    def _load_mechanism(self, mechanism_name: str, mechanism_dir: str) -> None:
 
         if hasattr(h, mechanism_name):
-            if self.verbose: print(f'Mechanism "{mechanism_name}" already exists in hoc')
+            self._log(f'Mechanism "{mechanism_name}" already exists in hoc')
         else:
             try:
                 neuron.load_mechanisms(mechanism_dir)
@@ -76,15 +115,45 @@ class MODFileLoader():
                 print(f"Failed to load mechanism {mechanism_name}: {e}")
                 return
         self._loaded_mechanisms.add(mechanism_name)
-        if self.verbose: print(f'Loaded mechanism "{mechanism_name}"')
-
-    # HELPER METHODS
+        self._log(f'Loaded mechanism "{mechanism_name}"')
+        
 
     
-    def _compile_files(self, path: str) -> None:
-        """Compile the MOD files in the specified directory."""
-        try:
-            subprocess.run(["nrnivmodl"], cwd=path, check=True)
-        except subprocess.CalledProcessError as e:
-            print(f"Compilation failed: {e}")
+    def _compile_files(self, path, command):
+        """
+        Compile the MOD files in the specified directory.
 
+        Parameters
+        ----------
+        path : str or Path
+            Directory containing MOD files to compile.
+
+        Returns
+        -------
+        bool
+            True if compilation succeeded, False otherwise.
+        """
+        path_str = str(path)
+
+        try:
+            result = subprocess.run(
+                command,
+                cwd=path_str,
+                check=True,
+                capture_output=True,
+                text=True
+            )
+
+            self._log("Compilation successful.")
+            if self.verbose and result.stdout:
+                print(result.stdout)
+            return
+
+        except subprocess.CalledProcessError as e:
+            print(f"Compilation failed with return code {e.returncode}")
+            if self.verbose:
+                if e.stdout:
+                    print("Compiler output:\n", e.stdout)
+                if e.stderr:
+                    print("Compiler errors:\n", e.stderr)
+            return

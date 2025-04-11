@@ -26,3 +26,4 @@ dist/
 *.npy
 **__pycache__/
 tutorials/examples/
+exploration.ipynb
