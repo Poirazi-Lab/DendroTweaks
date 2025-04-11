@@ -12,6 +12,12 @@ examples/*/biophys/mod/std*.mod
 examples/*/biophys/python/std*.py
 !examples/Test/biophys/mod/std*.mod
 !examples/Test/biophys/python/std*.py
+examples/*/membrane/mod/*/
+!examples/*/membrane/mod/*.mod
+examples/*/membrane/mod/std*.mod
+examples/*/membrane/python/std*.py
+!examples/Test/membrane/mod/std*.mod
+!examples/Test/membrane/python/std*.py
 examples/Default/
 examples/Templates/
 *.egg-info
