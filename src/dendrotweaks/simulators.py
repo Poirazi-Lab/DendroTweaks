@@ -36,25 +36,60 @@ class Simulator:
     """
     def __init__(self):
         self.vs = None
+        self.Is = None
+        self.record_current_from = None
         self.t = None
         self.dt = None
         self.recordings = {}
 
     def plot_voltage(self, ax=None, segments=None, **kwargs):
+        """
+        Plot the voltage recordings.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes, optional
+            The axes to plot on. If None, a new figure and axes will be created.
+        segments : list, optional
+            A list of segments to plot. If None, all segments will be plotted.
+        **kwargs : keyword arguments
+            Additional keyword arguments for the plot function.
+        """
+        self._plot_var('vs', ax=ax, segments=segments, **kwargs)
+
+    def plot_current(self, ax=None, segments=None, **kwargs):
+        """
+        Plot the current recordings.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes, optional
+            The axes to plot on. If None, a new figure and axes will be created.
+        segments : list, optional
+            A list of segments to plot. If None, all segments will be plotted.
+        **kwargs : keyword arguments
+            Additional keyword arguments for the plot function.
+        """
+        self._plot_var('Is', ax=ax, segments=segments, **kwargs)
+
+    def _plot_var(self, var='vs', ax=None, segments=None, **kwargs):
         if ax is None:
             fig, ax = plt.subplots()
         if segments is None:
             segments = self.recordings.keys()
-        for seg, v in self.vs.items():
+        recordings = getattr(self, var)
+        for seg, x in recordings.items():
             if segments and seg not in segments:
                 continue
-            ax.plot(self.t, v, label=f'{seg.domain} {seg.idx}', **kwargs)
-
+            ax.plot(self.t, x, label=f'{seg.domain} {seg.idx}', **kwargs)
         if len(segments) < 10:
             ax.legend()
-        # ax.set_ylim(-100, 60)
         ax.set_xlabel('Time (ms)')
-        ax.set_ylabel('Voltage (mV)')
+        if var == 'vs':
+            ax.set_ylabel('Voltage (mV)')
+        elif var == 'Is':
+            ax.set_ylabel('Current (nA)')
+            
         
 
 class NEURONSimulator(Simulator):
@@ -163,26 +198,15 @@ class NEURONSimulator(Simulator):
         """
         self._duration = duration
 
-
-        # vs = list(self.recordings.values())
-        Is = []
-
-        # for v in self.recordings.values():
-        #     # v = h.Vector().record(seg._ref_v)
-        #     vs.append(v)
-
         t = h.Vector().record(h._ref_t)
+        Is = None
 
-        # if self.ch is None:
-        #     pass
-        # else:
-        #     for seg in self.recordings.keys():
-        #         if getattr(seg, f'_ref_i_{self.ch.suffix}', None) is None:
-        #             logger.warning(
-        #                 f'No current recorded for {self.ch.suffix} at {seg}. Make i a RANGE variable in mod file.')
-        #             continue
-        #         I = h.Vector().record(getattr(seg, f'_ref_i_{self.ch.suffix}'))
-        #         Is.append(I)
+        if self.record_current_from is not None:
+            Is = {
+                seg: h.Vector().record(getattr(seg._ref, f'_ref_i_{self.record_current_from}', None))
+                for seg in self.recordings.keys()
+                if getattr(seg._ref, f'_ref_i_{self.record_current_from}', None) is not None
+            }
 
         self._init_simulation()
 
@@ -190,6 +214,9 @@ class NEURONSimulator(Simulator):
 
         self.t = t.to_python()
         self.vs = {seg: v.to_python() for seg, v in self.recordings.items()}
+
+        if Is:
+            self.Is = {seg: I.to_python() for seg, I in Is.items()}
     
 
     def to_dict(self):
