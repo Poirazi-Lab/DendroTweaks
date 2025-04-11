@@ -87,6 +87,20 @@ class MODFileLoader():
     # HELPER METHODS
 
     def _separate_and_compile(self, mechanism_name, mechanism_dir, path_to_mod_file):
+        """
+        Separate the mechanism files into their own directory and compile them.
+        Separation is done to enable dynamic loading of mechanisms.
+        Compilation is done using the appropriate command based on the platform.
+        
+        Parameters
+        ----------
+        mechanism_name : str
+            Name of the mechanism.
+        mechanism_dir : str
+            Directory to store the mechanism files.
+        path_to_mod_file : str
+            Path to the .mod file.
+        """
 
         if sys.platform.startswith('win'):
             dll_file = os.path.join(os.path.dirname(mechanism_dir), 'nrnmech.dll')
@@ -94,7 +108,7 @@ class MODFileLoader():
                 self._log(f'Compiling mechanism "{mechanism_name}"...')
                 os.makedirs(mechanism_dir, exist_ok=True)
                 shutil.copy(path_to_mod_file, mechanism_dir)
-                self._compile_files(mechanism_dir, ["mknrndll"])
+                self._compile_files(mechanism_dir, ["mknrndll"], shell=True)
         else:
             x86_64_dir = os.path.join(mechanism_dir, 'x86_64')
             if not os.path.exists(x86_64_dir):
@@ -105,6 +119,17 @@ class MODFileLoader():
 
 
     def _load_mechanism(self, mechanism_name: str, mechanism_dir: str) -> None:
+        """
+        Load the mechanism into NEURON using neuron.load_mechanisms.
+        This method checks if the mechanism is already loaded
+        and only loads it if not.
+        Parameters
+        ----------
+        mechanism_name : str
+            Name of the mechanism.
+        mechanism_dir : str
+            Directory containing the compiled mechanism files.
+        """
 
         if hasattr(h, mechanism_name):
             self._log(f'Mechanism "{mechanism_name}" already exists in hoc')
@@ -119,7 +144,7 @@ class MODFileLoader():
         
 
     
-    def _compile_files(self, path, command):
+    def _compile_files(self, path, command, shell=False):
         """
         Compile the MOD files in the specified directory.
 
@@ -127,6 +152,11 @@ class MODFileLoader():
         ----------
         path : str or Path
             Directory containing MOD files to compile.
+        command : list
+            Compilation command to execute. Either "mknrndll" or "nrnivmodl".
+        shell : bool
+            Whether to use shell=True for subprocess.run
+            (Windows compatibility).
 
         Returns
         -------
@@ -141,7 +171,8 @@ class MODFileLoader():
                 cwd=path_str,
                 check=True,
                 capture_output=True,
-                text=True
+                text=True,
+                shell=shell
             )
 
             self._log("Compilation successful.")
