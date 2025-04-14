@@ -1,5 +1,6 @@
 from collections import defaultdict
 import warnings
+from functools import cached_property
 
 import matplotlib.pyplot as plt
 import neuron
@@ -35,60 +36,46 @@ class Simulator:
     A generic simulator class.
     """
     def __init__(self):
-        self.vs = None
-        self.Is = None
-        self.record_current_from = None
         self.t = None
         self.dt = None
-        self.recordings = {}
+        self._recordings = {'v': {}}
 
-    def plot_voltage(self, ax=None, segments=None, **kwargs):
-        """
-        Plot the voltage recordings.
-
-        Parameters
-        ----------
-        ax : matplotlib.axes.Axes, optional
-            The axes to plot on. If None, a new figure and axes will be created.
-        segments : list, optional
-            A list of segments to plot. If None, all segments will be plotted.
-        **kwargs : keyword arguments
-            Additional keyword arguments for the plot function.
-        """
-        self._plot_var('vs', ax=ax, segments=segments, **kwargs)
-
-    def plot_current(self, ax=None, segments=None, **kwargs):
-        """
-        Plot the current recordings.
-
-        Parameters
-        ----------
-        ax : matplotlib.axes.Axes, optional
-            The axes to plot on. If None, a new figure and axes will be created.
-        segments : list, optional
-            A list of segments to plot. If None, all segments will be plotted.
-        **kwargs : keyword arguments
-            Additional keyword arguments for the plot function.
-        """
-        self._plot_var('Is', ax=ax, segments=segments, **kwargs)
-
-    def _plot_var(self, var='vs', ax=None, segments=None, **kwargs):
+    def plot_var(self, var='v', ax=None, segments=None, **kwargs):
+        if self.t is None:
+            raise ValueError('Simulation has not been run yet.')
+        if var not in self.recordings:
+            raise ValueError(f'Variable {var} not recorded.')
         if ax is None:
             fig, ax = plt.subplots()
         if segments is None:
-            segments = self.recordings.keys()
-        recordings = getattr(self, var)
-        for seg, x in recordings.items():
+            segments = self.recordings[var].keys()
+        for seg, x in self.recordings[var].items():
             if segments and seg not in segments:
                 continue
-            ax.plot(self.t, x, label=f'{seg.domain} {seg.idx}', **kwargs)
+            ax.plot(self.t, x, label=f'{var} {seg.domain} {seg.idx}', **kwargs)
         if len(segments) < 10:
             ax.legend()
         ax.set_xlabel('Time (ms)')
-        if var == 'vs':
+        if var == 'v':
             ax.set_ylabel('Voltage (mV)')
-        elif var == 'Is':
+        elif var.startswith('i_'):
             ax.set_ylabel('Current (nA)')
+        return ax
+
+    def plot_voltage(self, **kwargs):
+        """
+        Plot the recorded voltages.
+        """
+        self.plot_var('v', **kwargs)
+    
+    def plot_currents(self, **kwargs):
+        """
+        Plot the recorded currents.
+        """
+        ax = kwargs.pop('ax', None)
+        for var in self.recordings:
+            if var.startswith('i_'):
+                ax = self.plot_var(var, ax=ax, **kwargs)
             
         
 
@@ -123,9 +110,20 @@ class NEURONSimulator(Simulator):
         self.temperature = temperature
         self.v_init = v_init * mV
         self._duration = 300
+        
 
         self.dt = dt
         self._cvode = cvode
+
+    def _clean_cache(self):
+        """
+        Clean the cache of the simulator.
+        """
+        try:
+            del self.recordings
+        except AttributeError:
+            # Property hasn't been accessed yet, so no need to delete
+            pass
 
 
     def add_recording(self, sec, loc, var='v'):
@@ -141,12 +139,17 @@ class NEURONSimulator(Simulator):
         var : str
             The variable to record. Default is 'v' (voltage).
         """
+        if var not in self._recordings:
+            self._recordings[var] = {}
         seg = sec(loc)
-        if self.recordings.get(seg):
-            self.remove_recording(sec, loc)
-        self.recordings[seg] = h.Vector().record(getattr(seg._ref, f'_ref_{var}'))
+        if not hasattr(seg._ref, f'_ref_{var}'):
+            raise ValueError(f'Segment {seg} does not have variable {var}.')
+        if self._recordings[var].get(seg):
+            self.remove_recording(sec, loc, var)
+        self._recordings[var][seg] = h.Vector().record(getattr(seg._ref, f'_ref_{var}'))
+        self._clean_cache()
 
-    def remove_recording(self, sec, loc):
+    def remove_recording(self, sec, loc, var='v'):
         """
         Remove a recording from the simulator.
 
@@ -158,20 +161,22 @@ class NEURONSimulator(Simulator):
             The location along the normalized section length to remove the recording from.
         """
         seg = sec(loc)
-        if self.recordings.get(seg):
-            self.recordings[seg] = None
-            self.recordings.pop(seg)
+        if self._recordings[var].get(seg):
+            self._recordings[var][seg] = None
+            self._recordings[var].pop(seg)
+        self._clean_cache()
 
     def remove_all_recordings(self):
         """
         Remove all recordings from the simulator.
         """
-        for seg in list(self.recordings.keys()):
-            sec, loc = seg._section, seg.x
-            self.remove_recording(sec, loc)
-        if self.recordings:
-            warnings.warn(f'Not all recordings were removed: {self.recordings}')
-        self.recordings = {}
+        for var, recs in self._recordings.items():
+            for seg in list(recs.keys()):  # Iterate over a copy of the keys
+                sec, loc = seg._section, seg.x
+                self.remove_recording(sec, loc, var)
+            if self._recordings[var]:
+                warnings.warn(f'Not all recordings were removed: {self._recordings}')
+            self._recordings[var] = {}
 
 
     def _init_simulation(self):
@@ -196,27 +201,24 @@ class NEURONSimulator(Simulator):
         duration : float
             The duration of the simulation in milliseconds.
         """
+
+        self._clean_cache()
+
         self._duration = duration
 
-        t = h.Vector().record(h._ref_t)
-        Is = None
-
-        if self.record_current_from is not None:
-            Is = {
-                seg: h.Vector().record(getattr(seg._ref, f'_ref_i_{self.record_current_from}', None))
-                for seg in self.recordings.keys()
-                if getattr(seg._ref, f'_ref_i_{self.record_current_from}', None) is not None
-            }
+        self.t = h.Vector().record(h._ref_t)
 
         self._init_simulation()
 
         h.continuerun(duration * ms)
 
-        self.t = t.to_python()
-        self.vs = {seg: v.to_python() for seg, v in self.recordings.items()}
-
-        if Is:
-            self.Is = {seg: I.to_python() for seg, I in Is.items()}
+        
+    @cached_property
+    def recordings(self):
+        return {
+            var:{ seg: vec.to_python() for seg, vec in recs.items() }
+            for var, recs in self._recordings.items()
+        }
     
 
     def to_dict(self):

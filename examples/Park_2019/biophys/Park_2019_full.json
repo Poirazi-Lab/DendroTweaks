@@ -5,40 +5,40 @@
     "d_lambda": 0.1,
     "domains": {
         "apic": [
-            "Leak",
-            "KCa",
             "CaDyn",
             "CaHVA",
             "CaLVA",
+            "KCa",
             "Ka",
-            "Na",
             "Km",
-            "Kv"
+            "Kv",
+            "Leak",
+            "Na"
         ],
         "axon": [
             "Leak"
         ],
         "dend": [
-            "Leak",
-            "KCa",
             "CaDyn",
             "CaHVA",
             "CaLVA",
+            "KCa",
             "Ka",
-            "Na",
             "Km",
-            "Kv"
+            "Kv",
+            "Leak",
+            "Na"
         ],
         "soma": [
-            "Leak",
-            "KCa",
             "CaDyn",
             "CaHVA",
             "CaLVA",
+            "KCa",
             "Ka",
-            "Na",
             "Km",
-            "Kv"
+            "Kv",
+            "Leak",
+            "Na"
         ]
     },
     "groups": [

@@ -1287,7 +1287,7 @@ class Model():
         print(f'Recording added to sec {sec} at loc {loc}.')
 
 
-    def remove_recording(self, sec, loc):
+    def remove_recording(self, sec, loc, var='v'):
         """
         Remove a recording from the model.
 
@@ -1298,7 +1298,7 @@ class Model():
         loc : float
             The location along the normalized section length to remove the recording from.
         """
-        self.simulator.remove_recording(sec, loc)
+        self.simulator.remove_recording(sec, loc, var)
 
 
     def remove_all_recordings(self):
@@ -1598,7 +1598,7 @@ class Model():
             'name': self.name,
             },
             'd_lambda': self.d_lambda,
-            'domains': {domain: list(mechs) for domain, mechs in self.domains_to_mechs.items()},
+            'domains': {domain: sorted(list(mechs)) for domain, mechs in self.domains_to_mechs.items()},
             'groups': [
             group.to_dict() for group in self._groups
             ],
@@ -1722,6 +1722,14 @@ class Model():
                 **self.simulator.to_dict(),
             },
             'stimuli': {
+                'recordings': [
+                    {
+                        'name': f'rec_{i}',
+                        'var': var
+                    } 
+                    for var, recs in self.simulator.recordings.items()
+                    for i, _ in enumerate(recs)
+                ],
                 'iclamps': [
                     {
                         'name': f'iclamp_{i}',
@@ -1750,11 +1758,16 @@ class Model():
         """
         
         rec_data = {
-            'type': ['recording'] * len(self.recordings),
-            'idx': [i for i in range(len(self.recordings))],
-            'sec_idx': [seg._section.idx for seg in self.recordings],
-            'loc': [seg.x for seg in self.recordings],
+            'type': [],
+            'idx': [],
+            'sec_idx': [],
+            'loc': [],
         }
+        for var, recs in self.simulator.recordings.items():
+            rec_data['type'].extend(['rec'] * len(recs))
+            rec_data['idx'].extend([i for i in range(len(recs))])
+            rec_data['sec_idx'].extend([seg._section.idx for seg in recs])
+            rec_data['loc'].extend([seg.x for seg in recs])
 
         iclamp_data = {
             'type': ['iclamp'] * len(self.iclamps),
@@ -1783,6 +1796,7 @@ class Model():
             pd.DataFrame(iclamp_data),
             pd.DataFrame(synapses_data)
         ], ignore_index=True)
+        df['idx'] = df['idx'].astype(int)
         df['sec_idx'] = df['sec_idx'].astype(int)
         if path_to_csv: df.to_csv(path_to_csv, index=False)
 
@@ -1840,14 +1854,6 @@ class Model():
         self.remove_all_stimuli()
         self.remove_all_recordings()
 
-        # Recordings ---------------------------------------------------------
-
-        df_recs = df_stimuli[df_stimuli['type'] == 'recording']
-        for i, row in df_recs.iterrows():
-            self.add_recording(
-                self.sec_tree.sections[row['sec_idx']], row['loc']
-            )
-
         # IClamps -----------------------------------------------------------
 
         df_iclamps = df_stimuli[df_stimuli['type'] == 'iclamp'].reset_index(drop=True, inplace=False)
@@ -1887,6 +1893,20 @@ class Model():
                 pop.update_kinetic_params(**pop_data['kinetic_params'])
                 pop.update_input_params(**pop_data['input_params'])
                 self._add_population(pop)
+
+        # Recordings ---------------------------------------------------------
+
+        df_recs = df_stimuli[df_stimuli['type'] == 'rec'].reset_index(drop=True, inplace=False)
+        for i, row in df_recs.iterrows():
+            # TODO: This conditional statement is to account for a recent change
+            # in the JSON structure. It should be removed in the future.
+            if data['stimuli'].get('recordings'):
+                var = data['stimuli']['recordings'][i]
+            else:
+                var = 'v'
+            self.add_recording(
+                self.sec_tree.sections[row['sec_idx']], row['loc'], var
+            )
 
 
     def export_to_NEURON(self, file_name, include_kinetic_params=True):

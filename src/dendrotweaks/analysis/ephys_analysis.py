@@ -27,7 +27,7 @@ def get_somatic_data(model):
     seg = model.seg_tree.root
     iclamp = model.iclamps[seg]
 
-    v = np.array(model.simulator.vs[seg])
+    v = np.array(model.simulator.recordings['v'][seg])
     t = np.array(model.simulator.t)
     dt = model.simulator.dt
 
@@ -165,7 +165,7 @@ def detect_somatic_spikes(model, **kwargs):
     """
     seg = model.seg_tree.root
             
-    v = np.array(model.simulator.vs[seg])
+    v = np.array(model.simulator.recordings['v'][seg])
     t = np.array(model.simulator.t)
     dt = model.simulator.dt
 
@@ -271,7 +271,7 @@ def calculate_fI_curve(model, duration=1000, min_amp=0, max_amp=1, n=5, **kwargs
         n_spikes = len(spike_data['spike_times'])
         rate = n_spikes / iclamp.dur * 1000
         rates.append(rate)
-        vs[amp] = model.simulator.vs[seg]
+        vs[amp] = model.simulator.recordings['v'][seg]
 
     return {
         'current_amplitudes': amps,
@@ -336,10 +336,13 @@ def calculate_voltage_attenuation(model):
     if len(stimulated_segs) != 1:
         print("Only one stimulation site is supported")
         return None
-    recorded_segs = list(model.recordings.keys())
+    recorded_segs = list(model.recordings['v'].keys())
     if len(recorded_segs) < 2:
         print("At least two recording sites are required")
         return None
+
+    print(f"Stimulating segment: {stimulated_segs[0]}")
+    print(f"Recording segments: {recorded_segs}")
 
     stimulated_seg = stimulated_segs[0]
 
@@ -355,8 +358,9 @@ def calculate_voltage_attenuation(model):
     start_ts = int(iclamp.delay / model.simulator.dt)
     stop_ts = int((iclamp.delay + iclamp.dur) / model.simulator.dt)
 
-    voltage_at_stimulated = np.array(model.simulator.vs[stimulated_seg])[start_ts:stop_ts]
-    voltages = [np.array(model.simulator.vs[seg])[start_ts:stop_ts] for seg in recorded_segs]
+    voltage_at_stimulated = np.array(model.simulator.recordings['v'][stimulated_seg])[start_ts:stop_ts]
+    voltages = [np.array(model.simulator.recordings['v'][seg])[start_ts:stop_ts] for seg in recorded_segs]
+
 
     # Calculate voltage displacement from the resting potential
     delta_v_at_stimulated = voltage_at_stimulated[0] - np.min(voltage_at_stimulated)
@@ -405,7 +409,7 @@ def calculate_dendritic_nonlinearity(model, duration=1000, max_weight=None, n=No
         A dictionary containing the expected and observed voltage changes.
     """
 
-    recorded_segs = list(model.recordings.keys())
+    recorded_segs = list(model.recordings['v'].keys())
     seg = recorded_segs[0]
 
     populations = [pop for pops in model.populations.values() for pop in pops.values()]
@@ -432,7 +436,7 @@ def calculate_dendritic_nonlinearity(model, duration=1000, max_weight=None, n=No
     for w in weights:
         population.update_input_params(weight=w)
         model.simulator.run(duration)
-        v = np.array(model.simulator.vs[seg])
+        v = np.array(model.simulator.recordings['v'][seg])
         v_start = v[start_ts]
         v_max = np.max(v[start_ts:])
         delta_v = v_max - v_start

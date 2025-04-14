@@ -9,6 +9,32 @@
         "duration": 1000
     },
     "stimuli": {
+        "recordings": [
+            {
+                "name": "rec_0",
+                "var": "v"
+            },
+            {
+                "name": "rec_1",
+                "var": "v"
+            },
+            {
+                "name": "rec_2",
+                "var": "v"
+            },
+            {
+                "name": "rec_3",
+                "var": "v"
+            },
+            {
+                "name": "rec_4",
+                "var": "v"
+            },
+            {
+                "name": "rec_5",
+                "var": "v"
+            }
+        ],
         "iclamps": [
             {
                 "name": "iclamp_0",
