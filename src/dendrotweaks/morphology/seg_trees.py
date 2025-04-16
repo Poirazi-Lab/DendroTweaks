@@ -165,7 +165,8 @@ class JaxleySegment(Segment):
         """
         The reference to the segment object from the Jaxley simulator.
         """
-        return self._section._ref[self.idx]
+        idx = np.where([s == self for s in self._section.segments])[0][0]
+        return self._section._ref[idx]
 
     @_ref.setter
     def _ref(self, value):
