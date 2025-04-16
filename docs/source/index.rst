@@ -15,7 +15,7 @@ To learn more about the GUI, please refer to the :doc:`GUI documentation<gui>`.
 
 
    
-For a quick overview of the toolbox, including a video demonstration, you can visit our e-poster presented at the FENS Forum 2024 in Vienna.
+For a quick overview of the toolbox, including a video demonstration, you can visit our `e-poster <https://doi.org/10.57736/abba-7149>`_ presented at the FENS Forum 2024 in Vienna.
 
 
 .. image:: _static/poster.png
