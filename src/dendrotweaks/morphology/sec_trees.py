@@ -771,7 +771,7 @@ class JaxleySection(Section):
         # Add 3D points to the section
         for pt in self.points:
             diam = 2*pt.r
-            self.xyzr = np.array([[pt.x, pt.y, pt.z, pt.r]
+            self._ref.xyzr = np.array([[pt.x, pt.y, pt.z, pt.r]
                 for pt in self.points], dtype=np.float64)
 
     @property
