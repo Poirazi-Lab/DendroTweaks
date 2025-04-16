@@ -12,7 +12,7 @@ The following simulatord are currently supported:
 
 Planned support for the following simulators:
 
-- `Jaxley <https://jaxleyverse.github.io/jaxley>`_
+- `Jaxley <https://jaxley.readthedocs.io/en/latest/>`_
 
 .. tip::
 
