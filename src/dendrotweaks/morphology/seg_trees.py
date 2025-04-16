@@ -160,6 +160,20 @@ class JaxleySegment(Segment):
     def __init__(self, idx, parent_idx, sim_seg, section) -> None:
         super().__init__(idx, parent_idx, sim_seg, section)
 
+    @property
+    def _ref(self):
+        """
+        The reference to the segment object from the Jaxley simulator.
+        """
+        return self._section._ref[self.idx]
+
+    @_ref.setter
+    def _ref(self, value):
+        """
+        Set the reference to the segment object from the Jaxley simulator.
+        """
+        pass
+
     def set_param_value(self, param_name, value):
         PARAM_JAXLEY = {
             'cm': 'capacitance',
