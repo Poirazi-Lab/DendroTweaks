@@ -1901,7 +1901,7 @@ class Model():
             # TODO: This conditional statement is to account for a recent change
             # in the JSON structure. It should be removed in the future.
             if data['stimuli'].get('recordings'):
-                var = data['stimuli']['recordings'][i]
+                var = data['stimuli']['recordings'][i]['var']
             else:
                 var = 'v'
             self.add_recording(
