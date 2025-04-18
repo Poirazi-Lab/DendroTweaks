@@ -43,6 +43,7 @@ class {{ class_name }}(IonChannel):
         }
         self.ion = "{{ ion }}"
         self.current_name = "i_{{ ion }}"
+        self.current_available = {{ current_available }}
         self.independent_var_name = "{{ independent_var_name }}"
         self.temperature = 37
 

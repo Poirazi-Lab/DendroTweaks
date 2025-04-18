@@ -32,6 +32,7 @@ class Mechanism():
         self.name = name
         self.params = {}
         self.range_params = {}
+        self.current_available = False
 
     @property
     def params_with_suffix(self):

@@ -72,6 +72,7 @@ class PythonCodeGenerator(CodeGenerator):
             'independent_var_name': ast.independent_var_name,
             'channel_params': ast.params,
             'range_params': ast.range_params,
+            'current_available': ast.current_available,
             'state_vars': ast.state_vars,
             'functions': self._generate_functions(ast),
             'procedures': self._generate_procedures(ast),

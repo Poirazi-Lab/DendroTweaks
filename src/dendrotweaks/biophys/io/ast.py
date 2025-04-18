@@ -90,6 +90,12 @@ class AbstracSyntaxTree():
         return {k:v for k, v in self.params.items()
                 if k in self['NEURON']['range']}
 
+    @property
+    def current_available(self):
+        """
+        Returns True if the current is available in the mechanism.
+        """
+        return 'i' in self['NEURON']['range']
 
     # ASSIGNED block
     @property
