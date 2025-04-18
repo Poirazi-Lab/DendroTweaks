@@ -36,12 +36,12 @@ class Simulator:
     A generic simulator class.
     """
     def __init__(self):
-        self.t = None
+        self._t = None
         self.dt = None
         self._recordings = {'v': {}}
 
     def plot_var(self, var='v', ax=None, segments=None, **kwargs):
-        if self.t is None:
+        if self._t is None:
             raise ValueError('Simulation has not been run yet.')
         if var not in self.recordings:
             raise ValueError(f'Variable {var} not recorded.')
@@ -115,12 +115,24 @@ class NEURONSimulator(Simulator):
         self.dt = dt
         self._cvode = cvode
 
+    @cached_property
+    def recordings(self):
+        return {
+            var:{ seg: vec.to_python() for seg, vec in recs.items() }
+            for var, recs in self._recordings.items()
+        }
+
+    @cached_property
+    def t(self):
+        return self._t.to_python()
+
     def _clean_cache(self):
         """
         Clean the cache of the simulator.
         """
         try:
             del self.recordings
+            del self.t
         except AttributeError:
             # Property hasn't been accessed yet, so no need to delete
             pass
@@ -139,13 +151,13 @@ class NEURONSimulator(Simulator):
         var : str
             The variable to record. Default is 'v' (voltage).
         """
-        if var not in self._recordings:
-            self._recordings[var] = {}
         seg = sec(loc)
         if not hasattr(seg._ref, f'_ref_{var}'):
             raise ValueError(f'Segment {seg} does not have variable {var}.')
-        if self._recordings[var].get(seg):
+        if self._recordings.get(var, {}).get(seg):
             self.remove_recording(sec, loc, var)
+        if var not in self._recordings:
+            self._recordings[var] = {}
         self._recordings[var][seg] = h.Vector().record(getattr(seg._ref, f'_ref_{var}'))
         self._clean_cache()
 
@@ -164,19 +176,20 @@ class NEURONSimulator(Simulator):
         if self._recordings[var].get(seg):
             self._recordings[var][seg] = None
             self._recordings[var].pop(seg)
+            if not self._recordings[var]:
+                self._recordings.pop(var)
         self._clean_cache()
 
-    def remove_all_recordings(self):
+    def remove_all_recordings(self, var=None):
         """
         Remove all recordings from the simulator.
         """
-        for var, recs in self._recordings.items():
-            for seg in list(recs.keys()):  # Iterate over a copy of the keys
-                sec, loc = seg._section, seg.x
-                self.remove_recording(sec, loc, var)
-            if self._recordings[var]:
-                warnings.warn(f'Not all recordings were removed: {self._recordings}')
-            self._recordings[var] = {}
+        variables = [var] if var else list(self._recordings.keys())
+        for variable in variables:
+            for seg in list(self._recordings.get(variable, {}).keys()):
+                self.remove_recording(seg._section, seg.x, variable)
+            if self._recordings.get(variable):
+                warnings.warn(f'Not all recordings were removed for variable {variable}: {self._recordings}')
 
 
     def _init_simulation(self):
@@ -206,19 +219,11 @@ class NEURONSimulator(Simulator):
 
         self._duration = duration
 
-        self.t = h.Vector().record(h._ref_t)
+        self._t = h.Vector().record(h._ref_t)
 
         self._init_simulation()
 
         h.continuerun(duration * ms)
-
-        
-    @cached_property
-    def recordings(self):
-        return {
-            var:{ seg: vec.to_python() for seg, vec in recs.items() }
-            for var, recs in self._recordings.items()
-        }
     
 
     def to_dict(self):
