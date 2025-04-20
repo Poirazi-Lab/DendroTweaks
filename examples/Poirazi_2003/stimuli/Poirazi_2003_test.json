@@ -1,1 +1,0 @@
-{"metadata": {"name": "Poirazi_2003"}, "simulation": {"temperature": 37, "v_init": -70, "dt": 0.025, "duration": 300}, "stimuli": {"iclamps": [{"name": "iclamp_0", "amp": 0.22, "delay": 100.0, "dur": 100.0}], "populations": {"AMPA": [], "NMDA": [], "AMPA_NMDA": [], "GABAa": []}}}

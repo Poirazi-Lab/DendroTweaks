@@ -29,6 +29,7 @@ class cal(IonChannel):
             }
         self.ion = "ca"
         self.current_name = "i_ca"
+        self.current_available = True
         self.independent_var_name = "cai"
         self.temperature = 37
 

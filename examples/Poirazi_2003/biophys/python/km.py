@@ -33,6 +33,7 @@ class km(IonChannel):
             }
         self.ion = "k"
         self.current_name = "i_k"
+        self.current_available = True
         self.independent_var_name = "v"
         self.temperature = 37
 

@@ -33,6 +33,7 @@ class mykca(IonChannel):
             }
         self.ion = "k"
         self.current_name = "i_k"
+        self.current_available = False
         self.independent_var_name = "cai"
         self.temperature = 37
 

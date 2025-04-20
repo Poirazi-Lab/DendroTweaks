@@ -29,6 +29,7 @@ class Nap_Et2(IonChannel):
             }
         self.ion = "na"
         self.current_name = "i_na"
+        self.current_available = False
         self.independent_var_name = "v"
         self.temperature = 37
 

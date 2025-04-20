@@ -33,6 +33,7 @@ class h(IonChannel):
             }
         self.ion = "None"
         self.current_name = "i_None"
+        self.current_available = True
         self.independent_var_name = "v"
         self.temperature = 37
 

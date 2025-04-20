@@ -58,6 +58,8 @@ class Cell():
     def load_morphology(self, path_to_swc_file: str) -> None:
         if path_to_swc_file.endswith('.swc'):
             self._load_swc(path_to_swc_file)
+        elif path_to_swc_file.endswith('.asc'):
+            self._load_asc(path_to_swc_file)
         else:
             raise ValueError(f"File type not supported: {path_to_swc_file}")
 
@@ -66,6 +68,13 @@ class Cell():
         swc_importer = h.Import3d_SWC_read()
         swc_importer.input(path_to_swc_file)
         imported_cell = h.Import3d_GUI(swc_importer, False)
+        imported_cell.instantiate(self)
+
+    def _load_asc(self, path_to_asc_file: str) -> None:
+        h.load_file('import3d.hoc')
+        asc_importer = h.Import3d_Neurolucida3()
+        asc_importer.input(path_to_asc_file)
+        imported_cell = h.Import3d_GUI(asc_importer, False)
         imported_cell.instantiate(self)
 
     def distance(self, seg, from_seg=None):
@@ -105,43 +114,43 @@ class Cell():
         
         for sec in self.apic:
             
-                sec.insert('Kv')
-                sec.insert('CaLVA')
-                sec.insert('KCa')
-                sec.insert('Leak')
-                sec.insert('CaHVA')
-                sec.insert('Ka')
-                sec.insert('Na')
-                sec.insert('Km')
-                sec.insert('CaDyn')
+            sec.insert('Ka')
+            sec.insert('CaLVA')
+            sec.insert('CaDyn')
+            sec.insert('Na')
+            sec.insert('Km')
+            sec.insert('Kv')
+            sec.insert('KCa')
+            sec.insert('Leak')
+            sec.insert('CaHVA')
         
         for sec in self.axon:
             
-                sec.insert('Leak')
+            sec.insert('Leak')
         
         for sec in self.dend:
             
-                sec.insert('Kv')
-                sec.insert('CaLVA')
-                sec.insert('KCa')
-                sec.insert('Leak')
-                sec.insert('CaHVA')
-                sec.insert('Ka')
-                sec.insert('Na')
-                sec.insert('Km')
-                sec.insert('CaDyn')
+            sec.insert('Ka')
+            sec.insert('CaLVA')
+            sec.insert('CaDyn')
+            sec.insert('Na')
+            sec.insert('Km')
+            sec.insert('Kv')
+            sec.insert('KCa')
+            sec.insert('Leak')
+            sec.insert('CaHVA')
         
         for sec in self.soma:
             
-                sec.insert('Kv')
-                sec.insert('CaLVA')
-                sec.insert('KCa')
-                sec.insert('Leak')
-                sec.insert('CaHVA')
-                sec.insert('Ka')
-                sec.insert('Na')
-                sec.insert('Km')
-                sec.insert('CaDyn')
+            sec.insert('Ka')
+            sec.insert('CaLVA')
+            sec.insert('CaDyn')
+            sec.insert('Na')
+            sec.insert('Km')
+            sec.insert('Kv')
+            sec.insert('KCa')
+            sec.insert('Leak')
+            sec.insert('CaHVA')
         
 
     ### Parameter distribution methods ###
@@ -212,7 +221,7 @@ class Cell():
                 
             
             if domain in ['apic', 'dend', 'soma']:
-                self.set_param(seg, "tau_CaDyn", "CaDyn", 50)
+                self.set_param(seg, "taur_CaDyn", "CaDyn", 50)
                     
                 
             
@@ -223,6 +232,16 @@ class Cell():
             
             if domain in ['apic', 'dend', 'soma']:
                 self.set_param(seg, "gamma_CaDyn", "CaDyn", 1)
+                    
+                
+            
+            if domain in ['apic', 'dend', 'soma']:
+                self.set_param(seg, "kt_CaDyn", "CaDyn", 0)
+                    
+                
+            
+            if domain in ['apic', 'dend', 'soma']:
+                self.set_param(seg, "kd_CaDyn", "CaDyn", 0)
                     
                 
             
@@ -449,10 +468,18 @@ class Cell():
     def add_recordings(self):
         recordings = []
         
+        
         rec = h.Vector()
         rec.record(self.soma[0](0.5)._ref_v)
         recordings.append(rec)
         
+        rec = h.Vector()
+        rec.record(self.soma[0](0.5)._ref_i_Kv)
+        recordings.append(rec)
+        
+        rec = h.Vector()
+        rec.record(self.soma[0](0.5)._ref_i_Na)
+        recordings.append(rec)
         return recordings
 
     def add_iclamps(self):

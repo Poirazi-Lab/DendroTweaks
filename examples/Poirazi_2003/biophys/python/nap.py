@@ -31,6 +31,7 @@ class nap(IonChannel):
             }
         self.ion = "na"
         self.current_name = "i_na"
+        self.current_available = True
         self.independent_var_name = "v"
         self.temperature = 37
 
