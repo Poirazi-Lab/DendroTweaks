@@ -1,6 +1,30 @@
 Changelog
 =============
 
+Version 0.4.0
+--------------
+    This release enhances cross-platform compatibility and introduces a redesigned
+    data structure for recording multiple variables, such as voltage and ion channel currents.
+
+    Key Updates:
+
+    - Redesigned data structure for recordings with support for multiple variables. 
+      The :code:`model.recordings` attribute now uses a nested dictionary to store variable names 
+      (e.g., 'v', 'i_Na') and their corresponding segment values.
+      To record a variable, use the :code:`model.add_recording` method, which now accepts :code:`var` argument.
+    - Improved cross-platform compatibility with resolved installation and MOD file 
+      compilation issues on Windows.
+
+    Minor Updates:
+
+    - Renamed the 'membrane' subpackage and folder to 'biophys', along with updated methods for exporting 
+      and importing biophysical properties, such as :code:`model.export_biophys` and
+      :code:`model.load_biophys`.
+    - Renamed the :code:`model.export_stimuli_config` method to :code:`model.export_stimuli`.
+    - Added a :code:`current_available` attribute to each Mechanism to indicate whether the current 
+      through the channel can be recorded.
+
+
 Version 0.3.1
 --------------
     This release includes a minor update to resolve issues encountered during the distribution upload process to PyPI.

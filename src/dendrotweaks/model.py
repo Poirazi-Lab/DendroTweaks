@@ -1301,11 +1301,11 @@ class Model():
         self.simulator.remove_recording(sec, loc, var)
 
 
-    def remove_all_recordings(self):
+    def remove_all_recordings(self, var=None):
         """
         Remove all recordings from the model.
         """
-        self.simulator.remove_all_recordings()
+        self.simulator.remove_all_recordings(var=var)
 
 
     def run(self, duration=300):
