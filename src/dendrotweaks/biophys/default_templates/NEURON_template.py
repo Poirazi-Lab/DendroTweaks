@@ -114,7 +114,7 @@ class Cell():
         {% for domain, mechanisms in domains_to_mechs.items() %}
         for sec in self.{{ domains_to_NEURON[domain] }}:
             {% for mechanism in mechanisms %}
-                sec.insert('{{ mechanism }}')
+            sec.insert('{{ mechanism }}')
             {%- endfor %}
         {% endfor %}
 
@@ -235,10 +235,12 @@ class Cell():
 
     def add_recordings(self):
         recordings = []
-        {% for seg, rec in recordings.items() %}
+        {% for var, recs in recordings.items() %}
+        {% for seg, rec in recs.items() %}
         rec = h.Vector()
-        rec.record(self.{{seg._section.domain}}[{{seg._section.domain_idx}}]({{seg.x}})._ref_v)
+        rec.record(self.{{seg._section.domain}}[{{seg._section.domain_idx}}]({{seg.x}})._ref_{{ var }})
         recordings.append(rec)
+        {%- endfor -%}
         {% endfor %}
         return recordings
 
