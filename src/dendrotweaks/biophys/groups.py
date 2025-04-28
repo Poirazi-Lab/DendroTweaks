@@ -1,10 +1,5 @@
 from typing import List, Callable, Dict
 
-from dendrotweaks.morphology.trees import Node
-from dendrotweaks.morphology.sec_trees import Section
-from dendrotweaks.morphology.seg_trees import Segment
-from dendrotweaks.biophys.mechanisms import Mechanism
-from dendrotweaks.biophys.distributions import Distribution
 from dendrotweaks.utils import timeit
 from dataclasses import dataclass, field, asdict
 from typing import List, Tuple, Dict, Optional

@@ -1,7 +1,7 @@
 from dendrotweaks.morphology.trees import Node, Tree
 from dendrotweaks.morphology.point_trees import Point, PointTree
-from dendrotweaks.morphology.sec_trees import Section, SectionTree
-from dendrotweaks.morphology.seg_trees import Segment, SegmentTree
+from dendrotweaks.morphology.sec_trees import NeuronSection, Section, SectionTree
+from dendrotweaks.morphology.seg_trees import NeuronSegment, Segment, SegmentTree
 
 from dendrotweaks.morphology.io.reader import SWCReader
 
@@ -86,7 +86,7 @@ def _split_to_sections(point_tree: PointTree) -> List[Section]:
 
     # Assign a section to each bifurcation child
     for i, child in enumerate(bifurcation_children):
-        section = Section(idx=i, parent_idx=-1, points=[child])
+        section = NeuronSection(idx=i, parent_idx=-1, points=[child])
         sections.append(section)
         child._section = section
         # Propagate the section to the children until the next 
@@ -181,8 +181,8 @@ def _create_segments(sec_tree) -> List[Segment]:
         segs = {seg: idx + idx_counter for idx, seg in enumerate(sec._ref)}
         sec.segments = []
         for seg, idx in segs.items():
-            segment = Segment(
-                idx=idx, parent_idx=parent_idx, neuron_seg=seg, section=sec)
+            segment = NeuronSegment(
+                idx=idx, parent_idx=parent_idx, sim_seg=seg, section=sec)
             segments.append(segment)
             sec.segments.append(segment)
 

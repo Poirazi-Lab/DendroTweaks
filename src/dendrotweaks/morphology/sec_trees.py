@@ -54,7 +54,9 @@ class Section(Node):
         self.points = points
         self.segments = []
         self._ref = None
+        self._nseg = None
         self._domain = self.points[0].domain
+        self._cell = None
 
         if not all(pt.domain == self._domain for pt in points):
             raise ValueError('All points in a section must belong to the same domain.')
@@ -125,68 +127,12 @@ class Section(Node):
                             'parent_idx': [self.parent_idx]})
 
 
-    # TODO: Figure out why this is different from NEURON's diam
-    # Update: In NEURON, sec.diam returns the diameter of the segment at the center of the section
-    # In this implementation, sec.diam returns the average diameter of the section
-    # @property
-    # def diam(self):
-    #     """
-    #     Average diameter of the section calculated from
-    #     the radii and distances of the points.
-    #     """
-    #     distances = self.distances  # Cumulative distances
-    #     radii = self.radii  # Corresponding radii
-    #     total_length = distances[-1]  # Total section length
-        
-    #     if total_length == 0:
-    #         return 0  # Avoid division by zero for zero-length sections
-
-    #     segment_lengths = np.diff(distances)  # Lengths of frusta segments
-    #     segment_diameters = 2 * (np.array(radii[:-1]) + np.array(radii[1:])) / 2  # Mean diameter per segment
-
-    #     # Length-weighted average
-    #     avg_diameter = np.sum(segment_diameters * segment_lengths) / total_length
-
-    #     return avg_diameter
-
-    @property
-    def diam(self):
-        """
-        Diameter of the central segment of the section (from NEURON).
-        """
-        return self._ref.diam
-        
-
-    @property
-    def L(self):
-        """
-        Length of the section (from NEURON).
-        """
-        return self._ref.L
-
-
-    @property
-    def cm(self):
-        """
-        Specific membrane capacitance of the section (from NEURON).
-        """
-        return self._ref.cm
-
-
-    @property
-    def Ra(self):
-        """
-        Axial resistance of the section (from NEURON).
-        """
-        return self._ref.Ra
-
-
     @property
     def nseg(self):
         """
         Number of segments in the section (from NEURON).
         """
-        return self._ref.nseg
+        return self._nseg
 
     @nseg.setter
     def nseg(self, value):
@@ -195,14 +141,14 @@ class Section(Node):
         if value % 2 == 0:
             raise ValueError('Number of segments must be odd.')
         # Set the number in NEURON
-        self._ref.nseg = value
+        self._nseg = self._ref.nseg = value
         # Get the new NEURON segments
         nrnsegs = [seg for seg in self._ref]
 
         # Create new DendroTweaks segments
         from dendrotweaks.morphology.seg_trees import Segment
         old_segments = self.segments
-        new_segments = [Segment(idx=0, parent_idx=0, neuron_seg=seg, section=self)
+        new_segments = [Segment(idx=0, parent_idx=0, sim_seg=seg, section=self)
                             for seg in nrnsegs]
         
         seg_tree = self._tree._seg_tree
@@ -271,8 +217,8 @@ class Section(Node):
         """
         if self._ref is None:
             raise ValueError('Section is not referenced in NEURON.')
-        return (np.array([(2*i - 1) / (2 * self._ref.nseg)
-                for i in range(1, self._ref.nseg + 1)]) * self._ref.L).tolist()
+        return (np.array([(2*i - 1) / (2 * self.nseg)
+                for i in range(1, self.nseg + 1)]) * self.L).tolist()
 
 
     @property
@@ -282,7 +228,7 @@ class Section(Node):
         """
         if self._ref is None:
             raise ValueError('Section is not referenced in NEURON.')
-        nseg = int(self._ref.nseg)
+        nseg = int(self.nseg)
         return [i / nseg for i in range(nseg + 1)]
 
 
@@ -322,80 +268,27 @@ class Section(Node):
         areas = [np.pi * (r1 + r2) * np.sqrt((r1 - r2)**2 + h**2) for r1, r2, h in zip(self.radii[:-1], self.radii[1:], np.diff(self.distances))]
         return sum(areas)
 
-    def has_mechanism(mech_name):
-        """
-        Check if the section has a mechanism inserted.
-
-        Parameters
-        ----------
-        mech_name : str
-            The name of the mechanism to check.
-        """
-        return self._ref.has_membrane(mech_name)
-
-
-    # REFERENCING METHODS
-
-    def create_and_reference(self, simulator_name='NEURON'):
-        """
-        Add a reference to the section in the simulator.
-
-        Parameters
-        ----------
-        simulator_name : str
-            The name of the simulator to create the section in.
-        """
-        if simulator_name == 'NEURON':
-            self.create_NEURON_section()
-        elif simulator_name == 'JAXLEY':
-            self.create_JAXLEY_section()
-
-
-    def create_NEURON_section(self):
-        """
-        Create a NEURON section.
-        """
-        self._ref = h.Section() # name=f'Sec_{self.idx}'
-        if self.parent is not None:
-            # TODO: Attaching basal to soma 0
-            if self.parent.parent is None: # if parent is soma
-                self._ref.connect(self.parent._ref(0.5))
-            else:
-                self._ref.connect(self.parent._ref(1))
-        # Add 3D points to the section
-        self._ref.pt3dclear()
-        for pt in self.points:
-            diam = 2*pt.r
-            diam = round(diam, 16)
-            self._ref.pt3dadd(pt.x, pt.y, pt.z, diam)
-
-    def create_JAXLEY_section(self):
-        """
-        Create a JAXLEY section.
-        """
-        raise NotImplementedError
-
 
     # MECHANISM METHODS
 
-    def insert_mechanism(self, name: str):
+    def insert_mechanism(self, mech):
         """
         Inserts a mechanism in the section if 
         it is not already inserted.
         """
-        if self._ref.has_membrane(name):
+        if self._ref.has_membrane(mech.name):
             return
-        self._ref.insert(name)
+        self._ref.insert(mech.name)
 
 
-    def uninsert_mechanism(self, name: str):
+    def uninsert_mechanism(self, mech):
         """
         Uninserts a mechanism in the section if
         it was inserted.
         """
-        if not self._ref.has_membrane(name):
+        if not self._ref.has_membrane(mech.name):
             return
-        self._ref.uninsert(name)
+        self._ref.uninsert(mech.name)
 
 
     # PARAMETER METHODS
@@ -636,7 +529,7 @@ class Section(Node):
             seg_radii = np.array([seg.diam / 2 for seg in self._ref])
             
             # Use the specified bar width calculation from original code
-            bar_width = [self._ref.L / self._ref.nseg] * self._ref.nseg
+            bar_width = [self.L / self._nseg] * self._nseg
             
             # Plot segment radii as bars
             ax.bar(normalized_seg_centers, seg_radii, width=bar_width, 
@@ -666,7 +559,7 @@ class Section(Node):
                 parent_seg_radii = np.array([seg.diam / 2 for seg in self.parent._ref])
                 
                 # Use the specified bar width calculation for parent
-                parent_bar_width = [self.parent._ref.L / self.parent._ref.nseg] * self.parent._ref.nseg
+                parent_bar_width = [self.parent.L / self.parent._nseg] * self.parent._nseg
                 
                 # Plot parent segment radii as bars
                 ax.bar(normalized_parent_seg_centers, parent_seg_radii, 
@@ -737,6 +630,87 @@ class Section(Node):
         
         return ax
 
+
+
+ # --------------------------------------------------------------
+ # NEURON SECTION
+ # --------------------------------------------------------------
+ 
+class NeuronSection(Section):
+
+    def __init__(self, idx, parent_idx, points) -> None:
+        super().__init__(idx, parent_idx, points)
+
+    @property
+    def diam(self):
+        """
+        Diameter of the central segment of the section (from NEURON).
+        """
+        return self._ref.diam
+        
+
+    @property
+    def L(self):
+        """
+        Length of the section (from NEURON).
+        """
+        return self._ref.L
+
+
+    @property
+    def cm(self):
+        """
+        Specific membrane capacitance of the section (from NEURON).
+        """
+        return self._ref.cm
+
+
+    @property
+    def Ra(self):
+        """
+        Axial resistance of the section (from NEURON).
+        """
+        return self._ref.Ra
+
+
+    def has_mechanism(mech_name):
+        """
+        Check if the section has a mechanism inserted.
+
+        Parameters
+        ----------
+        mech_name : str
+            The name of the mechanism to check.
+        """
+        return self._ref.has_membrane(mech_name)
+
+
+    # REFERENCING METHODS
+
+    def create_and_reference(self):
+        """
+        Create a NEURON section.
+        """
+        self._ref = h.Section() # name=f'Sec_{self.idx}'
+        self._nseg = self._ref.nseg
+        if self.parent is not None:
+            # TODO: Attaching basal to soma 0
+            if self.parent.parent is None: # if parent is soma
+                self._ref.connect(self.parent._ref(0.5))
+            else:
+                self._ref.connect(self.parent._ref(1))
+        # Add 3D points to the section
+        self._ref.pt3dclear()
+        for pt in self.points:
+            diam = 2*pt.r
+            diam = round(diam, 16)
+            self._ref.pt3dadd(pt.x, pt.y, pt.z, diam)
+
+
+
+# ========================================================================
+# SECTION TREE
+# ========================================================================
 
 class SectionTree(Tree):
     """

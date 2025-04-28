@@ -6,9 +6,9 @@ import numpy as np
 import quantities as pq
 
 from dendrotweaks.morphology.point_trees import PointTree
-from dendrotweaks.morphology.sec_trees import Section, SectionTree, Domain
-from dendrotweaks.morphology.seg_trees import Segment, SegmentTree
-from dendrotweaks.simulators import NEURONSimulator
+from dendrotweaks.morphology.sec_trees import NeuronSection, Section, SectionTree, Domain
+from dendrotweaks.morphology.seg_trees import NeuronSegment, Segment, SegmentTree
+from dendrotweaks.simulators import NeuronSimulator
 from dendrotweaks.biophys.groups import SegmentGroup
 from dendrotweaks.biophys.mechanisms import Mechanism, LeakChannel, CaDynamics
 from dendrotweaks.biophys.io import create_channel, standardize_channel, create_standard_channel
@@ -149,7 +149,7 @@ class Model():
 
         # Simulator
         if simulator_name == 'NEURON':
-            self.simulator = NEURONSimulator()
+            self.simulator = NeuronSimulator()
         elif simulator_name == 'Jaxley':
             self.simulator = JaxleySimulator()
         else:
@@ -231,9 +231,9 @@ class Model():
         The dictionary mapping mechanisms to domains where they are inserted.
         """
         mechs_to_domains = defaultdict(set)
-        for domain, mechs in self.domains_to_mechs.items():
-            for mech in mechs:
-                mechs_to_domains[mech].add(domain)
+        for domain_name, mech_names in self.domains_to_mechs.items():
+            for mech_name in mech_names:
+                mechs_to_domains[mech_name].add(domain_name)
         return dict(mechs_to_domains)
 
 
@@ -418,7 +418,7 @@ class Model():
         """
         if self.verbose: print(f'Building sections in {self.simulator_name}...')
         for sec in self.sec_tree.sections:
-            sec.create_and_reference(self.simulator_name)
+            sec.create_and_reference()
         n_sec = len([sec._ref for sec in self.sec_tree.sections 
                     if sec._ref is not None])
         if self.verbose: print(f'{n_sec} sections created.')
@@ -439,9 +439,10 @@ class Model():
             # TODO: Check that domains match
             if not domain_name in self.domains_to_mechs: 
                 self.domains_to_mechs[domain_name] = set()
-        for domain_name, mechs in self.domains_to_mechs.items():
-            for mech_name in mechs:
-                self.insert_mechanism(mech_name, domain_name)
+        for domain_name, mech_names in self.domains_to_mechs.items():
+            for mech_name in mech_names:
+                mech = self.mechanisms[mech_name]
+                self.insert_mechanism(mech, domain_name)
 
 
     def get_sections(self, filter_function):
@@ -631,8 +632,8 @@ class Model():
 
         # Get data to transfer
         channel = self.mechanisms[channel_name]
-        channel_domain_names = [domain_name for domain_name, mechs 
-            in self.domains_to_mechs.items() if channel_name in mechs]
+        channel_domain_names = [domain_name for domain_name, mech_names 
+            in self.domains_to_mechs.items() if channel_name in mech_names]
         gbar_name = f'gbar_{channel_name}'
         gbar_distributions = self.params[gbar_name]
         # Kinetic variables cannot be transferred
@@ -709,13 +710,15 @@ class Model():
             for mech_name in self.domains_to_mechs[old_domain.name]:
                 # TODO: What if section is already in domain? Can't be as
                 # we use a filtered list of sections.
-                sec.uninsert_mechanism(mech_name)
+                mech = self.mechanisms[mech_name]
+                sec.uninsert_mechanism(mech)
             
 
         for sec in sections_to_move:
             domain.add_section(sec)
             for mech_name in self.domains_to_mechs.get(domain.name, set()):
-                sec.insert_mechanism(mech_name, distribute=distribute)
+                mech = self.mechanisms[mech_name]
+                sec.insert_mechanism(mech, distribute=distribute)
 
         self._remove_empty()
 
@@ -797,7 +800,7 @@ class Model():
         # domain.insert_mechanism(mech)
         self.domains_to_mechs[domain_name].add(mech.name)
         for sec in domain.sections:
-            sec.insert_mechanism(mech.name)
+            sec.insert_mechanism(mech)
         self._add_mechanism_params(mech)
 
         # TODO: Redistribute parameters if any group contains this domain
@@ -847,7 +850,7 @@ class Model():
 
         # domain.uninsert_mechanism(mech)
         for sec in domain.sections:
-            sec.uninsert_mechanism(mech.name)
+            sec.uninsert_mechanism(mech)
         self.domains_to_mechs[domain_name].remove(mech.name)
 
         if not self.mechs_to_domains.get(mech.name):

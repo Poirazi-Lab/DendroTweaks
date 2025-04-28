@@ -10,6 +10,7 @@ h.load_file('stdrun.hoc')
 # h.load_file('import3d.hoc')
 # h.load_file('nrngui.hoc')
 # h.load_file('import3d')
+import numpy as np
 
 import contextlib
 
@@ -30,6 +31,10 @@ def reset_neuron():
             h.delete_section()
 
 reset_neuron()            
+
+# -------------------------------------------------------
+# SIMULATOR
+# -------------------------------------------------------
 
 class Simulator:
     """
@@ -79,7 +84,7 @@ class Simulator:
             
         
 
-class NEURONSimulator(Simulator):
+class NeuronSimulator(Simulator):
     """
     A class to represent the NEURON simulator.
 
