@@ -8,9 +8,10 @@ import quantities as pq
 from dendrotweaks.morphology.point_trees import PointTree
 from dendrotweaks.morphology.sec_trees import NeuronSection, Section, SectionTree, Domain
 from dendrotweaks.morphology.seg_trees import NeuronSegment, Segment, SegmentTree
-from dendrotweaks.simulators import NeuronSimulator
+from dendrotweaks.simulators import NeuronSimulator, JaxleySimulator
 from dendrotweaks.biophys.groups import SegmentGroup
 from dendrotweaks.biophys.mechanisms import Mechanism, LeakChannel, CaDynamics
+from dendrotweaks.biophys.jaxley_mechanisms import JaxleyLeakChannel
 from dendrotweaks.biophys.io import create_channel, standardize_channel, create_standard_channel
 from dendrotweaks.biophys.io import MODFileLoader
 from dendrotweaks.morphology.io import create_point_tree, create_section_tree, create_segment_tree
@@ -19,6 +20,8 @@ from dendrotweaks.biophys.distributions import Distribution
 from dendrotweaks.stimuli.populations import Population
 from dendrotweaks.utils import calculate_lambda_f, dynamic_import
 from dendrotweaks.utils import get_domain_color, timeit
+
+import jaxley as jx
 
 from collections import OrderedDict, defaultdict
 from numpy import nan
@@ -397,22 +400,26 @@ class Model():
             point_tree.round_coordinates(8)
         self.point_tree = point_tree
 
-        sec_tree = create_section_tree(point_tree)
+        sec_tree = create_section_tree(point_tree, simulator_name=self.simulator_name)
         sec_tree.sort(sort_children=sort_children, force=force)
         self.sec_tree = sec_tree
 
-        self.create_and_reference_sections_in_simulator()
-        seg_tree = create_segment_tree(sec_tree)
+        if self.simulator_name == 'NEURON':
+            self.create_and_reference_sections_in_Neuron()
+        elif self.simulator_name == 'Jaxley':
+            self.create_and_reference_sections_in_Jaxley()
+
+        seg_tree = create_segment_tree(sec_tree, simulator_name=self.simulator_name)
         self.seg_tree = seg_tree
 
         self._add_default_segment_groups()
         self._initialize_domains_to_mechs()
 
-        d_lambda = self.d_lambda
-        self.set_segmentation(d_lambda=d_lambda)        
+        # d_lambda = self.d_lambda
+        # self.set_segmentation(d_lambda=d_lambda)        
               
 
-    def create_and_reference_sections_in_simulator(self):
+    def create_and_reference_sections_in_Neuron(self):
         """
         Create and reference sections in the simulator.
         """
@@ -423,7 +430,24 @@ class Model():
                     if sec._ref is not None])
         if self.verbose: print(f'{n_sec} sections created.')
 
-        
+    def create_and_reference_sections_in_Jaxley(self):
+
+        branches = [jx.Branch(ncomp=sec._nseg) for sec in self.sec_tree.sections]
+        parents = [sec.parent.idx if sec.parent is not None else -1 
+            for sec in self.sec_tree.sections]
+        xyzrs = [[(pt.x, pt.y, pt.z, pt.r) for pt in sec.points] for sec in self.sec_tree.sections]
+        cell = jx.Cell(
+                branches,
+                parents,
+                xyzr=xyzrs,
+            )
+        for sec in self.sec_tree.sections:
+            sec._cell = cell
+        self._cell = cell
+
+        n_sec = len([sec._ref for sec in self.sec_tree.sections 
+                    if sec._ref is not None])
+        if self.verbose: print(f'{n_sec} sections created.')
 
 
     def _add_default_segment_groups(self):
@@ -525,6 +549,21 @@ class Model():
 
         self.load_mechanisms('default_mod', recompile=recompile)
 
+
+    def add_default_jaxley_mechanisms(self):
+        """
+        Add Jaxley mechanisms to the model.
+
+        Parameters
+        ----------
+        recompile : bool, optional
+            Whether to recompile the mechanisms.
+        """
+        leak = JaxleyLeakChannel()
+        self.mechanisms[leak.name] = leak
+
+        # cadyn = JaxleyCaDynamics()
+        # self.mechanisms[cadyn.name] = cadyn
 
     def add_mechanisms(self, dir_name:str = 'mod', recompile=True) -> None:
         """

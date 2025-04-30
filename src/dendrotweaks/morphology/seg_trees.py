@@ -149,6 +149,85 @@ class NeuronSegment(Segment):
         """
         return self._ref.diam
 
+    # def parentseg(self):
+    #     """
+    #     The parent segment of the segment (from NEURON).
+    #     """
+    #     return self._ref.parentseg()
+
+
+# -------------------------------------------------------------------
+# JAXLEY SEGMENT
+# -------------------------------------------------------------------
+
+class JaxleySegment(Segment):
+    """
+    A class representing a segment for the Jaxley simulator.
+    """
+
+    def __init__(self, idx, parent_idx, sim_seg, section) -> None:
+        super().__init__(idx, parent_idx, sim_seg, section)
+
+    @property
+    def _ref(self):
+        """
+        The reference to the segment object from the Jaxley simulator.
+        """
+        idx = np.where([s == self for s in self._section.segments])[0][0]
+        return self._section._ref[idx]
+
+    @_ref.setter
+    def _ref(self, value):
+        """
+        Set the reference to the segment object from the Jaxley simulator.
+        """
+        pass
+
+    def set_param_value(self, param_name, value):
+        PARAM_JAXLEY = {
+            'cm': 'capacitance',
+            'Ra': 'axial_resistance',
+        }
+        if param_name in PARAM_JAXLEY:
+            param_name = PARAM_JAXLEY[param_name]
+        self._ref.set(param_name, value)
+
+    def get_param_value(self, param_name):
+        # return self._ref.nodes[param_name].iloc[0]
+        PARAM_JAXLEY = {
+            'cm': 'capacitance',
+            'Ra': 'axial_resistance',
+        }
+        if param_name in PARAM_JAXLEY:
+            param_name = PARAM_JAXLEY[param_name]
+        idx = np.where([s == self for s in self._section.segments])[0][0]
+        return self._section._ref[idx].get(param_name)
+
+    @property
+    def x(self):
+        seg_idx = np.where([s == self for s in self._section.segments])[0][0]
+        seg_centers = [c/self._section.L for c in self._section.seg_centers]
+        return seg_centers[seg_idx]
+
+    # def parentseg(self):
+    #     """
+    #     The parent segment of the segment (from Jaxley).
+    #     """
+    #     seg_idx = np.where([s == self for s in self._section.segments])[0][0]
+    #     if seg_idx == 0:
+    #         if self._section.parent is None:
+    #             return None
+    #         else:
+    #     else:
+    #         parent_idx = seg_idx - 1
+        
+    #     return parent_idx
+
+
+# ====================================================================
+# SEGMENT TREE
+# ====================================================================
+
 class SegmentTree(Tree):
     """
     A class representing a tree graph of segments.
