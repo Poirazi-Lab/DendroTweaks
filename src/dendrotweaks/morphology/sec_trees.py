@@ -53,7 +53,7 @@ class Section(Node):
         self.domain_idx = None
         self.points = points
         self.segments = []
-        self._ref = None
+        # self._ref = None
         self._nseg = None
         self._domain = self.points[0].domain
         self._cell = None
@@ -597,6 +597,7 @@ class NeuronSection(Section):
 
     def __init__(self, idx, parent_idx, points) -> None:
         super().__init__(idx, parent_idx, points)
+        self._ref = None
 
     @property
     def diam(self):
@@ -707,6 +708,53 @@ class NeuronSection(Section):
             diam = round(diam, 16)
             self._ref.pt3dadd(pt.x, pt.y, pt.z, diam)
 
+
+
+# --------------------------------------------------------------
+# JAXLEY SECTION
+# --------------------------------------------------------------
+
+class JaxleySection(Section):
+
+    def __init__(self, idx, parent_idx, points) -> None:
+        super().__init__(idx, parent_idx, points)
+        self._cell = None
+
+    @property
+    def _ref(self):
+        """
+        Dynamic reference to the Jaxley branch.
+        """
+        if self._cell is None:
+            return None
+        return self._cell[self.idx]
+
+    @property
+    def nseg(self):
+        return self._ref.ncomp
+
+    @property
+    def L(self):
+        return sum(self._ref.nodes['length'])
+
+    @property
+    def Ra(self):
+        return self._ref.loc(0.5).nodes['axial_resistivity'].iloc[0]
+
+    @property
+    def cm(self):
+        return self._ref.loc(0.5).nodes['capacitance'].iloc[0]
+
+    @property
+    def diam(self):
+        return self._ref.loc(0.5).nodes['radius'].iloc[0]*2
+
+
+    def insert_mechanism(self, mech: str):
+        """
+        Insert a mechanism in the section.
+        """
+        self._ref.insert(mech)
 
 
 # ========================================================================
