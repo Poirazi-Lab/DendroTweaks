@@ -198,17 +198,24 @@ class NeuronSimulator(Simulator):
 
 
     def _init_simulation(self):
-        h.CVode().active(self._cvode)
+
         h.celsius = self.temperature
-        h.dt = self.dt
-        h.stdinit()
-        h.init()
+
+        if self._cvode:
+            h.cvode.active(1)
+        else:
+            h.cvode.active(0)
+            h.dt = self.dt
+
         h.finitialize(self.v_init)
-        if h.cvode.active():
+
+        if self._cvode:
             h.cvode.re_init()
         else:
             h.fcurrent()
+
         h.frecord_init()
+
 
     def run(self, duration=300):
         """
