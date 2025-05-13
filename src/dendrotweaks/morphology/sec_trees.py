@@ -166,6 +166,15 @@ class Section(Node):
         """
         return [pt.z for pt in self.points]
 
+    @property
+    def seg_centers_normalized(self):
+        """
+        The array of segment centers in the section with normalized length.
+        """
+        if self._ref is None:
+            raise ValueError('Section is not referenced in simulator.')
+        return (np.array([(2*i - 1) / (2 * self.nseg)
+                for i in range(1, self.nseg + 1)]))
 
     @property
     def seg_centers(self):
@@ -719,6 +728,25 @@ class JaxleySection(Section):
     def __init__(self, idx, parent_idx, points) -> None:
         super().__init__(idx, parent_idx, points)
         self._cell = None
+
+    def __call__(self, x: float):
+        """
+        Return the segment at a given position.
+        """
+        if self._ref is None:
+            raise ValueError('Section is not referenced in NEURON.')
+        if x < 0 or x > 1:
+            raise ValueError('Location x must be in the range [0, 1].')
+        elif x == 0: 
+            # TODO: Decide how to handle sec(0) and sec(1)
+            # as they are not shown in the seg_graph
+            return self.segments[0]
+        elif x == 1:
+            return self.segments[-1]
+        
+        seg_idx = (np.abs(self.seg_centers_normalized - x)).argmin()
+        return self.segments[seg_idx]
+        
 
     @property
     def _ref(self):
