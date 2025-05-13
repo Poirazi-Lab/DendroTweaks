@@ -443,8 +443,9 @@ class Model():
             )
         for sec in self.sec_tree.sections:
             sec._cell = cell
-            sec._ref.set('length', sec.L)
-            sec._ref.set('radius', sec.diam/2)
+            print(f'sec.L: {sec.L} sec.diam: {sec.diam}')
+            sec._ref.set('length', sec.length)
+            sec._ref.set('radius', np.array(sec.radii).mean())
         self._cell = cell
         self.simulator._model = self
 
@@ -588,10 +589,17 @@ class Model():
         """
         # Create Mechanism objects and add them to the model
         for mechanism_name in self.path_manager.list_files(dir_name, extension='mod'):
-            self.add_mechanism(mechanism_name, 
-                               load=True, 
-                               dir_name=dir_name, 
-                               recompile=recompile)
+            if self.simulator_name == 'NEURON':
+                self.add_mechanism(mechanism_name, 
+                                load=True, 
+                                dir_name=dir_name, 
+                                recompile=recompile)
+            elif self.simulator_name == 'Jaxley':
+                self.add_mechanism(mechanism_name, 
+                                python_template_name='jaxley',
+                                load=False, 
+                                dir_name=dir_name, 
+                                recompile=False)
             
 
 
@@ -623,7 +631,6 @@ class Model():
         if load:
             self.load_mechanism(mechanism_name, dir_name, recompile)
         
-
 
     def load_mechanisms(self, dir_name: str = 'mod', recompile=True) -> None:
         """
@@ -1081,7 +1088,11 @@ class Model():
         groups_to_segments = {group.name: [seg for seg in self.seg_tree if seg in group] 
                          for group in self._groups}
         for param_name in self.params:
-            self.distribute(param_name, groups_to_segments)
+            try:
+                self.distribute(param_name, groups_to_segments)
+            except Exception as e:
+                print(f"Error distributing parameter '{param_name}': {e}")
+                
 
     
     def distribute(self, param_name: str, precomputed_groups=None):
@@ -1140,7 +1151,10 @@ class Model():
             else:
                 for seg in filtered_segments:
                     value = distribution(seg._section.path_distance(0.5))
-                    seg._section._ref.Ra = value
+                    if self.simulator_name == 'NEURON':
+                        seg._section._ref.Ra = value
+                    elif self.simulator_name == 'Jaxley':
+                        seg._section._ref.set('axial_resistivity', value)
 
 
     def remove_distribution(self, param_name, group_name):
@@ -1759,7 +1773,14 @@ class Model():
         for mech_name in {mech for mechs in data['domains'].values() for mech in mechs}:
             if mech_name in ['Leak', 'CaDyn', 'Independent']:
                 continue
-            self.add_mechanism(mech_name, dir_name='mod', recompile=recompile)            
+            if self.simulator_name == 'NEURON':
+                self.add_mechanism(mech_name, dir_name='mod', recompile=recompile)
+            elif self.simulator_name == 'Jaxley':
+                self.add_mechanism(mech_name,
+                                   python_template_name='jaxley',
+                                   load=False,
+                                   dir_name='mod',
+                                   recompile=False)
 
         self.from_dict(data)
 
