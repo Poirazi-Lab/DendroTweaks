@@ -134,41 +134,6 @@ class Section(Node):
         """
         return self._nseg
 
-    @nseg.setter
-    def nseg(self, value):
-        if value < 1:
-            raise ValueError('Number of segments must be at least 1.')
-        if value % 2 == 0:
-            raise ValueError('Number of segments must be odd.')
-        # Set the number in NEURON
-        self._nseg = self._ref.nseg = value
-        # Get the new NEURON segments
-        nrnsegs = [seg for seg in self._ref]
-
-        # Create new DendroTweaks segments
-        from dendrotweaks.morphology.seg_trees import Segment
-        old_segments = self.segments
-        new_segments = [Segment(idx=0, parent_idx=0, sim_seg=seg, section=self)
-                            for seg in nrnsegs]
-        
-        seg_tree = self._tree._seg_tree
-        first_segment = self.segments[0]
-        parent = first_segment.parent
-
-        for i, seg in enumerate(new_segments[:]):
-            if i == 0:
-                seg_tree.insert_node_before(seg, first_segment)
-            else:
-                seg_tree.insert_node_before(seg, new_segments[i-1])
-
-        for seg in old_segments:
-            seg_tree.remove_node(seg)
-        
-        # Sort the tree
-        self._tree._seg_tree.sort()
-        # Update the section's segments
-        self.segments = new_segments
-
 
     @property
     def radii(self):
@@ -683,6 +648,42 @@ class NeuronSection(Section):
             The name of the mechanism to check.
         """
         return self._ref.has_membrane(mech_name)
+
+
+    @nseg.setter
+    def nseg(self, value):
+        if value < 1:
+            raise ValueError('Number of segments must be at least 1.')
+        if value % 2 == 0:
+            raise ValueError('Number of segments must be odd.')
+        # Set the number in NEURON
+        self._nseg = self._ref.nseg = value
+        # Get the new NEURON segments
+        nrnsegs = [seg for seg in self._ref]
+
+        # Create new DendroTweaks segments
+        from dendrotweaks.morphology.seg_trees import NeuronSegment
+        old_segments = self.segments
+        new_segments = [NeuronSegment(idx=0, parent_idx=0, sim_seg=seg, section=self)
+                            for seg in nrnsegs]
+        
+        seg_tree = self._tree._seg_tree
+        first_segment = self.segments[0]
+        parent = first_segment.parent
+
+        for i, seg in enumerate(new_segments[:]):
+            if i == 0:
+                seg_tree.insert_node_before(seg, first_segment)
+            else:
+                seg_tree.insert_node_before(seg, new_segments[i-1])
+
+        for seg in old_segments:
+            seg_tree.remove_node(seg)
+        
+        # Sort the tree
+        self._tree._seg_tree.sort()
+        # Update the section's segments
+        self.segments = new_segments
 
 
     # REFERENCING METHODS
