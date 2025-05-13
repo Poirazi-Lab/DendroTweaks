@@ -292,19 +292,25 @@ class JaxleySimulator(Simulator):
 
         self.voltage_solver = voltage_solver
 
-    def add_iclamp(self, sec, loc, dur, delay, amp):
-        current = jx.step_current(i_delay=delay, i_dur=dur, i_amp=amp, delta_t=self.dt, t_max=300.0)
-        sec._ref.loc(0.5).stimulate(current)
+        self.recordings = {'v': {}}
+        self.iclamps = {}
+        self._model = None
+
 
     def add_recording(self, sec, loc, var='v'):
 
-        
-        # seg = sec(loc)
-        # if var not in self._recordings:
-        #     self._recordings[var] = {}
-        # self.recordings[var][seg] = []
+        seg = sec(loc)
+        if var not in self._recordings:
+            self._recordings[var] = {}
+        self.recordings[var][seg] = []
         sec._ref.loc(loc).record(var)
         
+
+    def _initialize_iclamps(self, duration):
+        for seg, iclamp in self._model.iclamps.items():
+            loc, delay, dur, amp = iclamp
+            current = jx.step_current(i_delay=delay, i_dur=dur, i_amp=amp, delta_t=self.dt, t_max=duration)
+            seg._section._ref.loc(loc).stimulate(current)
 
 
     def run(self, duration=300, sec=None):
@@ -316,9 +322,21 @@ class JaxleySimulator(Simulator):
         duration : float
             The duration of the simulation in milliseconds.
         """
-        self.t = np.arange(0, duration + 2*self.dt, self.dt)
-        vs = jnp.squeeze(jx.integrate(sec._ref, voltage_solver=self.voltage_solver).block_until_ready())
-
+        self._initialize_iclamps(duration)
+            
+        self.t = self._t = np.arange(0, duration + 2*self.dt, self.dt)[:-1]
+        vs = jnp.squeeze(
+            jx.integrate(
+                module=self._model._cell, 
+                params=[],
+                param_state=None,
+                voltage_solver=self.voltage_solver,
+                delta_t=self.dt,
+                t_max=duration
+            ).block_until_ready()
+        )
+        if vs.ndim == 1:
+            vs = jnp.expand_dims(vs, axis=0)
         self.recordings['v'] = {
-            seg: vs[i] for i, seg in enumerate(self.recordings['v'])
+            seg: vs[i, :] for i, seg in enumerate(self.recordings['v'])
         }

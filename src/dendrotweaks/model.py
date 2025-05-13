@@ -435,7 +435,7 @@ class Model():
         branches = [jx.Branch(ncomp=sec._nseg) for sec in self.sec_tree.sections]
         parents = [sec.parent.idx if sec.parent is not None else -1 
             for sec in self.sec_tree.sections]
-        xyzrs = [[(pt.x, pt.y, pt.z, pt.r) for pt in sec.points] for sec in self.sec_tree.sections]
+        xyzrs = [np.array([[pt.x, pt.y, pt.z, pt.r] for pt in sec.points]) for sec in self.sec_tree.sections]
         cell = jx.Cell(
                 branches,
                 parents,
@@ -443,7 +443,10 @@ class Model():
             )
         for sec in self.sec_tree.sections:
             sec._cell = cell
+            sec._ref.set('length', sec.L)
+            sec._ref.set('radius', sec.diam/2)
         self._cell = cell
+        self.simulator._model = self
 
         n_sec = len([sec._ref for sec in self.sec_tree.sections 
                     if sec._ref is not None])
@@ -533,6 +536,13 @@ class Model():
     # ========================================================================
 
     def add_default_mechanisms(self, recompile=False):
+        if self.simulator_name == 'NEURON':
+            self.add_default_neuron_mechanisms(recompile=recompile)
+        elif self.simulator_name == 'Jaxley':
+            self.add_default_jaxley_mechanisms()
+
+
+    def add_default_neuron_mechanisms(self, recompile=False):
         """
         Add default mechanisms to the model.
 
@@ -1182,7 +1192,10 @@ class Model():
         seg = sec(loc)
         if self.iclamps.get(seg):
             self.remove_iclamp(sec, loc)
-        iclamp = IClamp(sec, loc, amp, delay, dur)
+        if self.simulator_name == 'NEURON':
+            iclamp = IClamp(sec, loc, amp, delay, dur)
+        elif self.simulator_name == 'Jaxley':
+            iclamp = (loc, delay, dur, amp)
         print(f'IClamp added to sec {sec} at loc {loc}.')
         self.iclamps[seg] = iclamp
 
