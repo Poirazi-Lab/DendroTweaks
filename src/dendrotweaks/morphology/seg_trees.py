@@ -206,8 +206,8 @@ class JaxleySegment(Segment):
     @property
     def x(self):
         seg_idx = np.where([s == self for s in self._section.segments])[0][0]
-        seg_centers = [c/self._section.L for c in self._section.seg_centers]
-        return seg_centers[seg_idx]
+        # seg_centers = [c/self._section.L for c in self._section.seg_centers]
+        return self._section.seg_centers_normalized[seg_idx]
 
     # def parentseg(self):
     #     """
