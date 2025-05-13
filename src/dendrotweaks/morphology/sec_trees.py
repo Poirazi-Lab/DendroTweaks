@@ -128,14 +128,6 @@ class Section(Node):
 
 
     @property
-    def nseg(self):
-        """
-        Number of segments in the section (from NEURON).
-        """
-        return self._nseg
-
-
-    @property
     def radii(self):
         """
         Radii of the points in the section.
@@ -648,6 +640,14 @@ class NeuronSection(Section):
             The name of the mechanism to check.
         """
         return self._ref.has_membrane(mech_name)
+
+    
+    @property
+    def nseg(self):
+        """
+        Number of segments in the section (from NEURON).
+        """
+        return self._nseg
 
 
     @nseg.setter
