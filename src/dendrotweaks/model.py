@@ -494,7 +494,8 @@ class Model():
         for sec in self.sec_tree.sections:
             lambda_f = calculate_lambda_f(sec.distances, sec.diameters, sec.Ra, sec.cm, f)
             nseg = int((sec.L / (d_lambda * lambda_f) + 0.9) / 2) * 2 + 1
-            # TODO: Set sec._nseg instead
+            # TODO: Set sec.nseg instead
+            sec._nseg = nseg
             sec._ref.nseg = nseg
         # Rebuild the segment tree
         self.seg_tree = create_segment_tree(self.sec_tree)
