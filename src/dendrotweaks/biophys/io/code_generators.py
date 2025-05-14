@@ -134,7 +134,8 @@ class PythonCodeGenerator(CodeGenerator):
             # Generate the signature
             signature_str = self._generate_signature(procedure.signature, 
                                                      is_method=True,
-                                                     extra_params=['celsius'])
+                                                     extra_params=['celsius'],
+                                                     default_params=True)
 
             # Generate the body
             body_str = self._generate_body(procedure.statements)
@@ -160,7 +161,7 @@ class PythonCodeGenerator(CodeGenerator):
         
         return procedures
 
-    def _generate_signature(self, signature, is_method=True, extra_params=None):
+    def _generate_signature(self, signature, is_method=True, extra_params=None, default_params=False):
         """
         Generate the signature string for a function using a Jinja2 template.
         The function AST representation is used to retrieve the function name
@@ -180,6 +181,9 @@ class PythonCodeGenerator(CodeGenerator):
         template = Template(signature_template)
         name = signature['name']
         params = [param['name'] for param in signature.get('params', [])]
+        if params == [] and default_params:
+            print(f"Warning: Procedure {name} has no parameters! Expected 'v' or 'cai'. Defaulting to 'v'.")
+            params = ['v']
         if is_method:
             params = ['self'] + params
 
