@@ -1,6 +1,11 @@
 Changelog
 =============
 
+Version 0.4.2
+--------------
+  This release fixes a bug introduced in version 0.4.1 where segments were not properly updated
+  in the :code:`set_segmentation` method.
+
 Version 0.4.1
 --------------
   This release addresses minor bugs and improves the separation of NEURON-specific code from core classes.
@@ -12,7 +17,6 @@ Version 0.4.1
 
   Minor Updates:
 
-  - Resolved a bug in the morphology reduction method where :code:`mech_name` was incorrectly passed instead of :code:`mech` to insertion methods.
   - Enhanced the :code:`PythonCodeGenerator` class to handle MOD file procedures with no parameters, defaulting to 'v'.
 
 
