@@ -1405,7 +1405,8 @@ class Model():
             if mech_name == 'Leak':
                 continue
             for sec in root.subtree:
-                sec.uninsert_mechanism(mech_name)
+                mech = self.mechanisms[mech_name]
+                sec.uninsert_mechanism(mech)
 
         # Disconnect
         root.disconnect_from_parent()
@@ -1437,7 +1438,8 @@ class Model():
             if mech_name == 'Leak':
                 continue
             for sec in root.subtree:
-                sec.insert_mechanism(mech_name)
+                mech = self.mechanisms[mech_name]
+                sec.insert_mechanism(mech)
         
         # Replace locs with corresponding segs
         
@@ -1469,7 +1471,8 @@ class Model():
 
         # Reinsert active mechanisms after creating the new domain
         for mech_name in inserted_mechs:
-            root.insert_mechanism(mech_name)
+            mech = self.mechanisms[mech_name]
+            root.insert_mechanism(mech)
         self.domains_to_mechs[new_reduced_domain_name] = set(inserted_mechs.keys())
         
                
