@@ -38,7 +38,7 @@ class Im(IonChannel):
         self.params[item] = value
 
     
-    def compute_kinetic_variables(self):
+    def compute_kinetic_variables(self, v):
         
         qt = 2.3 ** ((34 - 21) / 10)
         mAlpha = 0.0033 * np.exp(((2.5 * 0.04) * (v - -35)))

@@ -42,18 +42,18 @@ BREAKPOINT	{
 }
 
 DERIVATIVE states	{
-	rates()
+	rates(v)
 	m' = (mInf-m)/mTau
 	h' = (hInf-h)/hTau
 }
 
 INITIAL{
-	rates()
+	rates(v)
 	m = mInf
 	h = hInf
 }
 
-PROCEDURE rates(){
+PROCEDURE rates(v(mV)){
   LOCAL qt
   qt = 2.3^((34-21)/10)
 

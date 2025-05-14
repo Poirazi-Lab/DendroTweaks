@@ -39,7 +39,7 @@ class Ih(IonChannel):
         self.params[item] = value
 
     
-    def compute_kinetic_variables(self):
+    def compute_kinetic_variables(self, v):
         
         conditions = [v == -154.9, ~(v == -154.9)]
         choices = [v + 0.0001, v]

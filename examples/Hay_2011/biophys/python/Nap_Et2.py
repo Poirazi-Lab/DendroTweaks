@@ -40,7 +40,7 @@ class Nap_Et2(IonChannel):
         self.params[item] = value
 
     
-    def compute_kinetic_variables(self):
+    def compute_kinetic_variables(self, v):
         
         qt = 2.3 ** ((34 - 21) / 10)
         mInf = 1.0 / (1 + np.exp(((v - -52.6) / -4.6)))

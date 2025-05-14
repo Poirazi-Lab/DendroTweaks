@@ -40,7 +40,7 @@ class CaHVA(IonChannel):
         self.params[item] = value
 
     
-    def compute_kinetic_variables(self):
+    def compute_kinetic_variables(self, v):
         
         conditions = [v == -27, ~(v == -27)]
         choices = [v + 0.0001, v]

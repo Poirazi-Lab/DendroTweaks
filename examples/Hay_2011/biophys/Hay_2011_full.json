@@ -228,62 +228,6 @@
                 }
             }
         },
-        "gbar_K_Tst": {
-            "all": {
-                "function": "constant",
-                "parameters": {
-                    "value": 0.0
-                }
-            },
-            "somatic": {
-                "function": "constant",
-                "parameters": {
-                    "value": 0.0812
-                }
-            }
-        },
-        "ek": {
-            "all": {
-                "function": "constant",
-                "parameters": {
-                    "value": -85
-                }
-            }
-        },
-        "gbar_K_Pst": {
-            "all": {
-                "function": "constant",
-                "parameters": {
-                    "value": 0.0
-                }
-            },
-            "somatic": {
-                "function": "constant",
-                "parameters": {
-                    "value": 0.00223
-                }
-            }
-        },
-        "gbar_SK_E2": {
-            "all": {
-                "function": "constant",
-                "parameters": {
-                    "value": 0.0
-                }
-            },
-            "somatic": {
-                "function": "constant",
-                "parameters": {
-                    "value": 0.0441
-                }
-            },
-            "apical": {
-                "function": "constant",
-                "parameters": {
-                    "value": 0.0012
-                }
-            }
-        },
         "gbar_Im": {
             "all": {
                 "function": "constant",
@@ -295,6 +239,42 @@
                 "function": "constant",
                 "parameters": {
                     "value": 6.75e-05
+                }
+            }
+        },
+        "ek": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": -85
+                }
+            }
+        },
+        "gbar_NaTa_t": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 2.04
+                }
+            },
+            "apical": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0213
+                }
+            }
+        },
+        "ena": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 50
                 }
             }
         },
@@ -329,91 +309,6 @@
                 }
             }
         },
-        "gbar_Nap_Et2": {
-            "all": {
-                "function": "constant",
-                "parameters": {
-                    "value": 0.0
-                }
-            },
-            "somatic": {
-                "function": "constant",
-                "parameters": {
-                    "value": 0.00172
-                }
-            }
-        },
-        "ena": {
-            "all": {
-                "function": "constant",
-                "parameters": {
-                    "value": 50
-                }
-            }
-        },
-        "gbar_NaTa_t": {
-            "all": {
-                "function": "constant",
-                "parameters": {
-                    "value": 0.0
-                }
-            },
-            "somatic": {
-                "function": "constant",
-                "parameters": {
-                    "value": 2.04
-                }
-            },
-            "apical": {
-                "function": "constant",
-                "parameters": {
-                    "value": 0.0213
-                }
-            }
-        },
-        "gbar_SKv3_1": {
-            "all": {
-                "function": "constant",
-                "parameters": {
-                    "value": 0.0
-                }
-            },
-            "somatic": {
-                "function": "constant",
-                "parameters": {
-                    "value": 0.693
-                }
-            },
-            "apical": {
-                "function": "constant",
-                "parameters": {
-                    "value": 0.000261
-                }
-            }
-        },
-        "gbar_CaHVA": {
-            "all": {
-                "function": "constant",
-                "parameters": {
-                    "value": 0.0
-                }
-            },
-            "somatic": {
-                "function": "constant",
-                "parameters": {
-                    "value": 0.000992
-                }
-            },
-            "apical": {
-                "function": "step",
-                "parameters": {
-                    "max_value": 0.000555,
-                    "min_value": 5.550000000000001e-05,
-                    "start": 685,
-                    "end": 885
-                }
-            }
-        },
         "gbar_Ih": {
             "all": {
                 "function": "constant",
@@ -440,6 +335,111 @@
                     "scale_factor": 0.0004,
                     "growth_rate": 0.0028,
                     "horizontal_shift": -0.398
+                }
+            }
+        },
+        "gbar_SKv3_1": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.693
+                }
+            },
+            "apical": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.000261
+                }
+            }
+        },
+        "gbar_SK_E2": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0441
+                }
+            },
+            "apical": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0012
+                }
+            }
+        },
+        "gbar_K_Pst": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.00223
+                }
+            }
+        },
+        "gbar_CaHVA": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.000992
+                }
+            },
+            "apical": {
+                "function": "step",
+                "parameters": {
+                    "max_value": 0.000555,
+                    "min_value": 5.550000000000001e-05,
+                    "start": 685,
+                    "end": 885
+                }
+            }
+        },
+        "gbar_Nap_Et2": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.00172
+                }
+            }
+        },
+        "gbar_K_Tst": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0812
                 }
             }
         }

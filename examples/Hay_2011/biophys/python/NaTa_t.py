@@ -40,7 +40,7 @@ class NaTa_t(IonChannel):
         self.params[item] = value
 
     
-    def compute_kinetic_variables(self):
+    def compute_kinetic_variables(self, v):
         
         qt = 2.3 ** ((34 - 21) / 10)
         conditions = [v == -38, ~(v == -38)]

@@ -38,7 +38,7 @@ class SKv3_1(IonChannel):
         self.params[item] = value
 
     
-    def compute_kinetic_variables(self):
+    def compute_kinetic_variables(self, v):
         
         mInf = 1 / (1 + np.exp(((v - 18.7) / -9.7)))
         mTau = (0.2 * 20.0) / (1 + np.exp(((v - -46.56) / -44.14)))

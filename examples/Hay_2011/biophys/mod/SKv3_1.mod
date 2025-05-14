@@ -37,16 +37,16 @@ BREAKPOINT	{
 }
 
 DERIVATIVE states	{
-	rates()
+	rates(v)
 	m' = (mInf-m)/mTau
 }
 
 INITIAL{
-	rates()
+	rates(v)
 	m = mInf
 }
 
-PROCEDURE rates(){
+PROCEDURE rates(v(mV)){
 		mInf =  1/(1+exp(((v -(18.700(mV)))/(-9.700(mV)))))
 		mTau =  0.2*20.000(ms)/(1+exp(((v -(-46.560(mV)))/(-44.140(mV)))))
 	
