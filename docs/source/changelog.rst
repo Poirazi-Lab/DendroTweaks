@@ -1,6 +1,21 @@
 Changelog
 =============
 
+Version 0.4.1
+--------------
+  This release addresses minor bugs and improves the separation of NEURON-specific code from core classes.
+
+  Key Updates:
+
+  - New :code:`NeuronSection` and :code:`NeuronSegment` subclasses encapsulating NEURON-specific functionality and separating it from the base :code:`Section` and :code:`Segment` classes.
+  - Proper :code:`CVode` handling and :code:`dt` updates during simulation initialization.
+
+  Minor Updates:
+
+  - Resolved a bug in the morphology reduction method where :code:`mech_name` was incorrectly passed instead of :code:`mech` to insertion methods.
+  - Enhanced the :code:`PythonCodeGenerator` class to handle MOD file procedures with no parameters, defaulting to 'v'.
+
+
 Version 0.4.0
 --------------
     This release enhances cross-platform compatibility and introduces a redesigned
