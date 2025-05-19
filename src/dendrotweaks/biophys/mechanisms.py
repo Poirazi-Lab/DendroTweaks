@@ -71,7 +71,7 @@ class Mechanism():
         }
 
     def __repr__(self):
-        return f"<Mechnaism({self.name})>"
+        return f"<Mechanism({self.name})>"
 
 
 
