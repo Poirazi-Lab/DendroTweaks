@@ -86,7 +86,7 @@ Creating a morphology from an SWC file
 
 As an alternative to manually instantiating each tree graph, 
 DendroTweaks provides a shortcut for creating a morphology from an SWC file
-that we have already seen in the quickstart :doc:`tutorial</tutorials/tutorial_quickstart>`. 
+that we have already seen in the quickstart :doc:`tutorial</tutorials/Quickstart>`. 
 
 First, we list the available morphologies in the morphology folder.
 

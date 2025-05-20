@@ -12,3 +12,4 @@ This set of tutorials is designed to provide a more in-depth look at the feature
    tutorials/Reduction
    tutorials/tutorial_mod
    tutorials/tutorial_standardization
+   tutorials/Channels

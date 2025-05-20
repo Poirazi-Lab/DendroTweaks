@@ -4,6 +4,9 @@ Simplifying Neuronal Morphology
 In this tutorial, we will demonstrate how to reduce a subtree of a neuron to a single equivalent cylinder.
 We will also show how to map the parameters of the original segments to the reduced segments.
 
+An interactive notebook version of this tutorial is available :doc:`here</tutorials/Reduction>`,
+providing a hands-on experience with less theoretical background.
+
 Here, we follow the analytical impedance-based approach proposed by Amsalem et al., 2020 (:code:`neuron_reduce`)
 
 .. admonition:: Citation 

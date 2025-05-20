@@ -1,4 +1,10 @@
-/* Base cell container styling with theme awareness */
+/* 
+ * JUPYTER NOTEBOOK SPECIFIC STYLING
+ * These selectors specifically target notebook cells by using the cell class
+ * combined with more specific selectors
+ */
+
+/* Base notebook cell container styling with theme awareness */
 div.cell.docutils.container {
   margin-bottom: 1.5rem;
   border-radius: 0.375rem;
@@ -13,16 +19,16 @@ div.cell_input.docutils.container {
   background-color: var(--color-code-background);
 }
 
-/* Make the code highlight area cleaner */
-div.highlight {
+/* Make the code highlight area in notebook cells cleaner */
+div.cell div.highlight {
   margin: 0 !important;
   padding: 0.75rem 1rem !important;
   background-color: transparent !important;
   border: none !important;
 }
 
-/* Improve code formatting */
-.highlight pre {
+/* Improve code formatting in notebook cells */
+div.cell .highlight pre {
   padding: 0 !important;
   margin: 0 !important;
   background-color: transparent !important;
@@ -42,10 +48,10 @@ div.cell_output.docutils.container {
 }
 
 /* Output text styling - clean and minimalistic */
-div.output.stream, 
-div.output.text_plain,
-div.highlight-myst-ansi,
-div.output.text_html {
+div.cell_output div.output.stream, 
+div.cell_output div.output.text_plain,
+div.cell_output div.highlight-myst-ansi,
+div.cell_output div.output.text_html {
   margin: 0 !important;
   padding: 0 !important;
   border: none !important;
@@ -54,7 +60,7 @@ div.output.text_html {
   font-size: var(--font-size--small);
 }
 
-/* Style the output pre tag */
+/* Style the output pre tag in notebook cells */
 div.cell_output pre {
   margin: 0 !important;
   padding: 0 !important;
@@ -74,106 +80,131 @@ div.cell_output .highlight-myst-ansi pre span {
 }
 
 /* Fix potential overflow issues with long commands */
-div.highlight pre {
+div.cell .highlight pre {
   white-space: pre-wrap;
   word-break: break-word;
 }
-/* TABLE STYLING - Fixed for dark/light themes */
+
+/* TABLE STYLING - Fixed for dark/light themes - ONLY for notebook outputs */
 div.cell_output table.dataframe {
-    border-collapse: collapse;
-    width: auto; /* Let table width adapt to content */
-    min-width: 100%; /* Ensure it doesn't shrink below container */
-    margin: 0 !important;
-    border: none !important;
-    font-size: var(--font-size--small);
-    background-color: transparent !important;
-    table-layout: auto; /* Let columns size to content */
+  border-collapse: collapse;
+  width: auto; /* Let table width adapt to content */
+  min-width: 100%; /* Ensure it doesn't shrink below container */
+  margin: 0 !important;
+  border: none !important;
+  font-size: var(--font-size--small);
+  background-color: transparent !important;
+  table-layout: auto; /* Let columns size to content */
 }
 
 /* Make columns adapt to content */
 div.cell_output table.dataframe th,
 div.cell_output table.dataframe td {
-    white-space: nowrap; /* Prevent wrapping for better fit */
-    width: auto;
-    max-width: 20em; /* Optional: prevent extremely wide columns */
-    overflow: hidden;
-    text-overflow: ellipsis;
+  white-space: nowrap; /* Prevent wrapping for better fit */
+  width: auto;
+  max-width: 20em; /* Optional: prevent extremely wide columns */
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Remove all background colors from table */
+/* Remove all background colors from notebook tables */
 div.cell_output table.dataframe tr,
 div.cell_output table.dataframe th,
 div.cell_output table.dataframe td {
-    background-color: transparent !important;
+  background-color: transparent !important;
 }
 
-/* Table header styling */
+/* Table header styling for notebook tables */
 div.cell_output table.dataframe thead th {
-    text-align: left !important;
-    padding: 0.5rem 0.75rem;
-    border-bottom: 1px solid var(--color-background-border);
-    font-weight: 600;
-    color: var(--color-foreground-primary) !important;
+  text-align: left !important;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--color-background-border);
+  font-weight: 600;
+  color: var(--color-foreground-primary) !important;
 }
 
-/* Table body styling */
+/* Table body styling for notebook tables */
 div.cell_output table.dataframe tbody tr th,
 div.cell_output table.dataframe tbody tr td {
-    padding: 0.5rem 0.75rem;
-    border: none;
-    border-bottom: 1px solid var(--color-background-border);
-    vertical-align: top;
-    color: var(--color-foreground-primary) !important;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-bottom: 1px solid var(--color-background-border);
+  vertical-align: top;
+  color: var(--color-foreground-primary) !important;
 }
 
-/* Index column styling */
+/* Index column styling for notebook tables */
 div.cell_output table.dataframe tbody tr th {
-    font-weight: normal;
-    color: var(--color-foreground-secondary) !important;
+  font-weight: normal;
+  color: var(--color-foreground-secondary) !important;
 }
 
 /* Subtle row separation instead of alternating backgrounds */
 div.cell_output table.dataframe tbody tr:not(:last-child) {
-    border-bottom: 1px solid var(--color-background-border);
+  border-bottom: 1px solid var(--color-background-border);
 }
 
 /* Remove the alternating row styling that was causing issues */
 div.cell_output table.dataframe tbody tr:nth-child(even),
 div.cell_output table.dataframe tbody tr:nth-child(odd) {
-    background-color: transparent !important;
+  background-color: transparent !important;
 }
 
-/* Override any inline background styles */
+/* Override any inline background styles in notebook tables */
 div.cell_output table.dataframe * {
-    background-color: transparent !important;
+  background-color: transparent !important;
 }
 
 /* Remove any style tags that dataframe might add */
 div.cell_output .dataframe style {
-    display: none !important;
+  display: none !important;
 }
 
-/* Keep figures clean with no borders */
+/* Keep figures clean with no borders in notebooks */
 div.cell_output img,
 div.cell_output svg {
-    border: none !important;
-    background: transparent !important;
-    max-width: 100%;
-    height: auto;
+  border: none !important;
+  background: transparent !important;
+  max-width: 100%;
+  height: auto;
 }
 
-/* Remove any border attribute from elements within output */
+/* Remove any border attribute from elements within notebook output */
 div.cell_output [border] {
-    border: none !important;
+  border: none !important;
 }
 
-/* Force the text color to be visible in any theme */
+/* Force the text color to be visible in any theme for notebook outputs */
 div.cell_output * {
-    color: var(--color-foreground-primary) !important;
+  color: var(--color-foreground-primary) !important;
 }
 
-/* Special handling for code in tables */
+/* Special handling for code in notebook tables */
 div.cell_output table.dataframe code {
-    color: var(--color-foreground-primary) !important;
-    background-color: transparent !important;
+  color: var(--color-foreground-primary) !important;
+  background-color: transparent !important;
+}
+
+/* 
+ * EXPLICIT RESET FOR REGULAR CODE BLOCKS
+ * These selectors specifically target non-notebook code blocks 
+ * to preserve their default Furo appearance
+ */
+
+/* Ensure regular code blocks keep their background */
+div.highlight:not(div.cell div.highlight):not(div.cell_output div.highlight) {
+  background-color: var(--color-code-background) !important;
+  /* Keep all the default Furo styling */
+}
+
+/* Regular pre blocks remain styled by Furo */
+pre:not(div.cell pre):not(div.cell_output pre) {
+  background-color: var(--color-code-background) !important;
+}
+
+/* Override specific styles for regular code blocks to ensure they keep Furo styling */
+div.highlight-python:not(div.cell div.highlight-python):not(div.cell_output div.highlight-python),
+div.highlight-default:not(div.cell div.highlight-default):not(div.cell_output div.highlight-default) {
+  background-color: var(--color-code-background) !important;
+  /* Preserve any additional Furo styling */
 }

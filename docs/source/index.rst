@@ -9,9 +9,18 @@ the creation and validation of single-cell biophysical neuronal models.
 
 The toolbox is available both as a **standalone Python package** and as a **web-based application**.
 
-The application's GUI can be accessed online at `dendrotweaks.dendrites.gr <https://dendrotweaks.dendrites.gr>`_.
+.. list-table:: 
+   :header-rows: 0
+   :widths: 30 70
 
-To learn more about the GUI, please refer to the :doc:`GUI documentation<gui>`.
+   * - Online platform
+     - `https://dendrotweaks.dendrites.gr <https://dendrotweaks.dendrites.gr>`_
+   * - PyPI project
+     - `https://pypi.org/project/dendrotweaks <https://pypi.org/project/dendrotweaks/>`_
+   * - Python package source code
+     - `https://github.com/Poirazi-Lab/DendroTweaks <https://github.com/Poirazi-Lab/DendroTweaks>`_
+   * - Web application source code
+     - `https://github.com/Poirazi-Lab/DendroTweaksApp <https://github.com/Poirazi-Lab/DendroTweaksApp>`_
 
 
    

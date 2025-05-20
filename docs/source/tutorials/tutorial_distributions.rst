@@ -3,7 +3,7 @@ Distributing Parameters
 
 In this tutorial, we will learn how to distribute parameters across the cell.
 
-In the quick start :doc:`tutorial</tutorials/tutorial_quickstart>`, we learned how to create a cell model and assign parameters 
+In the quick start :doc:`tutorial</tutorials/Quickstart>`, we learned how to create a cell model and assign parameters 
 to it. 
 However, for many parameters, we need to set different values across various 
 parts of the cell. Ion channels, for instance, are often distributed non-uniformly 
