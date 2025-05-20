@@ -1,3 +1,4 @@
 sphinx >= 5.1
 furo
 sphinx-copybutton
+myst-nb>=0.17
