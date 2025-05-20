@@ -26,6 +26,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinx_copybutton',
+    'myst_nb'
 ]
 
 templates_path = ['_templates']
@@ -39,6 +40,7 @@ autodoc_member_order = 'bysource'
 html_theme = 'furo'
 
 html_static_path = ['_static']
+html_css_files = ['custom.css']
 
 pygments_dark_style = "stata-dark"
 
@@ -51,3 +53,5 @@ html_theme_options = {
     'dark_logo': 'logo.png',
 }
 html_favicon = '_static/favicon.png'
+
+nb_execution_mode = "off"

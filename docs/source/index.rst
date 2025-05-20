@@ -59,7 +59,7 @@ If you find DendroTweaks helpful for building your models, please consider citin
    :caption: Tutorials:
 
    gui
-   tutorials/tutorial_quickstart
+   tutorials/Quickstart
    basics
    advanced
 

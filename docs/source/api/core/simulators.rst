@@ -1,7 +1,7 @@
 Simulators
 =================
 
-.. autoclass:: dendrotweaks.simulators.NEURONSimulator
+.. autoclass:: dendrotweaks.simulators.NeuronSimulator
     :members:
     :undoc-members:
     :show-inheritance:

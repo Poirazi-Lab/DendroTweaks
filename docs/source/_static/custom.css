@@ -1,0 +1,179 @@
+/* Base cell container styling with theme awareness */
+div.cell.docutils.container {
+  margin-bottom: 1.5rem;
+  border-radius: 0.375rem;
+  overflow: hidden;
+}
+
+/* Input cell styling - respects light/dark theme */
+div.cell_input.docutils.container {
+  border: 1px solid var(--color-background-border);
+  border-radius: 0.375rem;
+  margin: 0 !important;
+  background-color: var(--color-code-background);
+}
+
+/* Make the code highlight area cleaner */
+div.highlight {
+  margin: 0 !important;
+  padding: 0.75rem 1rem !important;
+  background-color: transparent !important;
+  border: none !important;
+}
+
+/* Improve code formatting */
+.highlight pre {
+  padding: 0 !important;
+  margin: 0 !important;
+  background-color: transparent !important;
+  font-family: var(--font-stack--monospace);
+  font-size: var(--font-size--small);
+  line-height: 1.5;
+  color: var(--color-code-foreground);
+}
+
+/* Clean output styling - NO BORDERS for outputs */
+div.cell_output.docutils.container {
+  margin-top: 0.5rem !important;
+  padding: 0 !important;
+  background-color: transparent !important;
+  border: none !important;
+  color: var(--color-foreground-primary);
+}
+
+/* Output text styling - clean and minimalistic */
+div.output.stream, 
+div.output.text_plain,
+div.highlight-myst-ansi,
+div.output.text_html {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background-color: transparent !important;
+  font-family: var(--font-stack--monospace);
+  font-size: var(--font-size--small);
+}
+
+/* Style the output pre tag */
+div.cell_output pre {
+  margin: 0 !important;
+  padding: 0 !important;
+  background-color: transparent !important;
+  line-height: 1.5;
+  color: var(--color-foreground-secondary);
+}
+
+/* Hide copy buttons in output */
+div.cell_output .copybtn {
+  display: none !important;
+}
+
+/* Fix multi-line output spacing */
+div.cell_output .highlight-myst-ansi pre span {
+  white-space: pre-wrap;
+}
+
+/* Fix potential overflow issues with long commands */
+div.highlight pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+/* TABLE STYLING - Fixed for dark/light themes */
+div.cell_output table.dataframe {
+    border-collapse: collapse;
+    width: auto; /* Let table width adapt to content */
+    min-width: 100%; /* Ensure it doesn't shrink below container */
+    margin: 0 !important;
+    border: none !important;
+    font-size: var(--font-size--small);
+    background-color: transparent !important;
+    table-layout: auto; /* Let columns size to content */
+}
+
+/* Make columns adapt to content */
+div.cell_output table.dataframe th,
+div.cell_output table.dataframe td {
+    white-space: nowrap; /* Prevent wrapping for better fit */
+    width: auto;
+    max-width: 20em; /* Optional: prevent extremely wide columns */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Remove all background colors from table */
+div.cell_output table.dataframe tr,
+div.cell_output table.dataframe th,
+div.cell_output table.dataframe td {
+    background-color: transparent !important;
+}
+
+/* Table header styling */
+div.cell_output table.dataframe thead th {
+    text-align: left !important;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--color-background-border);
+    font-weight: 600;
+    color: var(--color-foreground-primary) !important;
+}
+
+/* Table body styling */
+div.cell_output table.dataframe tbody tr th,
+div.cell_output table.dataframe tbody tr td {
+    padding: 0.5rem 0.75rem;
+    border: none;
+    border-bottom: 1px solid var(--color-background-border);
+    vertical-align: top;
+    color: var(--color-foreground-primary) !important;
+}
+
+/* Index column styling */
+div.cell_output table.dataframe tbody tr th {
+    font-weight: normal;
+    color: var(--color-foreground-secondary) !important;
+}
+
+/* Subtle row separation instead of alternating backgrounds */
+div.cell_output table.dataframe tbody tr:not(:last-child) {
+    border-bottom: 1px solid var(--color-background-border);
+}
+
+/* Remove the alternating row styling that was causing issues */
+div.cell_output table.dataframe tbody tr:nth-child(even),
+div.cell_output table.dataframe tbody tr:nth-child(odd) {
+    background-color: transparent !important;
+}
+
+/* Override any inline background styles */
+div.cell_output table.dataframe * {
+    background-color: transparent !important;
+}
+
+/* Remove any style tags that dataframe might add */
+div.cell_output .dataframe style {
+    display: none !important;
+}
+
+/* Keep figures clean with no borders */
+div.cell_output img,
+div.cell_output svg {
+    border: none !important;
+    background: transparent !important;
+    max-width: 100%;
+    height: auto;
+}
+
+/* Remove any border attribute from elements within output */
+div.cell_output [border] {
+    border: none !important;
+}
+
+/* Force the text color to be visible in any theme */
+div.cell_output * {
+    color: var(--color-foreground-primary) !important;
+}
+
+/* Special handling for code in tables */
+div.cell_output table.dataframe code {
+    color: var(--color-foreground-primary) !important;
+    background-color: transparent !important;
+}
