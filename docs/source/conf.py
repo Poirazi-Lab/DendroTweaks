@@ -29,6 +29,11 @@ extensions = [
     'myst_nb'
 ]
 
+myst_enable_extensions = [
+    "dollarmath",
+    "html_image",
+]
+
 templates_path = ['_templates']
 exclude_patterns = []
 
