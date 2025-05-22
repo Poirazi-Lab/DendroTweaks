@@ -416,8 +416,8 @@ class Model():
         self._add_default_segment_groups()
         self._initialize_domains_to_mechs()
 
-        # d_lambda = self.d_lambda
-        # self.set_segmentation(d_lambda=d_lambda)        
+        d_lambda = self.d_lambda
+        self.set_segmentation(d_lambda=d_lambda)
               
 
     def create_and_reference_sections_in_Neuron(self):
@@ -522,13 +522,18 @@ class Model():
 
         # Calculate lambda_f for each section and set nseg
         for sec in self.sec_tree.sections:
+            if sec is self.sec_tree.root:
+                continue
             lambda_f = calculate_lambda_f(sec.distances, sec.diameters, sec.Ra, sec.cm, f)
             nseg = int((sec.L / (d_lambda * lambda_f) + 0.9) / 2) * 2 + 1
             # TODO: Set sec.nseg instead
             sec._nseg = nseg
-            sec._ref.nseg = nseg
+            if self.simulator_name == 'NEURON':
+                sec._ref.nseg = nseg
+            elif self.simulator_name == 'Jaxley':
+                sec._ref.set_ncomp(nseg)
         # Rebuild the segment tree
-        self.seg_tree = create_segment_tree(self.sec_tree)
+        self.seg_tree = create_segment_tree(self.sec_tree, simulator_name=self.simulator_name)
 
         # Redistribute parameters
         self.distribute_all()
