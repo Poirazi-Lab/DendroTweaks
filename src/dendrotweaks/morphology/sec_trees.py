@@ -12,6 +12,9 @@ from dendrotweaks.morphology.domains import Domain
 from dataclasses import dataclass, field
 from bisect import bisect_left
 
+from functools import partial
+import os
+
 import warnings
 
 from dendrotweaks.utils import get_domain_color
@@ -723,6 +726,8 @@ class NeuronSection(Section):
 # JAXLEY SECTION
 # --------------------------------------------------------------
 
+from jaxley.io.swc import _radius
+
 class JaxleySection(Section):
 
     def __init__(self, idx, parent_idx, points) -> None:
@@ -761,6 +766,15 @@ class JaxleySection(Section):
     def nseg(self):
         return self._ref.ncomp
 
+    @nseg.setter
+    def nseg(self, value):
+        if value < 1:
+            raise ValueError('Number of segments must be at least 1.')
+        if value % 2 == 0:
+            raise ValueError('Number of segments must be odd.')
+        self._nseg = value
+        self._ref.set_ncomp(value)
+
     @property
     def L(self):
         return sum(self._ref.nodes['length'])
@@ -777,6 +791,25 @@ class JaxleySection(Section):
     def diam(self):
         return self._ref.loc(0.5).nodes['radius'].iloc[0]*2
 
+    @property
+    def radius_generating_fn(self):
+        """
+        Returns a function that interpolates radius based on normalized location [0,1].
+        """
+        lengths = np.diff(self.distances)
+        lengths[lengths < 1e-8] = 1e-8  # Avoid division by 0
+
+        cutoffs = self.distances / self.length
+        cutoffs[0] -= 1e-8
+        cutoffs[-1] += 1e-8
+
+        radii = np.array(self.radii, dtype=np.float32)
+
+        # Edge case: only one point in the section
+        if len(radii) == 1:
+            radii = np.tile(radii, 2)
+
+        return partial(_radius, cutoffs=cutoffs, radiuses=radii)
 
     def insert_mechanism(self, mech: str):
         """

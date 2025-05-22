@@ -155,6 +155,7 @@ class Model():
             self.simulator = NeuronSimulator()
         elif simulator_name == 'Jaxley':
             self.simulator = JaxleySimulator()
+            self.simulator._model = self
         else:
             raise ValueError(
                 'Simulator name not recognized. Use NEURON or Jaxley.')
@@ -441,13 +442,14 @@ class Model():
                 parents,
                 xyzr=xyzrs,
             )
+        cell._radius_generating_fns = [sec.radius_generating_fn for sec in self.sec_tree.sections]
         for sec in self.sec_tree.sections:
             sec._cell = cell
-            print(f'sec.L: {sec.L} sec.diam: {sec.diam}')
             sec._ref.set('length', sec.length)
             sec._ref.set('radius', np.array(sec.radii).mean())
+            sec._ref.set_ncomp(1)
         self._cell = cell
-        self.simulator._model = self
+        
 
         n_sec = len([sec._ref for sec in self.sec_tree.sections 
                     if sec._ref is not None])
