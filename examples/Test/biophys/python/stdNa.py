@@ -14,21 +14,6 @@ class stdNa(Channel, IonChannel):
     def __init__(self, name="stdNa"):
         self.current_is_in_mA_per_cm2 = True
         super().__init__(name=name)
-        self.params = {
-            "vhalf_m": -32.571,
-            "sigma_m": 9.8,
-            "k_m": 1.882,
-            "delta_m": 0.541,
-            "tau0_m": 0.065,
-            "vhalf_h": -60.0,
-            "sigma_h": -6.2,
-            "k_h": 0.018,
-            "delta_h": 0.395,
-            "tau0_h": 0.797,
-            "gbar": 0.0,
-            "q10": 2.3,
-            "temp": 23
-            }
         self.channel_params = {
             "vhalf_m_stdNa": -32.571,
             "sigma_m_stdNa": 9.8,
@@ -43,6 +28,21 @@ class stdNa(Channel, IonChannel):
             "gbar_stdNa": 0.0,
             "q10_stdNa": 2.3,
             "temp_stdNa": 23
+            }
+        self.params = {
+            "vhalf_m": -32.571,
+            "sigma_m": 9.8,
+            "k_m": 1.882,
+            "delta_m": 0.541,
+            "tau0_m": 0.065,
+            "vhalf_h": -60.0,
+            "sigma_h": -6.2,
+            "k_h": 0.018,
+            "delta_h": 0.395,
+            "tau0_h": 0.797,
+            "gbar": 0.0,
+            "q10": 2.3,
+            "temp": 23
             }
         self.range_params = {
             "vhalf_m": -32.571,
@@ -130,7 +130,7 @@ class stdNa(Channel, IonChannel):
         h = states['h_stdNa']
         gbar = params["gbar_stdNa"]
         # E = params["E_na"]
-        E = 60
+        E = 50
         mInf, mTau, hInf, hTau = self.compute_kinetic_variables(v)
         g = self.tadj * gbar * m**3 * h**1 
         return g * (v - E)

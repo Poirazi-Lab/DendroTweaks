@@ -4,7 +4,7 @@
 from dendrotweaks.biophys.mechanisms import IonChannel
 from jaxley.channels import Channel
 from jaxley.solver_gate import exponential_euler
-import jax.numpy as jn 
+import jax.numpy as np
 
 class {{ class_name }}(Channel, IonChannel):
     """
@@ -17,6 +17,13 @@ class {{ class_name }}(Channel, IonChannel):
         self.channel_params = {
             {% for param, value in channel_params.items() -%}
             "{{ param }}_{{ class_name }}": {{ value }}
+                {%- if not loop.last -%},
+                {%- endif %}
+            {% endfor -%}
+        }
+        self.params = {
+            {% for param, value in channel_params.items() -%}
+            "{{ param }}": {{ value }}
                 {%- if not loop.last -%},
                 {%- endif %}
             {% endfor -%}
@@ -97,7 +104,7 @@ class {{ class_name }}(Channel, IonChannel):
             {%- if not loop.last %}
             {%- endif %}
         {% endfor -%}
-        gbar = params["{{class_name}}_gbar"]
+        gbar = params["gbar_{{class_name}}"]
         # E = params["E_{{ ion }}"]
         E = {{ E_ion }}
         {{ procedure_calls}}

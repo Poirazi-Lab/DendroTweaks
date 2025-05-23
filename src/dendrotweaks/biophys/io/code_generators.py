@@ -14,8 +14,8 @@ from dendrotweaks.utils import write_file
 # )
 
 EQUILIBRIUM_POTENTIALS = {
-    'na': 60,
-    'k': -80,
+    'na': 50,
+    'k': -77,
     'ca': 140
 }
 

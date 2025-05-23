@@ -1,8 +1,9 @@
+from dendrotweaks.biophys.mechanisms import IonChannel
 from jaxley.channels import Channel
 from jaxley.solver_gate import exponential_euler
 import jax.numpy as jnp
 
-class JaxleyLeakChannel(Channel):
+class JaxleyLeakChannel(Channel, IonChannel):
     """Leakage current"""
 
     def __init__(self, name = 'Leak'):
@@ -10,6 +11,10 @@ class JaxleyLeakChannel(Channel):
         super().__init__(name)
         prefix = self._name
         self.channel_params = {
+            f"gbar_{prefix}": 0,  # S/cm^2
+            f"e_{prefix}": -70.0,  # mV
+        }
+        self.params = {
             f"gbar_{prefix}": 0,  # S/cm^2
             f"e_{prefix}": -70.0,  # mV
         }
