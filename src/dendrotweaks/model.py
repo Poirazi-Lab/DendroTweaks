@@ -869,7 +869,7 @@ class Model():
 
         # TODO: Redistribute parameters if any group contains this domain
         if distribute:
-            for param_name in self.params:
+            for param_name in mech.params_with_suffix:
                 self.distribute(param_name)
         
 
