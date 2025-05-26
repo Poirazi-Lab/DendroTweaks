@@ -230,3 +230,105 @@ Here, it is called with the default parameters.
   :alt: Channel kinetics
 
   *Figure 2: Visualization of channel kinetics*
+
+
+Limitations and Best Practices for MOD File Parsing
+--------------------------------------------------
+
+When working with MOD files in DendroTweaks, there are certain limitations and recommended practices to ensure compatibility and maintainability.
+
+Best Practices
+~~~~~~~~~~~~~~
+
+**Naming conventions:**
+  
+- For variables representing the time constant or the steady state of a state variable, include the state variable name and either :code:`tau` or :code:`inf` (notation is not case- or order-sensitive). For example, for a state variable :code:`m`, the following names are acceptable: :code:`mtau`, :code:`taum`, :code:`tau_m`, :code:`mTau`, etc.
+
+- Do not include the mechanism suffix in variable names (e.g., use :code:`gbar`, not :code:`gnabar`). NEURON will automatically append the suffix (e.g., :code:`gbar_na`).
+
+**Variable usage:**
+  
+- Set the maximal channel conductance :code:`gbar` to :code:`0.0` and use units of S/cm².
+
+- Avoid using :code:`dt` as a parameter in the MOD file; it is reserved for NEURON's internal use.
+
+- Avoid declaring :code:`GLOBAL` variables.
+
+- Place variables such as :code:`v` (membrane potential) and :code:`i` (current) in the :code:`ASSIGNED` block, not in :code:`PARAMETER`.
+
+- Avoid voltage shift parameters like :code:`v_shift`.
+
+- Pass the independent variable (usually :code:`v` for voltage-gated channels or :code:`cai` for calcium-gated channels) as an argument to procedures.
+
+**Code cleanliness:**
+  
+- Remove any unused functions or procedures from the MOD file.
+
+- Ensure all declared variables are used and initialized appropriately.
+
+Unsupported Features
+~~~~~~~~~~~~~~~~~~~~
+
+The following MOD file features are not supported:
+
+**Unsupported blocks:**
+
+- INDEPENDENT block:
+  ::
+  
+    INDEPENDENT {t FROM 0 TO 1 WITH 1 (ms)}
+
+- KINETIC blocks:
+  ::
+  
+    KINETIC kin {
+      : rates(v, cani)
+      rates(v, cai)
+      ~cst<->ost  (k3, k4)
+      ~ost<->ist  (k1, 0.0)
+      ~ist<->cst  (k2, 0.0)
+      CONSERVE cst+ost+ist=1
+    }
+
+- VERBATIM blocks:
+  ::
+  
+    VERBATIM
+    #some C code here
+    ENDVERBATIM
+
+**Unsupported keywords:**
+
+- FROM TO WITH keywords in the STATE block:
+  ::
+  
+    STATE {
+        z   FROM 0 TO 1
+    }
+
+- Declaration of LOCAL variables outside a block
+
+- TABLE statements
+
+- Multiple USEION statements in the NEURON block:
+  ::
+  
+    NEURON {
+      SUFFIX mychannel
+      USEION na READ ena WRITE ina
+      USEION k READ ek WRITE ik
+    }
+
+**Miscellaneous:**
+
+- Multiple assignments on one line:
+  ::
+  
+    aa = alf(v)  ab = bet(v)
+
+- Scaling factors in function signatures:
+  ::
+  
+    FUNCTION ghk(v(mV), ci(mM), co(mM)) (.001 coul/cm3) {
+      ...
+    }
