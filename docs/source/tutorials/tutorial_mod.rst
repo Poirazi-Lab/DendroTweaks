@@ -51,6 +51,8 @@ Each block is defined by a keyword followed by a set of parameters or statements
 
   ...
 
+For more information about the NMODL language, refer to the `official NEURON documentation <https://nrn.readthedocs.io/en/latest/nmodl/language.html>`_
+
 Converting MOD files into Python code
 ------------------------------------------
 
