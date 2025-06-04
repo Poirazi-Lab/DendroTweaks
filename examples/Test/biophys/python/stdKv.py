@@ -14,16 +14,6 @@ class stdKv(Channel, IonChannel):
     def __init__(self, name="stdKv"):
         self.current_is_in_mA_per_cm2 = True
         super().__init__(name=name)
-        self.channel_params = {
-            "vhalf_n_stdKv": 14.164,
-            "sigma_n_stdKv": 9.0,
-            "k_n_stdKv": 0.123,
-            "delta_n_stdKv": 0.732,
-            "tau0_n_stdKv": 0.877,
-            "gbar_stdKv": 0.0,
-            "q10_stdKv": 2.3,
-            "temp_stdKv": 23
-            }
         self.params = {
             "vhalf_n": 14.164,
             "sigma_n": 9.0,
@@ -33,6 +23,16 @@ class stdKv(Channel, IonChannel):
             "gbar": 0.0,
             "q10": 2.3,
             "temp": 23
+            }
+        self.channel_params = {
+            "vhalf_n_stdKv": 14.164,
+            "sigma_n_stdKv": 9.0,
+            "k_n_stdKv": 0.123,
+            "delta_n_stdKv": 0.732,
+            "tau0_n_stdKv": 0.877,
+            "gbar_stdKv": 0.0,
+            "q10_stdKv": 2.3,
+            "temp_stdKv": 23
             }
         self.range_params = {
             "vhalf_n": 14.164,

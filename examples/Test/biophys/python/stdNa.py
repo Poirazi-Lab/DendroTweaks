@@ -14,21 +14,6 @@ class stdNa(Channel, IonChannel):
     def __init__(self, name="stdNa"):
         self.current_is_in_mA_per_cm2 = True
         super().__init__(name=name)
-        self.channel_params = {
-            "vhalf_m_stdNa": -32.571,
-            "sigma_m_stdNa": 9.8,
-            "k_m_stdNa": 1.882,
-            "delta_m_stdNa": 0.541,
-            "tau0_m_stdNa": 0.065,
-            "vhalf_h_stdNa": -60.0,
-            "sigma_h_stdNa": -6.2,
-            "k_h_stdNa": 0.018,
-            "delta_h_stdNa": 0.395,
-            "tau0_h_stdNa": 0.797,
-            "gbar_stdNa": 0.0,
-            "q10_stdNa": 2.3,
-            "temp_stdNa": 23
-            }
         self.params = {
             "vhalf_m": -32.571,
             "sigma_m": 9.8,
@@ -43,6 +28,21 @@ class stdNa(Channel, IonChannel):
             "gbar": 0.0,
             "q10": 2.3,
             "temp": 23
+            }
+        self.channel_params = {
+            "vhalf_m_stdNa": -32.571,
+            "sigma_m_stdNa": 9.8,
+            "k_m_stdNa": 1.882,
+            "delta_m_stdNa": 0.541,
+            "tau0_m_stdNa": 0.065,
+            "vhalf_h_stdNa": -60.0,
+            "sigma_h_stdNa": -6.2,
+            "k_h_stdNa": 0.018,
+            "delta_h_stdNa": 0.395,
+            "tau0_h_stdNa": 0.797,
+            "gbar_stdNa": 0.0,
+            "q10_stdNa": 2.3,
+            "temp_stdNa": 23
             }
         self.range_params = {
             "vhalf_m": -32.571,
