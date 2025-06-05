@@ -671,11 +671,13 @@ class NeuronSection(Section):
         first_segment = self.segments[0]
         parent = first_segment.parent
 
-        for i, seg in enumerate(new_segments[:]):
-            if i == 0:
-                seg_tree.insert_node_before(seg, first_segment)
-            else:
-                seg_tree.insert_node_before(seg, new_segments[i-1])
+        for seg in new_segments:
+            seg_tree.insert_node_before(seg, first_segment)
+        # for i, seg in enumerate(new_segments[:]):
+        #     if i == 0:
+        #         seg_tree.insert_node_before(seg, first_segment)
+        #     else:
+        #         seg_tree.insert_node_after(seg, new_segments[i-1])
 
         for seg in old_segments:
             seg_tree.remove_node(seg)

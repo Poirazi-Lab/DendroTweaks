@@ -473,6 +473,25 @@ class Model():
     # SEGMENTATION
     # ========================================================================
 
+    # TODO Make a context manager for this
+    def _temp_clear_stimuli(self):
+        """
+        Temporarily save and clear stimuli.
+        """
+        self.export_stimuli(file_name='_temp_stimuli')
+        self.remove_all_stimuli()
+        self.remove_all_recordings()
+
+    def _temp_reload_stimuli(self):
+        """
+        Load stimuli from a temporary file and clean up.
+        """
+        self.load_stimuli(file_name='_temp_stimuli')
+        for ext in ['json', 'csv']:
+            temp_path = self.path_manager.get_file_path('stimuli', '_temp_stimuli', extension=ext)
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+
     def set_segmentation(self, d_lambda=0.1, f=100):
         """
         Set the number of segments in each section based on the geometry.
@@ -487,11 +506,7 @@ class Model():
         self.d_lambda = d_lambda
 
         # Temporarily save and clear stimuli
-        # TODO Make a context manager for this
-        temp_stimuli_file = '_temp_stimuli'
-        self.export_stimuli(file_name=temp_stimuli_file)
-        self.remove_all_stimuli()
-        self.remove_all_recordings()
+        self._temp_clear_stimuli()
 
         # Pre-distribute parameters needed for lambda_f calculation
         for param_name in ['cm', 'Ra']:
@@ -508,11 +523,7 @@ class Model():
         self.distribute_all()
 
         # Reload stimuli and clean up temporary files
-        self.load_stimuli(file_name=temp_stimuli_file)
-        for ext in ['json', 'csv']:
-            temp_path = self.path_manager.get_file_path('stimuli', temp_stimuli_file, extension=ext)
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
+        self._temp_reload_stimuli()
 
 
     # ========================================================================
