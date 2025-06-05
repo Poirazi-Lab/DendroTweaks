@@ -24,7 +24,8 @@ def get_somatic_data(model):
     tuple
         A tuple containing the voltage, time, time step, and injected current.
     """
-    seg = model.seg_tree.root
+    soma = model.sec_tree.root
+    seg = soma(0.5)
     iclamp = model.iclamps[seg]
 
     v = np.array(model.simulator.recordings['v'][seg])
@@ -163,7 +164,8 @@ def detect_somatic_spikes(model, **kwargs):
     Returns:
         dict: A dictionary containing spike metrics.
     """
-    seg = model.seg_tree.root
+    soma = model.sec_tree.root
+    seg = soma(0.5)
             
     v = np.array(model.simulator.recordings['v'][seg])
     t = np.array(model.simulator.t)

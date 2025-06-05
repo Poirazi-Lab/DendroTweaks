@@ -486,22 +486,33 @@ class Model():
         """
         self.d_lambda = d_lambda
 
+        # Temporarily save and clear stimuli
+        # TODO Make a context manager for this
+        temp_stimuli_file = '_temp_stimuli'
+        self.export_stimuli(file_name=temp_stimuli_file)
+        self.remove_all_stimuli()
+        self.remove_all_recordings()
+
         # Pre-distribute parameters needed for lambda_f calculation
         for param_name in ['cm', 'Ra']:
             self.distribute(param_name)
 
-        # Calculate lambda_f for each section and set nseg
+        # Calculate lambda_f and set nseg for each section
         for sec in self.sec_tree.sections:
             lambda_f = calculate_lambda_f(sec.distances, sec.diameters, sec.Ra, sec.cm, f)
-            nseg = int((sec.L / (d_lambda * lambda_f) + 0.9) / 2) * 2 + 1
-            # TODO: Set sec.nseg instead
-            sec._nseg = nseg
-            sec._ref.nseg = nseg
-        # Rebuild the segment tree
-        self.seg_tree = create_segment_tree(self.sec_tree)
+            nseg = max(1, int((sec.L / (d_lambda * lambda_f) + 0.9) / 2) * 2 + 1)
+            sec._nseg = sec._ref.nseg = nseg
 
-        # Redistribute parameters
+        # Rebuild the segment tree and redistribute parameters
+        self.seg_tree = create_segment_tree(self.sec_tree)
         self.distribute_all()
+
+        # Reload stimuli and clean up temporary files
+        self.load_stimuli(file_name=temp_stimuli_file)
+        for ext in ['json', 'csv']:
+            temp_path = self.path_manager.get_file_path('stimuli', temp_stimuli_file, extension=ext)
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
 
 
     # ========================================================================

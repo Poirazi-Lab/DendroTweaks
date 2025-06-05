@@ -255,7 +255,7 @@ class Population():
             'syn_type': [self.syn_type] * len(flat_synapses),
             'name': [self.name] * len(flat_synapses),
             'sec_idx': [syn.sec.idx for syn in flat_synapses],
-            'loc': [syn.loc for syn in flat_synapses],
+            'loc': [round(syn.loc, 8) for syn in flat_synapses],
         }
         
 

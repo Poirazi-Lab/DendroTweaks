@@ -178,7 +178,7 @@ class NeuronSimulator(Simulator):
             The location along the normalized section length to remove the recording from.
         """
         seg = sec(loc)
-        if self._recordings[var].get(seg):
+        if seg in self._recordings[var]:
             self._recordings[var][seg] = None
             self._recordings[var].pop(seg)
             if not self._recordings[var]:
