@@ -11,6 +11,7 @@ from dendrotweaks.morphology.trees import Node, Tree
 from dendrotweaks.morphology.domains import Domain
 from dataclasses import dataclass, field
 from bisect import bisect_left
+from functools import cached_property
 
 import warnings
 
@@ -271,11 +272,49 @@ class Section(Node):
         seg_values = [seg.get_param_value(param_name) for seg in self.segments]
         return round(np.mean(seg_values), 16)
 
-
-    def path_distance(self, relative_position: float = 0, 
-                        within_domain: bool = False) -> float:
+    @cached_property
+    def path_distance_to_root(self) -> float:
         """
-        Calculate the distance from the section to the root at a given relative position.
+        Calculate the total distance from the section start to the root.
+
+        Returns
+        -------
+        float
+            The distance from the section to the root.
+        """
+        distance = 0
+        node = self
+
+        while node.parent:
+            distance += node.length
+            node = node.parent
+            
+        return distance
+
+    @cached_property
+    def path_distance_within_domain(self) -> float:
+        """
+        Calculate the distance from the section start to the root within the same domain.
+
+        Returns
+        -------
+        float
+            The distance from the section to the root within the same domain.
+        """
+        distance = 0
+        node = self
+
+        while node.parent:
+            if node.parent.domain != node.domain:
+                break
+            distance += node.length
+            node = node.parent
+            
+        return distance
+
+    def path_distance(self, relative_position: float = 0, within_domain: bool = False) -> float:
+        """
+        Get the distance from the section to the root at a given relative position.
 
         Parameters
         ----------
@@ -288,29 +327,12 @@ class Section(Node):
         -------
         float
             The distance from the section to the root.
-
-        Important
-        ---------
-        Assumes that we always attach the 0 end of the child.
         """
         if not (0 <= relative_position <= 1):
             raise ValueError('Relative position must be between 0 and 1.')
 
-        distance = 0
-        factor = relative_position
-        node = self
-
-        while node.parent:
-
-            distance += factor * node.length
-
-            if within_domain and node.parent.domain != node.domain:
-                break
-
-            node = node.parent
-            factor = 1
-            
-        return distance       
+        base_distance = self.path_distance_within_domain if within_domain else self.path_distance_to_root
+        return base_distance + relative_position * self.length
 
     
     def disconnect_from_parent(self):

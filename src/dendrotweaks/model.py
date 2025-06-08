@@ -1046,7 +1046,6 @@ class Model():
             distribution = Distribution(distr_type, **distr_params)
         self.params[param_name][group_name] = distribution
 
-    
     def distribute_all(self):
         """
         Distribute all parameters to the segments.
@@ -1088,8 +1087,9 @@ class Model():
                     value = seg.parent.get_param_value(param_name)
                     seg.set_param_value(param_name, value)
             else:
-                for seg in filtered_segments:
-                    value = distribution(seg.path_distance())
+                dists = np.array([seg.path_distance() for seg in filtered_segments])
+                values = distribution(dists)
+                for seg, value in zip(filtered_segments, values):
                     seg.set_param_value(param_name, value)
 
 

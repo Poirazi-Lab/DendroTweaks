@@ -20,7 +20,7 @@ def constant(position, value=0):
         The value of the constant function at the given position.
     """
     if isinstance(position, ndarray):
-        return full_like(position, value)
+        return full_like(position, value, dtype=float)
     else:
         return value
 
@@ -42,7 +42,7 @@ def uniform(position, value=0):
         The value of the constant function at the given position.
     """
     if isinstance(position, ndarray):
-        return full_like(position, value)
+        return full_like(position, value, dtype=float)
     else:
         return value
 
