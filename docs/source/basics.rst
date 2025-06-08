@@ -12,3 +12,4 @@ This set of tutorials is designed to provide a basic introduction to the feature
    tutorials/tutorial_segmentation
    tutorials/tutorial_synapses
    tutorials/tutorial_validation
+   tutorials/tutorial_units
