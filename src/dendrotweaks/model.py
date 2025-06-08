@@ -1911,10 +1911,10 @@ class Model():
                 segments = [self.sec_tree.sections[sec_idx](loc) 
                             for sec_idx, loc in zip(df_pop['sec_idx'], df_pop['loc'])]
                 
-                pop = Population(i, 
-                                segments, 
-                                pop_data['N'], 
-                                'AMPA')
+                pop = Population(idx=i, 
+                                segments=segments, 
+                                N=pop_data['N'], 
+                                syn_type=syn_type)
                 
                 syn_locs = [(self.sec_tree.sections[sec_idx], loc) for sec_idx, loc in zip(df_pop['sec_idx'].tolist(), df_pop['loc'].tolist())]
                 
