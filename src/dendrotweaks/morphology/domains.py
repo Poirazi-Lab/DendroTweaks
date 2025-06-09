@@ -85,6 +85,9 @@ class Domain:
             return
         sec.domain = None
         sec.domain_idx = None
+        if hasattr(sec, 'path_distance_within_domain'):
+            # Remove cached property if it exists
+            del sec.path_distance_within_domain
         self._sections.remove(sec)
 
 

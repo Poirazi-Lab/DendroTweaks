@@ -280,10 +280,13 @@ class Section(Node):
         Returns
         -------
         float
-            The distance from the section to the root.
+            The distance from the section start to the root.
         """
         distance = 0
-        node = self
+        node = self.parent  # Start from the parent node
+
+        if node is None:
+            return 0
 
         while node.parent:
             distance += node.length
@@ -299,13 +302,16 @@ class Section(Node):
         Returns
         -------
         float
-            The distance from the section to the root within the same domain.
+            The distance from the section start to the root within the same domain.
         """
         distance = 0
-        node = self
+        node = self.parent  # Start from the parent node
+
+        if node is None:
+            return 0
 
         while node.parent:
-            if node.parent.domain != node.domain:
+            if node.domain != self.domain:
                 break
             distance += node.length
             node = node.parent
@@ -330,6 +336,10 @@ class Section(Node):
         """
         if not (0 <= relative_position <= 1):
             raise ValueError('Relative position must be between 0 and 1.')
+
+        if self.parent is None: # Soma section
+            # relative_position = abs(relative_position - 0.5)
+            return 0
 
         base_distance = self.path_distance_within_domain if within_domain else self.path_distance_to_root
         return base_distance + relative_position * self.length

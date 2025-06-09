@@ -697,17 +697,26 @@ class Model():
 
     def define_domain(self, domain_name: str, sections, distribute=True):
         """
-        Adds a new domain to the tree and ensures correct partitioning of
-        the section tree graph.
+        Adds a new domain to the cell and ensures proper partitioning 
+        of the section tree graph.
+
+        This method does not automatically insert mechanisms into the newly 
+        created domain. It is the user's responsibility to insert mechanisms 
+        into the domain after its creation. However, if the domain already 
+        exists and is being extended, mechanisms will be inserted automatically 
+        into the newly added sections.
 
         Parameters
         ----------
         domain_name : str
-            The name of the domain.
+            The name of the domain to be added or extended.
         sections : list[Section] or Callable
-            The sections to include in the domain. If a callable is provided,
-            it should be a filter function applied to the list of all sections
-            of the cell.
+            The sections to include in the domain. If a callable is provided, 
+            it should be a filter function applied to the list of all sections 
+            in the model.
+        distribute : bool, optional
+            Whether to re-distribute the parameters after defining the domain. 
+            Default is True.
         """
         if isinstance(sections, Callable):
             sections = self.get_sections(sections)
@@ -737,13 +746,21 @@ class Model():
                 sec.uninsert_mechanism(mech)
             
 
+        # Add sections to the new domain
         for sec in sections_to_move:
             domain.add_section(sec)
+            # Important: here we insert mechanisms only if we extend the domain,
+            # i.e. the domain already exists and has mechanisms.
+            # If the domain is new, we DO NOT insert mechanisms automatically
+            # and leave it to the user to do so.
             for mech_name in self.domains_to_mechs.get(domain.name, set()):
                 mech = self.mechanisms[mech_name]
-                sec.insert_mechanism(mech, distribute=distribute)
+                sec.insert_mechanism(mech)
 
         self._remove_empty()
+
+        if distribute:
+            self.distribute_all()
 
 
     def _add_domain_groups(self, domain_name):
@@ -1493,6 +1510,8 @@ class Model():
         
 
         # Reinsert active mechanisms after creating the new domain
+        # The new domain by default has no mechanisms. Here we re-insert the
+        # exact same mechanisms as in the original domain of the root section.
         for mech_name in inserted_mechs:
             mech = self.mechanisms[mech_name]
             root.insert_mechanism(mech)
