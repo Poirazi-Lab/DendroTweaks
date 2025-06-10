@@ -262,6 +262,13 @@ Best Practices
 
 - Pass the independent variable (usually :code:`v` for voltage-gated channels or :code:`cai` for calcium-gated channels) as an argument to procedures.
 
+- To calculate the temperature adjustment factor, include the :code:`q10` and :code:`temp` parameters in the :code:`PARAMETER` block. The :code:`q10` parameter represents the Q10 factor, while the :code:`temp` parameter specifies the reference temperature at which the kinetics were measured. The temperature adjustment factor can be calculated for a given temperature :code:`t°` using the formula:
+
+  .. math::
+
+    t_{\text{adj}} = q_{10}^{\left( \dfrac{t^{\circ} - \text{temp}}{10} \right)}
+
+
 **Code cleanliness:**
   
 - Remove any unused functions or procedures from the MOD file.
