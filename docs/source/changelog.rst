@@ -1,6 +1,18 @@
 Changelog
 =============
 
+Version 0.4.3
+--------------
+  This release improves performance and resolves several bugs.
+
+  Updates:
+
+  - Fixed a bug where population loading ignored synapse types.
+  - Enhanced parameter distribution performance by introducing cached properties for path distances:
+    :code:`section.path_distance_to_root` and :code:`section.path_distance_within_domain`.
+  - Resolved issues with re-segmentation involving stimuli and recordings. The :code:`model.set_segmentation` method now correctly updates segments, preserving existing stimuli and recordings by temporarily exporting and reloading their configurations.
+  - Renamed "Test" model to "Toy" model and refined its morphologies.
+
 Version 0.4.2
 --------------
   This release fixes a bug introduced in version 0.4.1 where segments were not properly updated

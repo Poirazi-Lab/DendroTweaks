@@ -1,4 +1,4 @@
-__version__ = "0.4.2"
+__version__ = "0.4.3"
 
 from dendrotweaks.model import Model
 from dendrotweaks.simulators import NeuronSimulator
