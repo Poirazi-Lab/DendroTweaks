@@ -1104,9 +1104,8 @@ class Model():
                     value = seg.parent.get_param_value(param_name)
                     seg.set_param_value(param_name, value)
             else:
-                dists = np.array([seg.path_distance() for seg in filtered_segments])
-                values = distribution(dists)
-                for seg, value in zip(filtered_segments, values):
+                for seg in filtered_segments:
+                    value = distribution(seg.path_distance())
                     seg.set_param_value(param_name, value)
 
 
