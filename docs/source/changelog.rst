@@ -1,6 +1,13 @@
 Changelog
 =============
 
+Version 0.4.4
+--------------
+  This release addresses a bug introduced in version 0.4.3, where vectorized inputs to some
+  distribution functions caused errors during parameter distribution using the :code:`model.distribute` method.
+  The issue has been addressed by reverting to the non-vectorized implementation, as the performance impact 
+  is minimal.
+
 Version 0.4.3
 --------------
   This release improves performance and resolves several bugs.
