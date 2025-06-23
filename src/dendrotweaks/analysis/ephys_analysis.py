@@ -38,6 +38,11 @@ def get_somatic_data(model):
 def calculate_input_resistance(model):
     """
     Calculate the input resistance of the neuron model.
+        
+    This function determines the input resistance by calculating the ratio 
+    between the voltage change and the injected current. The voltage change 
+    is measured as the difference between the membrane potential at the onset 
+    and offset of the current injection.
 
     Parameters
     ----------
@@ -52,13 +57,11 @@ def calculate_input_resistance(model):
     
     v, t, dt, iclamp = get_somatic_data(model)
 
-    v_min = np.min(v)
-    
     amp = iclamp.amp
-    start_ts = iclamp.delay / dt
-    end_ts = int((iclamp.delay + iclamp.dur) / dt)
+    start_ts = int(iclamp.delay / dt)
+    stop_ts = int((iclamp.delay + iclamp.dur) / dt)
     v_onset = v[int(start_ts)]
-    v_offset = v[int(end_ts)]
+    v_offset = v[int(stop_ts)]
     
     R_in = (v_onset - v_offset) / amp
     print(f"Input resistance: {R_in:.2f} MOhm")
@@ -71,43 +74,60 @@ def calculate_input_resistance(model):
     }
 
 
-def _exp_decay(t, A, tau):
-    return A * np.exp(-t / tau)
-
+def _double_exp_decay(t, A1, tau1, A2, tau2):
+    return A1 * np.exp(-t / tau1) + A2 * np.exp(-t / tau2)
 
 def calculate_time_constant(model):
     """
-    Calculate the membrane time constant of the neuron model.
+    Estimate the passive membrane time constant (τm) by fitting
+    a double exponential to the somatic voltage decay and selecting
+    the slowest τ component.
 
     Parameters
     ----------
     model : Model
-        The neuron model.
+        The neuron model (assumes Ih is disabled).
 
     Returns
     -------
     dict
-        A dictionary containing the time constant and the exponential fit.
+        A dictionary with τm (slowest), both τs, and fit details.
     """
     v, t, dt, iclamp = get_somatic_data(model)
 
     start_ts = int(iclamp.delay / dt)
     stop_ts = int((iclamp.delay + iclamp.dur) / dt)
     min_ts = np.argmin(v[start_ts:stop_ts]) + start_ts
-    v_min = np.min(v[start_ts: min_ts])
+    v_min = v[min_ts]
     v_decay = v[start_ts: min_ts] - v_min
     t_decay = t[start_ts: min_ts] - t[start_ts]
-    popt, _ = curve_fit(_exp_decay, t_decay, v_decay, p0=[1, 100])
-    tau = popt[1]
-    A = popt[0]
-    print(f"Membrane time constant: {tau:.2f} ms")
+
+    # Fit double exponential
+    try:
+        popt, _ = curve_fit(
+            _double_exp_decay, t_decay, v_decay, 
+            p0=[1, 10, 0.5, 100], 
+            bounds=(0, [np.inf, 1000, np.inf, 1000])
+        )
+        A1, tau1, A2, tau2 = popt
+        tau_slowest = max(tau1, tau2)
+    except RuntimeError:
+        print("Fit failed. Could not estimate time constant.")
+        return None
+
+    print(f"Time constant {tau_slowest:.2f} ms. Estimated from double exp fit (slowest component)")
+
     return {
-        'time_constant': tau,
-        'A': A,
+        'time_constant': tau_slowest,
         'start_time': start_ts * dt,
+        'tau1': tau1,
+        'tau2': tau2,
+        'A1': A1,
+        'A2': A2,
         'decay_time': t_decay,
         'decay_voltage': v_decay
     }
+
 
 def calculate_passive_properties(model):
     """
@@ -140,7 +160,6 @@ def plot_passive_properties(data, ax=None):
     v_offset = data['offset_voltage']
     t_decay = data['decay_time']
     v_decay = data['decay_voltage']
-    A = data['A']
     start_t = data['start_time']
 
     ax.set_title(f"R_in: {R_in:.2f} MOhm, Tau: {tau:.2f} ms")
@@ -148,8 +167,10 @@ def plot_passive_properties(data, ax=None):
     ax.axhline(v_offset, color='gray', linestyle='--', label='V offset')
     
     # Shift the exp_decay output along the y-axis
-    shifted_exp_decay = _exp_decay(t_decay, A, tau) + v_offset
-    ax.plot(t_decay + start_t, shifted_exp_decay, color='red', label='Exp. fit', linestyle='--')
+    fit_curve = _double_exp_decay(t_decay, data['A1'], data['tau1'], data['A2'], data['tau2']) + v_offset
+    label = f'Double exp fit (tau1 = {data["tau1"]:.1f} ms, tau2 = {data["tau2"]:.1f} ms)'
+
+    ax.plot(t_decay + start_t, fit_curve, color='red', label='Exp. fit', linestyle='--')
     ax.legend()
 
 
@@ -365,16 +386,18 @@ def calculate_voltage_attenuation(model):
 
 
     # Calculate voltage displacement from the resting potential
-    delta_v_at_stimulated = voltage_at_stimulated[0] - np.min(voltage_at_stimulated)
-    delta_vs = [v[0] - np.min(v) for v in voltages]
+    delta_v_at_stimulated = voltage_at_stimulated[0] - voltage_at_stimulated[-2]# np.min(voltage_at_stimulated)
+    delta_vs = [v[0] - v[-2] for v in voltages] # np.min(v) for v in voltages]
 
     min_voltages = [np.min(v) for v in voltages]
+    end_voltages = [v[-2] for v in voltages]
 
     attenuation = [dv / delta_v_at_stimulated for dv in delta_vs]
 
     return {
         'path_distances': path_distances,
         'min_voltages': min_voltages,
+        'end_voltages': end_voltages,
         'attenuation': attenuation
     }
 
@@ -484,5 +507,36 @@ def plot_dendritic_nonlinearity(data, ax=None, **kwargs):
     ax[1].set_title('Dendritic nonlinearity')
     
 
+def calculate_sag_ratio(model):
+    """
+    Calculate the sag ratio of the neuron model.
 
+    Parameters
+    ----------
+    model : Model
+        The neuron model.
+
+    Returns
+    -------
+    dict
+        A dictionary containing the sag ratio and intermediate values.
+    """
+    v, t, dt, iclamp = get_somatic_data(model)
+
+    start_ts = int(iclamp.delay / dt)
+    stop_ts = int((iclamp.delay + iclamp.dur) / dt)
+    min_ts = np.argmin(v[start_ts:stop_ts]) + start_ts
+    v_min = np.min(v[start_ts: min_ts])
+
+    a = v[stop_ts] - v_min
+    b = v[start_ts] - v_min
+
+    sag_ratio = a / b if b != 0 else np.nan
+
+    print(f"Sag ratio: {a:.2f}/{b:.2f} = {sag_ratio:.2f}")
+    return {
+        'a': a,
+        'b': b,
+        'sag_ratio': sag_ratio,
+    }
 

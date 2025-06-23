@@ -9,3 +9,4 @@ from dendrotweaks.analysis.ephys_analysis import calculate_voltage_attenuation
 from dendrotweaks.analysis.ephys_analysis import plot_voltage_attenuation
 from dendrotweaks.analysis.ephys_analysis import calculate_dendritic_nonlinearity
 from dendrotweaks.analysis.ephys_analysis import plot_dendritic_nonlinearity
+from dendrotweaks.analysis.ephys_analysis import calculate_sag_ratio
