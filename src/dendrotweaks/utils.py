@@ -182,31 +182,54 @@ def read_file(path_to_file):
     return content
 
 
-def download_example_data(path_to_destination):
+def download_example_data(path_to_destination, include_templates=True, include_modfiles=True):
     """
-    Download the examples subfolder from the DendroTweaks GitHub repository.
+    Download and extract specific folders from the DendroTweaks GitHub repository:
+    - examples/                <- from examples subfolder (always included)
+    - examples/Templates/      <- from src/dendrotweaks/biophys/default_templates (optional)
+    - examples/Default/        <- from src/dendrotweaks/biophys/default_mod (optional)
 
     Parameters
     ----------
     path_to_destination : str
-        The path to the destination folder where the examples will be downloaded.
+        The path to the destination folder where the data will be downloaded and extracted.
+
+    include_templates : bool, optional
+        If True, also extract default_templates/ into examples/Templates/.
+
+    include_modfiles : bool, optional
+        If True, also extract default_mod/ into examples/Default/.
     """
     if not os.path.exists(path_to_destination):
         os.makedirs(path_to_destination)
 
     repo_url = "https://github.com/Poirazi-Lab/DendroTweaks/archive/refs/heads/main.zip"
-    zip_path = os.path.join(path_to_destination, "examples.zip")
+    zip_path = os.path.join(path_to_destination, "dendrotweaks_repo.zip")
 
-    print(f"Downloading examples from {repo_url}...")
+    print(f"Downloading data from {repo_url}...")
     urllib.request.urlretrieve(repo_url, zip_path)
 
-    print(f"Extracting examples to {path_to_destination}")
+    print(f"Extracting relevant folders to {path_to_destination}...")
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         for member in zip_ref.namelist():
+            target_path = None
+
+            # === Always extract examples/ folder ===
             if member.startswith("DendroTweaks-main/examples/"):
-                # Extract the file with the correct path
-                member_path = os.path.relpath(member, "DendroTweaks-main/examples")
-                target_path = os.path.join(path_to_destination, member_path)
+                rel_path = os.path.relpath(member, "DendroTweaks-main/examples")
+                target_path = os.path.join(path_to_destination, rel_path)
+
+            # === Optionally extract Templates/ folder ===
+            elif include_templates and member.startswith("DendroTweaks-main/src/dendrotweaks/biophys/default_templates/"):
+                rel_path = os.path.relpath(member, "DendroTweaks-main/src/dendrotweaks/biophys/default_templates")
+                target_path = os.path.join(path_to_destination, "Templates", rel_path)
+
+            # === Optionally extract Default/ folder ===
+            elif include_modfiles and member.startswith("DendroTweaks-main/src/dendrotweaks/biophys/default_mod/"):
+                rel_path = os.path.relpath(member, "DendroTweaks-main/src/dendrotweaks/biophys/default_mod")
+                target_path = os.path.join(path_to_destination, "Default", rel_path)
+
+            if target_path:
                 if member.endswith('/'):
                     os.makedirs(target_path, exist_ok=True)
                 else:
@@ -214,8 +237,8 @@ def download_example_data(path_to_destination):
                     with zip_ref.open(member) as source, open(target_path, 'wb') as target:
                         target.write(source.read())
 
-    os.remove(zip_path)  # Clean up the zip file
-    print(f"Examples downloaded successfully to {path_to_destination}/.")
+    os.remove(zip_path)
+    print(f"Data downloaded and extracted successfully to {path_to_destination}/.")
 
 
 
