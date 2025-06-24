@@ -1,6 +1,30 @@
 Changelog
 =============
 
+Version 0.4.5
+--------------
+  This release introduces refined validation protocols, 
+  improvements in morphology reduction, and updates to the NMODL-to-Jaxley conversion template,
+  along with several minor enhancements and bug fixes.
+
+  Key Updates:
+
+  - Enhanced the time constant protocol by adopting a double exponential function for improved fitting precision.
+  - Added a new analysis function for calculating the sag ratio, enabling better characterization of neuronal responses.
+  - Updated the (plain) Jaxley template.
+  - Improved iteration over dataframes using the :code:`itertuples` method for better performance and type safety.
+
+  Minor Updates:
+
+  - Enhanced the :code:`download_example_data` function to include templates and default MOD files.
+  - Added a tutorial for converting MOD files to Jaxley-compatible classes.
+  - Improved parameter fitting when reducing morphologies by properly escaping cases where the mechanism is not in the domain (or if an equilibrium potential is not set for the domain).
+  - Improved the logic to ensure the domains in a subtree have the same mechanisms when reducing morphologies.
+  - Fixed minor issues with exporting distributions in reduced models.
+
+  Known Issues:
+  - Polynomial fitting fails to accurately represent step-like distributions when reducing morphologies.
+
 Version 0.4.4
 --------------
   This release addresses a bug introduced in version 0.4.3, where vectorized inputs to some
