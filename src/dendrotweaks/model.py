@@ -1421,12 +1421,15 @@ class Model():
             domains_to_mechs = {domain_name: mech_names for domain_name, mech_names
                 in self.domains_to_mechs.items() if domain_name in [domain.name for domain in domains_in_subtree]}
             common_mechs = set.intersection(*domains_to_mechs.values())
-            if not common_mechs:
+            if not all(mech_names == common_mechs
+                    for mech_names in domains_to_mechs.values()):
                 raise ValueError(
                     'The domains in the subtree have different mechanisms. '
                     'Please ensure that all domains in the subtree have the same mechanisms. '
                     'You may need to insert the missing mechanisms and set their conductances to 0 where they are not needed.'
                 )
+        elif len(domains_in_subtree) == 1:
+            common_mechs = self.domains_to_mechs[domain_name].copy()
         
         inserted_mechs = {mech_name: mech for mech_name, mech
             in self.mechanisms.items()
@@ -1496,9 +1499,15 @@ class Model():
 
         root_segs = [seg for seg in root.segments]
         params_to_coeffs = {}
-        for param_name in self.params:
-            coeffs = self.fit_distribution(param_name, segments=root_segs, plot=False)
-            params_to_coeffs[param_name] = coeffs
+        # for param_name in self.params:
+        common_mechs.add('Independent')
+        for mech in common_mechs:
+            for param_name in self.mechs_to_params[mech]:
+                coeffs = self.fit_distribution(param_name, segments=root_segs, plot=False)
+                if coeffs is None:
+                    warnings.warn(f'Cannot fit distribution for parameter {param_name}. No values found.')
+                    continue
+                params_to_coeffs[param_name] = coeffs
 
         
         # Create new domain
@@ -1535,9 +1544,12 @@ class Model():
         }
 
 
-    def fit_distribution(self, param_name, segments, max_degree=6, tolerance=1e-7, plot=False):
+    def fit_distribution(self, param_name, segments, max_degree=20, tolerance=1e-7, plot=False):
         from numpy import polyfit, polyval
         values = [seg.get_param_value(param_name) for seg in segments]
+        # if all values are NaN, return None
+        if all(np.isnan(values)):
+            return None
         distances = [seg.path_distance() for seg in segments]
         sorted_pairs = sorted(zip(distances, values))
         distances, values = zip(*sorted_pairs)
@@ -1564,7 +1576,7 @@ class Model():
         elif len(coeffs) == 2:
             self.params[param_name][group_name] = Distribution('linear', slope=coeffs[0], intercept=coeffs[1])
         else:
-            self.params[param_name][group_name] = Distribution('polynomial', coeffs=coeffs)
+            self.params[param_name][group_name] = Distribution('polynomial', coeffs=coeffs.tolist())
             
 
     # ========================================================================
