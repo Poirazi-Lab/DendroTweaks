@@ -235,7 +235,7 @@ Here, it is called with the default parameters.
 
 
 Limitations and Best Practices for MOD File Parsing
---------------------------------------------------
+----------------------------------------------------
 
 When working with MOD files in DendroTweaks, there are certain limitations and recommended practices to ensure compatibility and maintainability.
 
