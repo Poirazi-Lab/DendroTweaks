@@ -35,7 +35,16 @@ class SWCReader():
             header=None, 
             comment='#', 
             names=['Index', 'Type', 'X', 'Y', 'Z', 'R', 'Parent'],
-            index_col=False
+            index_col=False,
+            dtype={
+            'Index': int,
+            'Type': int,
+            'X': float,
+            'Y': float,
+            'Z': float,
+            'R': float,
+            'Parent': int
+            }
         )
 
         if (df['R'] == 0).all():

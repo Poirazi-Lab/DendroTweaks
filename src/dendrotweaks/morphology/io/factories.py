@@ -36,8 +36,8 @@ def create_point_tree(source: Union[str, DataFrame]) -> PointTree:
         raise ValueError("Source must be a file path (str) or a DataFrame.")
 
     nodes = [
-        Point(row['Index'], row['Type'], row['X'], row['Y'], row['Z'], row['R'], row['Parent'])
-        for _, row in df.iterrows()
+        Point(row.Index, row.Type, row.X, row.Y, row.Z, row.R, row.Parent)
+        for row in df.itertuples(index=False)
     ]
     point_tree =  PointTree(nodes)
     point_tree.remove_overlaps()

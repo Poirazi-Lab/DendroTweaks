@@ -1917,13 +1917,13 @@ class Model():
 
         df_iclamps = df_stimuli[df_stimuli['type'] == 'iclamp'].reset_index(drop=True, inplace=False)
 
-        for i, row in df_iclamps.iterrows():
+        for row in df_iclamps.itertuples(index=False):
             self.add_iclamp(
-            self.sec_tree.sections[row['sec_idx']], 
-            row['loc'],
-            data['stimuli']['iclamps'][i]['amp'],
-            data['stimuli']['iclamps'][i]['delay'],
-            data['stimuli']['iclamps'][i]['dur']
+            self.sec_tree.sections[row.sec_idx], 
+            row.loc,
+            data['stimuli']['iclamps'][row.idx]['amp'],
+            data['stimuli']['iclamps'][row.idx]['delay'],
+            data['stimuli']['iclamps'][row.idx]['dur']
             )
 
         # Populations -------------------------------------------------------
@@ -1956,15 +1956,10 @@ class Model():
         # Recordings ---------------------------------------------------------
 
         df_recs = df_stimuli[df_stimuli['type'] == 'rec'].reset_index(drop=True, inplace=False)
-        for i, row in df_recs.iterrows():
-            # TODO: This conditional statement is to account for a recent change
-            # in the JSON structure. It should be removed in the future.
-            if data['stimuli'].get('recordings'):
-                var = data['stimuli']['recordings'][i]['var']
-            else:
-                var = 'v'
+        for row in df_recs.itertuples(index=False):
+            var = data['stimuli']['recordings'][row.idx]['var']
             self.add_recording(
-                self.sec_tree.sections[row['sec_idx']], row['loc'], var
+            self.sec_tree.sections[row.sec_idx], row.loc, var
             )
 
 

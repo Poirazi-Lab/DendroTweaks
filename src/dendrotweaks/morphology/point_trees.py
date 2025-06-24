@@ -59,7 +59,7 @@ class Point(Node):
                  x: float, y: float, z: float, r: float, 
                  parent_idx: str) -> None:
         super().__init__(idx, parent_idx)
-        self.type_idx = type_idx
+        self.type_idx = int(type_idx)
         self.x = x
         self.y = y
         self.z = z
