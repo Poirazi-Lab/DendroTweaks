@@ -77,16 +77,25 @@ By default a group is created for each domain and the group :code:`all` is creat
 
 To define a new segment group, we must specify both a criterion 
 and the domains where we will search for matching segments. 
-The criterion can be one of three types: diameter, absolute distance (to the root of the tree), 
-or relative distance within a domain. When no criterion is specified, 
+The criterion can be one of three types: 
+
+- :code:`diam` - diameter of the segment
+
+- :code:`section_diam` - diameter at the center of the section to which the segment belongs
+
+- :code:`distance` - distance of the segment center from the soma center
+
+- :code:`domain_distance` - distance of the segment center to the closest parent segment in a different domain
+
+When no criterion is specified, 
 the group automatically includes all segments from the selected domains.
 Examples of group definitions are shown below:
 
 .. code-block:: python
 
     >>> model.add_group('thin_apical', domains=['apic'], select_by='diameter', max_val=0.5)
-    >>> model.add_group('proximal_dendritic', domains=['dend', 'apic'], select_by='abs_distance', max_val=100)
-    >>> model.add_group('hot_spot', domains=['apic'], select_by='rel_distance', min_val=300, max_val=400)
+    >>> model.add_group('proximal_dendritic', domains=['dend', 'apic'], select_by='distance', max_val=100)
+    >>> model.add_group('hot_spot', domains=['apic'], select_by='domain_distance', min_val=300, max_val=400)
 
 Groups as layers
 ~~~~~~~~~~~~~~~~~
