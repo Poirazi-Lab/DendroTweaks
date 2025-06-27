@@ -19,6 +19,7 @@ from dendrotweaks.biophys.distributions import Distribution
 from dendrotweaks.stimuli.populations import Population
 from dendrotweaks.utils import calculate_lambda_f, dynamic_import
 from dendrotweaks.utils import get_domain_color, timeit
+from dendrotweaks.prerun import prerun
 
 from collections import OrderedDict, defaultdict
 from numpy import nan
@@ -1350,16 +1351,32 @@ class Model():
         self.simulator.remove_all_recordings(var=var)
 
 
-    def run(self, duration=300):
+    def run(self, duration=300, prerun_time=0, truncate=True):
         """
-        Run the simulation for a specified duration.
+        Run the simulation for a specified duration, optionally preceded by a prerun period
+        to stabilize the model.
 
         Parameters
         ----------
-        duration : float, optional
-            The duration of the simulation. Default is 300.
+        duration : float
+            Duration of the main simulation (excluding prerun).
+        prerun_time : float
+            Optional prerun period to run before the main simulation.
+        truncate : bool
+            Whether to truncate prerun data after the simulation.
         """
-        self.simulator.run(duration)
+        if duration <= 0:
+            raise ValueError("Simulation duration must be positive.")
+        if prerun_time < 0:
+            raise ValueError("Prerun time must be non-negative.")
+
+        total_time = duration + prerun_time
+
+        if prerun_time > 0:
+            with prerun(self, duration=prerun_time, truncate=truncate):
+                self.simulator.run(total_time)
+        else:
+            self.simulator.run(duration)
 
     def get_traces(self):
         return self.simulator.get_traces()
