@@ -50,9 +50,9 @@ class PathManager:
     @property
     def path_to_data(self):
         """
-        The path to the data directory.
+        The path to the data directory, which is always the parent directory of path_to_model.
         """
-        return os.path.dirname(self.path_to_model)
+        return os.path.abspath(os.path.join(self.path_to_model, os.pardir))
 
     def __repr__(self):
         return f"PathManager({self.path_to_model})"
