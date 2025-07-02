@@ -70,6 +70,6 @@ class SWCReader():
         for t in df['Type'].unique():
             color = types_to_colors.get(t, 'k')
             mask = df['Type'] == t
-            ax.scatter(df[mask]['X'], df[mask]['Y'], df[mask]['Z'], 
-                       c=color, s=1, label=f'Type {t}')
+            ax.scatter(xs=df[mask]['X'], ys=df[mask]['Y'], zs=df[mask]['Z'], 
+                    c=color, s=1, label=f'Type {t}')
         ax.legend()
