@@ -257,7 +257,7 @@ def plot_somatic_spikes(data, ax=None, show_metrics=False):
             ax.plot([t - 10*w/2, t + 10*w/2], [v - a/2, v - a/2], color='lawngreen', linestyle='--')
 
 
-def calculate_fI_curve(model, duration=1000, min_amp=0, max_amp=1, n=5, **kwargs):
+def calculate_fI_curve(model, duration=1000, prerun_time=0, min_amp=0, max_amp=1, n=5, **kwargs):
     """
     Calculate the frequency-current (f-I) curve of the neuron model.
 
@@ -289,7 +289,7 @@ def calculate_fI_curve(model, duration=1000, min_amp=0, max_amp=1, n=5, **kwargs
     vs = {}
     for amp in amps:
         iclamp.amp = amp
-        model.simulator.run(duration)
+        model.run(duration=duration, prerun_time=prerun_time)
         spike_data = detect_somatic_spikes(model, **kwargs)
         n_spikes = len(spike_data['spike_times'])
         rate = n_spikes / iclamp.dur * 1000
@@ -304,7 +304,22 @@ def calculate_fI_curve(model, duration=1000, min_amp=0, max_amp=1, n=5, **kwargs
     }
 
 
-def plot_fI_curve(data, ax=None, **kwargs):
+def plot_fI_curve(data, ax=None, vshift=200, **kwargs):
+    """
+    Plot the f-I curve and somatic voltage traces.
+
+    Parameters
+    ----------
+    data : dict
+        A dictionary containing the current amplitudes, firing rates, and voltages.
+        Can be obtained from `calculate_fI_curve`.
+    ax : matplotlib.axes.Axes, optional
+        The axes to plot on. If two axes are provided, the first will show the somatic voltage traces and the second will show the f-I curve.
+        If a single axis is provided, it will show the f-I curve only.
+        If None, a new figure will be created.
+    vshift : int, optional
+        The vertical shift for the somatic voltage traces. Default is 200.
+    """
 
     if ax is None:
         _, ax = plt.subplots(1, 2, figsize=(5, 5))
@@ -314,25 +329,20 @@ def plot_fI_curve(data, ax=None, **kwargs):
     vs = data['voltages']
     t = data['time']
 
-    for i, (amp, v) in enumerate(vs.items()):
-        ax[0].plot(t, np.array(v) - i*200, label=f'{amp} nA')
-    # ax[0].set_xlabel('Time (ms)')
-    # ax[0].set_ylabel('Voltage (mV)')
-    ax[0].set_title('Somatic spikes')
-    ax[0].legend()
-    ax[0].spines['top'].set_visible(False)
-    ax[0].spines['right'].set_visible(False)
-    ax[0].spines['bottom'].set_visible(False)
-    ax[0].spines['left'].set_visible(False)
-    ax[0].set_xticks([])
-    ax[0].set_yticks([])
+    if isinstance(ax, (list, np.ndarray)):        
+        for i, (amp, v) in enumerate(vs.items()):
+            ax[0].plot(t, np.array(v) - i*vshift, label=f'{amp} nA')
+        ax[0].set_title('Somatic spikes')
+        ax[0].legend()
+        ax[0].axis('off')
+        ax = ax[1]
     
-    ax[1].plot(amps, rates, color='gray', zorder=0)
+    ax.plot(amps, rates, color='gray', zorder=0)
     for a, r in zip(amps, rates):
-        ax[1].scatter(a, r, s=50, edgecolor='white')
-    ax[1].set_xlabel('Current (nA)')
-    ax[1].set_ylabel('Firing rate (Hz)')
-    ax[1].set_title('f-I curve')
+        ax.plot(a, r, 'o', color='red', zorder=1)
+    ax.set_xlabel('Current (nA)')
+    ax.set_ylabel('Firing rate (Hz)')
+    ax.set_title('f-I curve')
 
 
 # =============================================================================
@@ -416,7 +426,7 @@ def plot_voltage_attenuation(data, ax=None):
     ax.set_ylabel('Voltage attenuation')
     ax.set_title('Voltage attenuation')
 
-def calculate_dendritic_nonlinearity(model, duration=1000, max_weight=None, n=None):
+def calculate_dendritic_nonlinearity(model, duration=1000, prerun_time=0, max_weight=None, n=None):
     """Calculate the expected and observed voltage changes for a range of synaptic weights.
 
     Parameters
@@ -460,7 +470,7 @@ def calculate_dendritic_nonlinearity(model, duration=1000, max_weight=None, n=No
 
     for w in weights:
         population.update_input_params(weight=w)
-        model.simulator.run(duration)
+        model.run(duration=duration, prerun_time=prerun_time)
         v = np.array(model.simulator.recordings['v'][seg])
         v_start = v[start_ts]
         v_max = np.max(v[start_ts:])
@@ -479,7 +489,22 @@ def calculate_dendritic_nonlinearity(model, duration=1000, max_weight=None, n=No
     }
 
 
-def plot_dendritic_nonlinearity(data, ax=None, **kwargs):
+def plot_dendritic_nonlinearity(data, ax=None, vshift=200, **kwargs):
+    """
+    Plot the dendritic nonlinearity based on expected and observed voltage changes.
+
+    Parameters
+    ----------
+    data : dict
+        A dictionary containing the expected and observed voltage changes.
+        Can be obtained from `calculate_dendritic_nonlinearity`.
+    ax : matplotlib.axes.Axes, optional
+        The axes to plot on. If two axes are provided, the first will show the voltage traces and the second will show the dendritic nonlinearity.
+        If a single axis is provided, it will show the dendritic nonlinearity only.
+        If None, a new figure will be created.
+    vshift : int, optional
+        The vertical shift for the voltage traces.
+    """
     
     if ax is None:
         _, ax = plt.subplots(1, 2, figsize=(10, 5))
@@ -489,22 +514,21 @@ def plot_dendritic_nonlinearity(data, ax=None, **kwargs):
     vs = data['voltages']
     t = data['time']
 
-    for i, (weight, v) in enumerate(vs.items()):
-        ax[0].plot(t, np.array(v) - i*200, label=f'{weight} synapses')
-    ax[0].set_title('Voltage traces')
-    ax[0].legend()
-    ax[0].spines['top'].set_visible(False)
-    ax[0].spines['right'].set_visible(False)
-    ax[0].spines['bottom'].set_visible(False)
-    ax[0].spines['left'].set_visible(False)
-    ax[0].set_xticks([])
-    ax[0].set_yticks([])
-
-    ax[1].plot(expected_delta_vs, delta_vs, 'o-')
-    ax[1].plot(expected_delta_vs, expected_delta_vs, color='gray', linestyle='--')
-    ax[1].set_xlabel('Expected voltage change (mV)')
-    ax[1].set_ylabel('Observed voltage change (mV)')
-    ax[1].set_title('Dendritic nonlinearity')
+    if isinstance(ax, (list, np.ndarray)):        
+        for i, (weight, v) in enumerate(vs.items()):
+            ax[0].plot(t, np.array(v) - i*vshift, label=f'{weight} synapses')
+        ax[0].set_title('Voltage traces')
+        ax[0].legend()
+        ax[0].axis('off')
+        ax = ax[1]
+    
+    ax.plot(expected_delta_vs, delta_vs, zorder=1)
+    ax.plot(expected_delta_vs, expected_delta_vs, color='gray', linestyle='--', zorder=0)
+    for ep, ob in zip(expected_delta_vs, delta_vs):
+        ax.plot(ep, ob, 'o', zorder=2)
+    ax.set_xlabel('Expected voltage change (mV)')
+    ax.set_ylabel('Observed voltage change (mV)')
+    ax.set_title('Dendritic nonlinearity')
     
 
 def calculate_sag_ratio(model):

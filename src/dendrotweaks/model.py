@@ -1635,7 +1635,7 @@ class Model():
             ax.scatter(*zip(*zero_values), edgecolors=zero_colors, facecolors='none', marker='.')
         if nan_values and show_nan:
             ax.scatter(*zip(*nan_values), c=nan_colors, marker='x', alpha=0.5, zorder=0)
-        plt.axhline(y=0, color='k', linestyle='--')
+        ax.axhline(y=0, color='k', linestyle='--')
 
         ax.set_xlabel('Path distance')
         ax.set_ylabel(param_name)
