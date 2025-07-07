@@ -1,0 +1,62 @@
+{
+    "metadata": {
+        "name": "Hay_2011"
+    },
+    "simulation": {
+        "temperature": 37,
+        "v_init": -80,
+        "dt": 0.1,
+        "duration": 300
+    },
+    "stimuli": {
+        "recordings": [
+            {
+                "name": "rec_0",
+                "var": "v"
+            },
+            {
+                "name": "rec_1",
+                "var": "v"
+            }
+        ],
+        "iclamps": [
+            {
+                "name": "iclamp_0",
+                "amp": 2.0,
+                "delay": 200.0,
+                "dur": 5.000000000000028
+            }
+        ],
+        "populations": {
+            "AMPA": [],
+            "NMDA": [],
+            "AMPA_NMDA": [
+                {
+                    "name": "AMPA_NMDA_0",
+                    "syn_type": "AMPA_NMDA",
+                    "N": 1,
+                    "input_params": {
+                        "rate": 1,
+                        "noise": 0,
+                        "start": 205,
+                        "end": 257.00000000000006,
+                        "weight": 20,
+                        "delay": 0
+                    },
+                    "kinetic_params": {
+                        "gmax_AMPA": 0.001,
+                        "gmax_NMDA": 0.0007000000000000001,
+                        "tau_rise_AMPA": 0.1,
+                        "tau_decay_AMPA": 2.5,
+                        "tau_rise_NMDA": 2,
+                        "tau_decay_NMDA": 30,
+                        "e": 0,
+                        "gamma": 0.062,
+                        "mu": 0.28
+                    }
+                }
+            ],
+            "GABAa": []
+        }
+    }
+}

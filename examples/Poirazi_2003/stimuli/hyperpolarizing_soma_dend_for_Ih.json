@@ -1,10 +1,10 @@
 {
     "metadata": {
-        "name": "Hay_2011"
+        "name": "Poirazi_2003"
     },
     "simulation": {
         "temperature": 37,
-        "v_init": -80,
+        "v_init": -70,
         "dt": 0.1,
         "duration": 1000
     },
@@ -13,14 +13,24 @@
             {
                 "name": "rec_0",
                 "var": "v"
+            },
+            {
+                "name": "rec_1",
+                "var": "v"
             }
         ],
         "iclamps": [
             {
                 "name": "iclamp_0",
-                "amp": 0.793,
-                "delay": 100.0,
-                "dur": 800.0
+                "amp": -0.2,
+                "delay": 200.0,
+                "dur": 200.0
+            },
+            {
+                "name": "iclamp_1",
+                "amp": -0.2,
+                "delay": 700.0,
+                "dur": 200.0
             }
         ],
         "populations": {

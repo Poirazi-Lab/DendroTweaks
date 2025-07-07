@@ -1,0 +1,71 @@
+{
+    "metadata": {
+        "name": "Hay_2011"
+    },
+    "simulation": {
+        "temperature": 37,
+        "v_init": -80,
+        "dt": 0.1,
+        "duration": 500
+    },
+    "stimuli": {
+        "recordings": [
+            {
+                "name": "rec_0",
+                "var": "v"
+            }
+        ],
+        "iclamps": [],
+        "populations": {
+            "AMPA": [],
+            "NMDA": [],
+            "AMPA_NMDA": [
+                {
+                    "name": "AMPA_NMDA_0",
+                    "syn_type": "AMPA_NMDA",
+                    "N": 20,
+                    "input_params": {
+                        "rate": 10,
+                        "noise": 0,
+                        "start": 200,
+                        "end": 300,
+                        "weight": 1,
+                        "delay": 0
+                    },
+                    "kinetic_params": {
+                        "gmax_AMPA": 0.0004,
+                        "gmax_NMDA": 0.0004,
+                        "tau_rise_AMPA": 0.2,
+                        "tau_decay_AMPA": 1.7,
+                        "tau_rise_NMDA": 2,
+                        "tau_decay_NMDA": 75,
+                        "e": 0,
+                        "gamma": 0.08,
+                        "mu": 0.28
+                    }
+                }
+            ],
+            "GABAa": [
+                {
+                    "name": "GABAa_0",
+                    "syn_type": "GABAa",
+                    "N": 1,
+                    "input_params": {
+                        "rate": 1,
+                        "noise": 0,
+                        "start": 220,
+                        "end": 262.00000000000006,
+                        "weight": 1,
+                        "delay": 0
+                    },
+                    "kinetic_params": {
+                        "gmax": 0.001,
+                        "tau_rise": 0.18,
+                        "tau_decay": 5,
+                        "e": -80
+                    }
+                }
+            ]
+        }
+    }
+}

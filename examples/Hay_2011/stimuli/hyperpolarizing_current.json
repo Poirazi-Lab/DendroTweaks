@@ -4,9 +4,10 @@
     },
     "simulation": {
         "temperature": 37,
-        "v_init": -80,
+        "v_init": -90,
         "dt": 0.1,
-        "duration": 1000
+        "duration": 1000,
+        "prerun": 300
     },
     "stimuli": {
         "recordings": [
@@ -18,9 +19,9 @@
         "iclamps": [
             {
                 "name": "iclamp_0",
-                "amp": 0.793,
-                "delay": 100.0,
-                "dur": 800.0
+                "amp": -0.05,
+                "delay": 200.0,
+                "dur": 500.0
             }
         ],
         "populations": {
