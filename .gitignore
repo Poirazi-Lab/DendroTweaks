@@ -28,3 +28,4 @@ dist/
 tutorials/examples/
 docs/source/tutorials/examples/
 exploration.ipynb
+examples/_*/
