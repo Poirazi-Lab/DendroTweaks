@@ -26,8 +26,55 @@ SWC_ID_TO_DOMAIN = {
     8: 'reduced',
 }
 
+POPULATIONS = {'AMPA': {}, 'NMDA': {}, 'AMPA_NMDA': {}, 'GABAa': {}}
+
+INDEPENDENT_PARAMS = {
+    'cm': 1, # uF/cm2
+    'Ra': 100, # Ohm cm
+    'ena': 50, # mV
+    'ek': -77, # mV
+    'eca': 140 # mV
+}
+
+DOMAIN_TO_GROUP = {
+    'soma': 'somatic',
+    'axon': 'axonal',
+    'dend': 'dendritic',
+    'apic': 'apical',
+}
+
 DOMAIN_TO_SWC_ID = {
     v: k for k, v in SWC_ID_TO_DOMAIN.items()
+}
+
+DOMAINS_TO_NEURON = {
+    'soma': 'soma',
+    'perisomatic': 'dend_11',
+    'axon': 'axon',
+    'apic': 'apic',
+    'dend': 'dend',
+    'basal': 'dend_31',
+    'trunk': 'dend_41',
+    'tuft': 'dend_42',
+    'oblique': 'dend_43',
+    'custom': 'dend_5',
+    'reduced': 'dend_8',
+    'undefined': 'dend_0',
+}
+
+DOMAINS_TO_COLORS = {
+    'soma': '#E69F00',
+    'apic': '#0072B2',
+    'dend': '#019E73',
+    'basal': '#31A354',
+    'axon': '#F0E442',
+    'trunk': '#56B4E9',
+    'tuft': '#A55194',
+    'oblique': '#8C564B',
+    'perisomatic': '#D55E00',
+    'custom': '#D62728',
+    'reduced': '#E377C2',
+    'undefined': '#7F7F7F',
 }
 
 def get_swc_idx(domain_name):
@@ -45,26 +92,9 @@ def get_domain_name(swc_idx):
         return 'custom_' + str(swc_idx)[1:]
     return SWC_ID_TO_DOMAIN.get(swc_idx, 'undefined')
 
-DOMAINS_TO_COLORS = {
-    'soma': '#E69F00',
-    'apic': '#0072B2',
-    'dend': '#019E73',
-    'basal': '#31A354',
-    'axon': '#F0E442',
-    'trunk': '#56B4E9',
-    'tuft': '#A55194',
-    'oblique': '#8C564B',
-    'perisomatic': '#D55E00',
-    'custom': '#D62728',
-    'reduced': '#E377C2',
-    'undefined': '#7F7F7F',
-}
-
 def get_domain_color(domain_name):
     base_domain, _, idx = domain_name.partition('_')
     return DOMAINS_TO_COLORS.get(base_domain, '#7F7F7F')
-
-
 
 def timeit(func):
     def wrapper(*args, **kwargs):
@@ -74,7 +104,6 @@ def timeit(func):
         print(f"  Elapsed time: {round(end-start, 3)} seconds")
         return result
     return wrapper
-
 
 def calculate_lambda_f(distances, diameters, Ra=35.4, Cm=1, frequency=100):
     """
@@ -118,10 +147,6 @@ def calculate_lambda_f(distances, diameters, Ra=35.4, Cm=1, frequency=100):
     # Return section_L/lam (electrotonic length of the section)
     return section_L / lam
 
-if (__name__ == '__main__'):
-    print('Executing as standalone script')
-
-
 def dynamic_import(module_name, class_name):
     """
     Dynamically import a class from a module.
@@ -142,19 +167,16 @@ def dynamic_import(module_name, class_name):
     module = import_module(module_name)
     return getattr(module, class_name)
 
-
 def list_folders(path_to_folder):
     folders = [f for f in os.listdir(path_to_folder)
             if os.path.isdir(os.path.join(path_to_folder, f))]
     sorted_folders = sorted(folders, key=lambda x: x.lower())
     return sorted_folders
 
-    
 def list_files(path_to_folder, extension):
     files = [f for f in os.listdir(path_to_folder)
             if f.endswith(extension)]
     return files
-
 
 def write_file(content: str, path_to_file: str, verbose: bool = True) -> None:
     """
@@ -175,12 +197,10 @@ def write_file(content: str, path_to_file: str, verbose: bool = True) -> None:
         f.write(content)
     print(f"Saved content to {path_to_file}")
 
-
 def read_file(path_to_file):
     with open(path_to_file, 'r') as f:
         content = f.read()
     return content
-
 
 def download_example_data(path_to_destination, include_templates=True, include_modfiles=True):
     """
@@ -239,8 +259,6 @@ def download_example_data(path_to_destination, include_templates=True, include_m
 
     os.remove(zip_path)
     print(f"Data downloaded and extracted successfully to {path_to_destination}/.")
-
-
 
 def apply_dark_theme():
     """

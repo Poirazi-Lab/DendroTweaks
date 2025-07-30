@@ -1,63 +1,44 @@
+# Imports
 from typing import List, Union, Callable
 import os
-import json
+from collections import defaultdict
+
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy import nan
+import pandas as pd
 import quantities as pq
 
-from dendrotweaks.morphology.point_trees import PointTree
-from dendrotweaks.morphology.sec_trees import NeuronSection, Section, SectionTree, Domain
-from dendrotweaks.morphology.seg_trees import NeuronSegment, Segment, SegmentTree
+# DendroTweaks imports
 from dendrotweaks.simulators import NeuronSimulator
-from dendrotweaks.biophys.groups import SegmentGroup
-from dendrotweaks.biophys.mechanisms import Mechanism, LeakChannel, CaDynamics
-from dendrotweaks.biophys.io import create_channel, standardize_channel, create_standard_channel
 from dendrotweaks.biophys.io import MODFileLoader
-from dendrotweaks.morphology.io import create_point_tree, create_section_tree, create_segment_tree
-from dendrotweaks.stimuli.iclamps import IClamp
+from dendrotweaks.morphology import Domain
+from dendrotweaks.biophys.groups import SegmentGroup
 from dendrotweaks.biophys.distributions import Distribution
-from dendrotweaks.stimuli.populations import Population
-from dendrotweaks.utils import calculate_lambda_f, dynamic_import
-from dendrotweaks.utils import get_domain_color, timeit
-from dendrotweaks.prerun import prerun
-
-from collections import OrderedDict, defaultdict
-from numpy import nan
-# from .logger import logger
-
 from dendrotweaks.path_manager import PathManager
 import dendrotweaks.morphology.reduce as rdc
+from dendrotweaks.utils import INDEPENDENT_PARAMS, DOMAIN_TO_GROUP, POPULATIONS
 
-import pandas as pd
+# Mixins
+from dendrotweaks.model_io import IOMixin
+from dendrotweaks.model_simulation import SimulationMixin
 
+# Warnings configuration
 import warnings
-
-POPULATIONS = {'AMPA': {}, 'NMDA': {}, 'AMPA_NMDA': {}, 'GABAa': {}}
 
 def custom_warning_formatter(message, category, filename, lineno, file=None, line=None):
     return f"WARNING: {message}\n({os.path.basename(filename)}, line {lineno})\n"
 
 warnings.formatwarning = custom_warning_formatter
 
-INDEPENDENT_PARAMS = {
-    'cm': 1, # uF/cm2
-    'Ra': 100, # Ohm cm
-    'ena': 50, # mV
-    'ek': -77, # mV
-    'eca': 140 # mV
-}
-
-DOMAIN_TO_GROUP = {
-    'soma': 'somatic',
-    'axon': 'axonal',
-    'dend': 'dendritic',
-    'apic': 'apical',
-}
 
 
-class Model():
+class Model(IOMixin, SimulationMixin):
     """
     A model object that represents a neuron model.
+
+    The class incorporates various mixins to separate concerns while
+    maintaining a flat interface.
 
     Parameters
     ----------
@@ -169,12 +150,14 @@ class Model():
         """
         return self._name
 
+
     @property
     def verbose(self):
         """
         Whether to print verbose output.
         """
         return self._verbose
+
 
     @verbose.setter
     def verbose(self, value):
@@ -192,18 +175,17 @@ class Model():
 
 
     @property
-    def recordings(self):
+    def mechs_to_domains(self):
         """
-        The recordings of the model. Reference to the recordings in the simulator.
+        The dictionary mapping mechanisms to domains where they are inserted.
         """
-        return self.simulator.recordings
+        mechs_to_domains = defaultdict(set)
+        for domain_name, mech_names in self.domains_to_mechs.items():
+            for mech_name in mech_names:
+                mechs_to_domains[mech_name].add(domain_name)
+        return dict(mechs_to_domains)
 
-
-    @recordings.setter
-    def recordings(self, recordings):
-        self.simulator.recordings = recordings
-
-
+    
     @property
     def groups(self):
         """
@@ -225,17 +207,6 @@ class Model():
                     continue
                 groups_to_parameters[group.name] = params
         return groups_to_parameters
-
-    @property
-    def mechs_to_domains(self):
-        """
-        The dictionary mapping mechanisms to domains where they are inserted.
-        """
-        mechs_to_domains = defaultdict(set)
-        for domain_name, mech_names in self.domains_to_mechs.items():
-            for mech_name in mech_names:
-                mechs_to_domains[mech_name].add(domain_name)
-        return dict(mechs_to_domains)
 
 
     @property
@@ -292,25 +263,6 @@ class Model():
         """
         return {param: value for param, value in self.params.items()
                 if param.startswith('gbar')}
-    # -----------------------------------------------------------------------
-    # METADATA
-    # -----------------------------------------------------------------------
-
-    def info(self):
-        """
-        Print information about the model.
-        """
-        info_str = (
-            f"Model: {self.name}\n"
-            f"Path to data: {self.path_manager.path_to_data}\n"
-            f"Simulator: {self.simulator_name}\n"
-            f"Groups: {len(self.groups)}\n"
-            f"Avaliable mechanisms: {len(self.mechanisms)}\n"
-            f"Inserted mechanisms: {len(self.mechs_to_params) - 1}\n"
-            # f"Parameters: {len(self.parameters)}\n"
-            f"IClamps: {len(self.iclamps)}\n"
-        )
-        print(info_str)
 
 
     @property
@@ -331,365 +283,6 @@ class Model():
                     })
         df = pd.DataFrame(data)
         return df
-
-    def print_directory_tree(self, *args, **kwargs):
-        """
-        Print the directory tree.
-        """
-        return self.path_manager.print_directory_tree(*args, **kwargs)
-
-    def list_morphologies(self, extension='swc'):
-        """
-        List the morphologies available for the model.
-        """
-        return self.path_manager.list_files('morphology', extension=extension)
-
-    def list_biophys(self, extension='json'):
-        """
-        List the biophysical configurations available for the model.
-        """
-        return self.path_manager.list_files('biophys', extension=extension)
-
-    def list_mechanisms(self, extension='mod'):
-        """
-        List the mechanisms available for the model.
-        """
-        return self.path_manager.list_files('mod', extension=extension)
-
-    def list_stimuli(self, extension='json'):
-        """
-        List the stimuli configurations available for the model.
-        """
-        return self.path_manager.list_files('stimuli', extension=extension)
-
-    # ========================================================================
-    # MORPHOLOGY
-    # ========================================================================
-
-    def load_morphology(self, file_name, soma_notation='3PS', 
-        align=True, sort_children=True, force=False) -> None:
-        """
-        Read an SWC file and build the SWC and section trees.
-
-        Parameters
-        ----------
-        file_name : str
-            The name of the SWC file to read.
-        soma_notation : str, optional
-            The notation of the soma in the SWC file. Can be '3PS' (three-point soma) or '1PS'. Default is '3PS'.
-        align : bool, optional
-            Whether to align the morphology to the soma center and align the apical dendrite (if present).
-        sort_children : bool, optional
-            Whether to sort the children of each node by increasing subtree size
-            in the tree sorting algorithms. If True, the traversal visits 
-            children with shorter subtrees first and assigns them lower indices. If False, children
-            are visited in their original SWC file order (matching NEURON's behavior).
-        """
-        # self.name = file_name.split('.')[0]
-        self.morphology_name = file_name.replace('.swc', '')
-        path_to_swc_file = self.path_manager.get_file_path('morphology', file_name, extension='swc')
-        point_tree = create_point_tree(path_to_swc_file)
-        # point_tree.remove_overlaps()
-        point_tree.change_soma_notation(soma_notation)
-        point_tree.sort(sort_children=sort_children, force=force)
-        if align:    
-            point_tree.shift_coordinates_to_soma_center()
-            point_tree.align_apical_dendrite()
-            point_tree.round_coordinates(8)
-        self.point_tree = point_tree
-
-        sec_tree = create_section_tree(point_tree)
-        sec_tree.sort(sort_children=sort_children, force=force)
-        self.sec_tree = sec_tree
-
-        self.create_and_reference_sections_in_simulator()
-        seg_tree = create_segment_tree(sec_tree)
-        self.seg_tree = seg_tree
-
-        self._add_default_segment_groups()
-        self._initialize_domains_to_mechs()
-
-        d_lambda = self.d_lambda
-        self.set_segmentation(d_lambda=d_lambda)        
-              
-
-    def create_and_reference_sections_in_simulator(self):
-        """
-        Create and reference sections in the simulator.
-        """
-        if self.verbose: print(f'Building sections in {self.simulator_name}...')
-        for sec in self.sec_tree.sections:
-            sec.create_and_reference()
-        n_sec = len([sec._ref for sec in self.sec_tree.sections 
-                    if sec._ref is not None])
-        if self.verbose: print(f'{n_sec} sections created.')
-
-        
-
-
-    def _add_default_segment_groups(self):
-        self.add_group('all', list(self.domains.keys()))
-        for domain_name in self.domains:
-            group_name = DOMAIN_TO_GROUP.get(domain_name, domain_name)
-            self.add_group(group_name, [domain_name])
-
-
-    def _initialize_domains_to_mechs(self):
-        for domain_name in self.domains:
-            # Only if haven't been defined for the previous morphology
-            # TODO: Check that domains match
-            if not domain_name in self.domains_to_mechs: 
-                self.domains_to_mechs[domain_name] = set()
-        for domain_name, mech_names in self.domains_to_mechs.items():
-            for mech_name in mech_names:
-                mech = self.mechanisms[mech_name]
-                self.insert_mechanism(mech, domain_name)
-
-
-    def get_sections(self, filter_function):
-        """Filter sections using a lambda function.
-        
-        Parameters
-        ----------
-        filter_function : Callable
-            The lambda function to filter sections.
-        """
-        return [sec for sec in self.sec_tree.sections if filter_function(sec)]
-
-
-    def get_segments(self, group_names=None):
-        """
-        Get the segments in specified groups.
-
-        Parameters
-        ----------
-        group_names : List[str]
-            The names of the groups to get segments from.
-        """
-        if not isinstance(group_names, list):
-            raise ValueError('Group names must be a list.')
-        return [seg for group_name in group_names for seg in self.seg_tree.segments if seg in self.groups[group_name]]
-        
-    # ========================================================================
-    # SEGMENTATION
-    # ========================================================================
-
-    # TODO Make a context manager for this
-    def _temp_clear_stimuli(self):
-        """
-        Temporarily save and clear stimuli.
-        """
-        self.export_stimuli(file_name='_temp_stimuli')
-        self.remove_all_stimuli()
-        self.remove_all_recordings()
-
-    def _temp_reload_stimuli(self):
-        """
-        Load stimuli from a temporary file and clean up.
-        """
-        self.load_stimuli(file_name='_temp_stimuli')
-        for ext in ['json', 'csv']:
-            temp_path = self.path_manager.get_file_path('stimuli', '_temp_stimuli', extension=ext)
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
-
-    def set_segmentation(self, d_lambda=0.1, f=100):
-        """
-        Set the number of segments in each section based on the geometry.
-
-        Parameters
-        ----------
-        d_lambda : float
-            The lambda value to use.
-        f : float
-            The frequency value to use.
-        """
-        self.d_lambda = d_lambda
-
-        # Temporarily save and clear stimuli
-        self._temp_clear_stimuli()
-
-        # Pre-distribute parameters needed for lambda_f calculation
-        for param_name in ['cm', 'Ra']:
-            self.distribute(param_name)
-
-        # Calculate lambda_f and set nseg for each section
-        for sec in self.sec_tree.sections:
-            lambda_f = calculate_lambda_f(sec.distances, sec.diameters, sec.Ra, sec.cm, f)
-            nseg = max(1, int((sec.L / (d_lambda * lambda_f) + 0.9) / 2) * 2 + 1)
-            sec._nseg = sec._ref.nseg = nseg
-
-        # Rebuild the segment tree and redistribute parameters
-        self.seg_tree = create_segment_tree(self.sec_tree)
-        self.distribute_all()
-
-        # Reload stimuli and clean up temporary files
-        self._temp_reload_stimuli()
-
-
-    # ========================================================================
-    # MECHANISMS
-    # ========================================================================
-
-    def add_default_mechanisms(self, recompile=False):
-        """
-        Add default mechanisms to the model.
-
-        Parameters
-        ----------
-        recompile : bool, optional
-            Whether to recompile the mechanisms.
-        """
-        leak = LeakChannel()
-        self.mechanisms[leak.name] = leak
-
-        cadyn = CaDynamics()
-        self.mechanisms[cadyn.name] = cadyn
-
-        self.load_mechanisms('default_mod', recompile=recompile)
-
-
-    def add_mechanisms(self, dir_name:str = 'mod', recompile=True) -> None:
-        """
-        Add a set of mechanisms from an archive to the model.
-
-        Parameters
-        ----------
-        dir_name : str, optional
-            The name of the archive to load mechanisms from. Default is 'mod'.
-        recompile : bool, optional
-            Whether to recompile the mechanisms.
-        """
-        # Create Mechanism objects and add them to the model
-        for mechanism_name in self.path_manager.list_files(dir_name, extension='mod'):
-            self.add_mechanism(mechanism_name, 
-                               load=True, 
-                               dir_name=dir_name, 
-                               recompile=recompile)
-            
-
-
-    def add_mechanism(self, mechanism_name: str, 
-                      python_template_name: str = 'default',
-                      load=True, dir_name: str = 'mod', recompile=True
-                      ) -> None:
-        """
-        Create a Mechanism object from the MOD file (or LeakChannel).
-
-        Parameters
-        ----------
-        mechanism_name : str
-            The name of the mechanism to add.
-        python_template_name : str, optional
-            The name of the Python template to use. Default is 'default'.
-        load : bool, optional
-            Whether to load the mechanism using neuron.load_mechanisms.
-        """
-        paths = self.path_manager.get_channel_paths(
-            mechanism_name, 
-            python_template_name=python_template_name
-        )
-        mech = create_channel(**paths)
-        # Add the mechanism to the model
-        self.mechanisms[mech.name] = mech
-        # Update the global parameters
-
-        if load:
-            self.load_mechanism(mechanism_name, dir_name, recompile)
-        
-
-
-    def load_mechanisms(self, dir_name: str = 'mod', recompile=True) -> None:
-        """
-        Load mechanisms from an archive.
-
-        Parameters
-        ----------
-        dir_name : str, optional
-            The name of the archive to load mechanisms from.
-        recompile : bool, optional
-            Whether to recompile the mechanisms.
-        """
-        mod_files = self.path_manager.list_files(dir_name, extension='mod')
-        for mechanism_name in mod_files:
-            self.load_mechanism(mechanism_name, dir_name, recompile)
-
-
-    def load_mechanism(self, mechanism_name, dir_name='mod', recompile=False) -> None:
-        """
-        Load a mechanism from the specified archive.
-
-        Parameters
-        ----------
-        mechanism_name : str
-            The name of the mechanism to load.
-        dir_name : str, optional
-            The name of the directory to load the mechanism from. Default is 'mod'.
-        recompile : bool, optional
-            Whether to recompile the mechanism.
-        """
-        path_to_mod_file = self.path_manager.get_file_path(
-            dir_name, mechanism_name, extension='mod'
-        )
-        self.mod_loader.load_mechanism(
-            path_to_mod_file=path_to_mod_file, recompile=recompile
-        )
-
-
-    def standardize_channel(self, channel_name, 
-        python_template_name=None, mod_template_name=None, remove_old=True):
-        """
-        Standardize a channel by creating a new channel with the same kinetic
-        properties using the standard equations.
-
-        Parameters
-        ----------
-        channel_name : str
-            The name of the channel to standardize.
-        python_template_name : str, optional
-            The name of the Python template to use.
-        mod_template_name : str, optional
-            The name of the MOD template to use. 
-        remove_old : bool, optional
-            Whether to remove the old channel from the model. Default is True.
-        """
-
-        # Get data to transfer
-        channel = self.mechanisms[channel_name]
-        channel_domain_names = [domain_name for domain_name, mech_names 
-            in self.domains_to_mechs.items() if channel_name in mech_names]
-        gbar_name = f'gbar_{channel_name}'
-        gbar_distributions = self.params[gbar_name]
-        # Kinetic variables cannot be transferred
-
-        # Uninsert the old channel
-        for domain_name in self.domains:
-            if channel_name in self.domains_to_mechs[domain_name]:
-                self.uninsert_mechanism(channel_name, domain_name)
-
-        # Remove the old channel
-        if remove_old:
-            self.mechanisms.pop(channel_name)
-              
-        # Create, add and load a new channel
-        paths = self.path_manager.get_standard_channel_paths(
-            channel_name, 
-            mod_template_name=mod_template_name
-        )
-        standard_channel = standardize_channel(channel, **paths)
-        
-        self.mechanisms[standard_channel.name] = standard_channel
-        self.load_mechanism(standard_channel.name, recompile=True)
-
-        # Insert the new channel
-        for domain_name in channel_domain_names:
-            self.insert_mechanism(standard_channel.name, domain_name)
-
-        # Transfer data
-        gbar_name = f'gbar_{standard_channel.name}'
-        for group_name, distribution in gbar_distributions.items():
-            self.set_param(gbar_name, group_name, 
-                distribution.function_name, **distribution.parameters)
 
 
     # ========================================================================
@@ -817,9 +410,9 @@ class Model():
             self.remove_group(group.name)
 
 
-    # -----------------------------------------------------------------------
-    # INSERT / UNINSERT MECHANISMS
-    # -----------------------------------------------------------------------
+    # ========================================================================
+    # MECHANISMS
+    # ========================================================================
 
     def insert_mechanism(self, mechanism_name: str, 
                          domain_name: str, distribute=True):
@@ -923,11 +516,11 @@ class Model():
 
 
     # ========================================================================
-    # SET PARAMETERS
+    # PARAMETERS
     # ========================================================================
 
     # -----------------------------------------------------------------------
-    # GROUPS
+    # SEGMENT GROUPS (Where)
     # -----------------------------------------------------------------------
 
     def add_group(self, name, domains, select_by=None, min_value=None, max_value=None):
@@ -1002,7 +595,7 @@ class Model():
 
 
     # -----------------------------------------------------------------------
-    # DISTRIBUTIONS
+    # DISTRIBUTIONS (How)
     # -----------------------------------------------------------------------
 
     def set_param(self, param_name: str,
@@ -1063,6 +656,7 @@ class Model():
         else:
             distribution = Distribution(distr_type, **distr_params)
         self.params[param_name][group_name] = distribution
+
 
     def distribute_all(self):
         """
@@ -1147,246 +741,122 @@ class Model():
         self.params[param_name].pop(group_name, None)
         self.distribute(param_name)
 
-    # def set_section_param(self, param_name, value, domains=None):
-
-    #     domains = domains or self.domains
-    #     for sec in self.sec_tree.sections:
-    #         if sec.domain in domains:
-    #             setattr(sec._ref, param_name, value)
-
-    # ========================================================================
-    # STIMULI
-    # ========================================================================
 
     # -----------------------------------------------------------------------
-    # ICLAMPS
+    # FITTING
     # -----------------------------------------------------------------------
 
-    def add_iclamp(self, sec, loc, amp=0, delay=100, dur=100):
-        """
-        Add an IClamp to a section.
-
-        Parameters
-        ----------
-        sec : Section
-            The section to add the IClamp to.
-        loc : float
-            The location of the IClamp in the section.
-        amp : float, optional
-            The amplitude of the IClamp. Default is 0.
-        delay : float, optional
-            The delay of the IClamp. Default is 100.
-        dur : float, optional
-            The duration of the IClamp. Default is 100.
-        """
-        seg = sec(loc)
-        if self.iclamps.get(seg):
-            self.remove_iclamp(sec, loc)
-        iclamp = IClamp(sec, loc, amp, delay, dur)
-        print(f'IClamp added to sec {sec} at loc {loc}.')
-        self.iclamps[seg] = iclamp
-
-
-    def remove_iclamp(self, sec, loc):
-        """
-        Remove an IClamp from a section.
-
-        Parameters
-        ----------
-        sec : Section
-            The section to remove the IClamp from.
-        loc : float
-            The location of the IClamp in the section.
-        """
-        seg = sec(loc)
-        if self.iclamps.get(seg):
-            self.iclamps.pop(seg)
+    def fit_distribution(self, param_name, segments, max_degree=20, tolerance=1e-7, plot=False):
+        from numpy import polyfit, polyval
+        values = [seg.get_param_value(param_name) for seg in segments]
+        # if all values are NaN, return None
+        if all(np.isnan(values)):
+            return None
+        distances = [seg.path_distance() for seg in segments]
+        sorted_pairs = sorted(zip(distances, values))
+        distances, values = zip(*sorted_pairs)
+        degrees = range(0, max_degree+1)
+        for degree in degrees:
+            coeffs = polyfit(distances, values, degree)
+            residuals = values - polyval(coeffs, distances)
+            if all(abs(residuals) < tolerance):
+                break
+        if not all(abs(residuals) < tolerance):
+            warnings.warn(f'Fitting failed for parameter {param_name} with the provided tolerance.\nUsing the last valid fit (degree={degree}). Maximum residual: {max(abs(residuals))}')
+        if plot and degree > 0:
+            self.plot_param(param_name, show_nan=False)
+            plt.plot(distances, polyval(coeffs, distances), label='Fitted', color='red', linestyle='--')
+            plt.legend()
+        return coeffs
 
 
-    def remove_all_iclamps(self):
-        """
-        Remove all IClamps from the model.
-        """
-
-        for seg in list(self.iclamps.keys()):
-            sec, loc = seg._section, seg.x
-            self.remove_iclamp(sec, loc)
-        if self.iclamps:
-            warnings.warn(f'Not all iclamps were removed: {self.iclamps}')
-        self.iclamps = {}
-
-
-    # -----------------------------------------------------------------------
-    # SYNAPSES
-    # -----------------------------------------------------------------------
-
-    def _add_population(self, population):
-        self.populations[population.syn_type][population.name] = population
-
-
-    def add_population(self, segments, N, syn_type):
-        """
-        Add a population of synapses to the model.
-
-        Parameters
-        ----------
-        segments : list[Segment]
-            The segments to add the synapses to.
-        N : int
-            The number of synapses to add.
-        syn_type : str
-            The type of synapse to add.
-        """
-        idx = len(self.populations[syn_type])
-        population = Population(idx, segments, N, syn_type)
-        population.allocate_synapses()
-        population.create_inputs()
-        self._add_population(population)
-
-
-    def update_population_kinetic_params(self, pop_name, **params):
-        """
-        Update the kinetic parameters of a population of synapses.
-
-        Parameters
-        ----------
-        pop_name : str
-            The name of the population.
-        params : dict
-            The parameters to update.
-        """
-        syn_type, idx = pop_name.rsplit('_', 1)
-        population = self.populations[syn_type][pop_name]
-        population.update_kinetic_params(**params)
-        print(population.kinetic_params)
-
-    
-    def update_population_input_params(self, pop_name, **params):
-        """
-        Update the input parameters of a population of synapses.
-
-        Parameters
-        ----------
-        pop_name : str
-            The name of the population.
-        params : dict
-            The parameters to update.
-        """
-        syn_type, idx = pop_name.rsplit('_', 1)
-        population = self.populations[syn_type][pop_name]
-        population.update_input_params(**params)
-        print(population.input_params)
-
-
-    def remove_population(self, name):
-        """
-        Remove a population of synapses from the model.
-
-        Parameters  
-        ----------
-        name : str
-            The name of the population
-        """
-        syn_type, idx = name.rsplit('_', 1)
-        population = self.populations[syn_type].pop(name)
-        population.clean()
-        
-    def remove_all_populations(self):
-        """
-        Remove all populations of synapses from the model.
-        """
-        for syn_type in self.populations:
-            for name in list(self.populations[syn_type].keys()):
-                self.remove_population(name)
-        if any(self.populations.values()):
-            warnings.warn(f'Not all populations were removed: {self.populations}')
-        self.populations = POPULATIONS
-
-    def remove_all_stimuli(self):
-        """
-        Remove all stimuli from the model.
-        """
-        self.remove_all_iclamps()
-        self.remove_all_populations()
-
-    # ========================================================================
-    # SIMULATION
-    # ========================================================================
-
-    def add_recording(self, sec, loc, var='v'):
-        """
-        Add a recording to the model.
-
-        Parameters
-        ----------
-        sec : Section
-            The section to record from.
-        loc : float
-            The location along the normalized section length to record from.
-        var : str, optional
-            The variable to record. Default is 'v'.
-        """
-        self.simulator.add_recording(sec, loc, var)
-        print(f'Recording added to sec {sec} at loc {loc}.')
-
-
-    def remove_recording(self, sec, loc, var='v'):
-        """
-        Remove a recording from the model.
-
-        Parameters
-        ----------
-        sec : Section
-            The section to remove the recording from.
-        loc : float
-            The location along the normalized section length to remove the recording from.
-        """
-        self.simulator.remove_recording(sec, loc, var)
-
-
-    def remove_all_recordings(self, var=None):
-        """
-        Remove all recordings from the model.
-        """
-        self.simulator.remove_all_recordings(var=var)
-
-
-    def run(self, duration=300, prerun_time=0, truncate=True):
-        """
-        Run the simulation for a specified duration, optionally preceded by a prerun period
-        to stabilize the model.
-
-        Parameters
-        ----------
-        duration : float
-            Duration of the main simulation (excluding prerun).
-        prerun_time : float
-            Optional prerun period to run before the main simulation.
-        truncate : bool
-            Whether to truncate prerun data after the simulation.
-        """
-        if duration <= 0:
-            raise ValueError("Simulation duration must be positive.")
-        if prerun_time < 0:
-            raise ValueError("Prerun time must be non-negative.")
-
-        total_time = duration + prerun_time
-
-        if prerun_time > 0:
-            with prerun(self, duration=prerun_time, truncate=truncate):
-                self.simulator.run(total_time)
+    def _set_distribution(self, param_name, group_name, coeffs, plot=False):
+        # Set the distribution based on the degree of the polynomial fit
+        coeffs = np.where(np.round(coeffs) == 0, coeffs, np.round(coeffs, 10))
+        if len(coeffs) == 1:
+            self.params[param_name][group_name] = Distribution('constant', value=coeffs[0])
+        elif len(coeffs) == 2:
+            self.params[param_name][group_name] = Distribution('linear', slope=coeffs[0], intercept=coeffs[1])
         else:
-            self.simulator.run(duration)
+            self.params[param_name][group_name] = Distribution('polynomial', coeffs=coeffs.tolist())
 
-    def get_traces(self):
-        return self.simulator.get_traces()
 
-    def plot(self, *args, **kwargs):
-        self.simulator.plot(*args, **kwargs)
+    # -----------------------------------------------------------------------
+    # PLOTTING
+    # -----------------------------------------------------------------------
+
+    def plot_param(self, param_name, ax=None, show_nan=True):
+        """
+        Plot the distribution of a parameter in the model.
+
+        Parameters
+        ----------
+        param_name : str
+            The name of the parameter to plot.
+        ax : matplotlib.axes.Axes, optional
+            The axes to plot on. Default is None.
+        show_nan : bool, optional
+            Whether to show NaN values. Default is True.            
+        """
+        from dendrotweaks.utils import get_domain_color
+
+        if ax is None:
+            fig, ax = plt.subplots(figsize=(10, 2))
+
+        if param_name not in self.params:
+            warnings.warn(f'Parameter {param_name} not found.')
+
+        values = [(seg.path_distance(), seg.get_param_value(param_name)) for seg in self.seg_tree]
+        colors = [get_domain_color(seg.domain) for seg in self.seg_tree]
+
+        valid_values = [(x, y) for (x, y), color in zip(values, colors) if not pd.isna(y) and y != 0]
+        zero_values = [(x, y) for (x, y), color in zip(values, colors) if y == 0]
+        nan_values = [(x, 0) for (x, y), color in zip(values, colors) if pd.isna(y)]
+        valid_colors = [color for (x, y), color in zip(values, colors) if not pd.isna(y) and y != 0]
+        zero_colors = [color for (x, y), color in zip(values, colors) if y == 0]
+        nan_colors = [color for (x, y), color in zip(values, colors) if pd.isna(y)]
+
+        if valid_values:
+            ax.scatter(*zip(*valid_values), c=valid_colors)
+        if zero_values:
+            ax.scatter(*zip(*zero_values), edgecolors=zero_colors, facecolors='none', marker='.')
+        if nan_values and show_nan:
+            ax.scatter(*zip(*nan_values), c=nan_colors, marker='x', alpha=0.5, zorder=0)
+        ax.axhline(y=0, color='k', linestyle='--')
+
+        ax.set_xlabel('Path distance')
+        ax.set_ylabel(param_name)
+        ax.set_title(f'{param_name} distribution')
+
 
     # ========================================================================
     # MORPHOLOGY
     # ========================================================================
+
+    def get_sections(self, filter_function):
+        """Filter sections using a lambda function.
+        
+        Parameters
+        ----------
+        filter_function : Callable
+            The lambda function to filter sections.
+        """
+        return [sec for sec in self.sec_tree.sections if filter_function(sec)]
+
+
+    def get_segments(self, group_names=None):
+        """
+        Get the segments in specified groups.
+
+        Parameters
+        ----------
+        group_names : List[str]
+            The names of the groups to get segments from.
+        """
+        if not isinstance(group_names, list):
+            raise ValueError('Group names must be a list.')
+        return [seg for group_name in group_names for seg in self.seg_tree.segments if seg in self.groups[group_name]]
+
 
     def remove_subtree(self, sec):
         """
@@ -1559,462 +1029,3 @@ class Model():
             'reduced_segs_to_params': reduced_segs_to_params,
             'params_to_coeffs': params_to_coeffs
         }
-
-
-    def fit_distribution(self, param_name, segments, max_degree=20, tolerance=1e-7, plot=False):
-        from numpy import polyfit, polyval
-        values = [seg.get_param_value(param_name) for seg in segments]
-        # if all values are NaN, return None
-        if all(np.isnan(values)):
-            return None
-        distances = [seg.path_distance() for seg in segments]
-        sorted_pairs = sorted(zip(distances, values))
-        distances, values = zip(*sorted_pairs)
-        degrees = range(0, max_degree+1)
-        for degree in degrees:
-            coeffs = polyfit(distances, values, degree)
-            residuals = values - polyval(coeffs, distances)
-            if all(abs(residuals) < tolerance):
-                break
-        if not all(abs(residuals) < tolerance):
-            warnings.warn(f'Fitting failed for parameter {param_name} with the provided tolerance.\nUsing the last valid fit (degree={degree}). Maximum residual: {max(abs(residuals))}')
-        if plot and degree > 0:
-            self.plot_param(param_name, show_nan=False)
-            plt.plot(distances, polyval(coeffs, distances), label='Fitted', color='red', linestyle='--')
-            plt.legend()
-        return coeffs
-
-
-    def _set_distribution(self, param_name, group_name, coeffs, plot=False):
-        # Set the distribution based on the degree of the polynomial fit
-        coeffs = np.where(np.round(coeffs) == 0, coeffs, np.round(coeffs, 10))
-        if len(coeffs) == 1:
-            self.params[param_name][group_name] = Distribution('constant', value=coeffs[0])
-        elif len(coeffs) == 2:
-            self.params[param_name][group_name] = Distribution('linear', slope=coeffs[0], intercept=coeffs[1])
-        else:
-            self.params[param_name][group_name] = Distribution('polynomial', coeffs=coeffs.tolist())
-            
-
-    # ========================================================================
-    # PLOTTING
-    # ========================================================================
-
-    def plot_param(self, param_name, ax=None, show_nan=True):
-        """
-        Plot the distribution of a parameter in the model.
-
-        Parameters
-        ----------
-        param_name : str
-            The name of the parameter to plot.
-        ax : matplotlib.axes.Axes, optional
-            The axes to plot on. Default is None.
-        show_nan : bool, optional
-            Whether to show NaN values. Default is True.            
-        """
-        if ax is None:
-            fig, ax = plt.subplots(figsize=(10, 2))
-
-        if param_name not in self.params:
-            warnings.warn(f'Parameter {param_name} not found.')
-
-        values = [(seg.path_distance(), seg.get_param_value(param_name)) for seg in self.seg_tree]
-        colors = [get_domain_color(seg.domain) for seg in self.seg_tree]
-
-        valid_values = [(x, y) for (x, y), color in zip(values, colors) if not pd.isna(y) and y != 0]
-        zero_values = [(x, y) for (x, y), color in zip(values, colors) if y == 0]
-        nan_values = [(x, 0) for (x, y), color in zip(values, colors) if pd.isna(y)]
-        valid_colors = [color for (x, y), color in zip(values, colors) if not pd.isna(y) and y != 0]
-        zero_colors = [color for (x, y), color in zip(values, colors) if y == 0]
-        nan_colors = [color for (x, y), color in zip(values, colors) if pd.isna(y)]
-
-        if valid_values:
-            ax.scatter(*zip(*valid_values), c=valid_colors)
-        if zero_values:
-            ax.scatter(*zip(*zero_values), edgecolors=zero_colors, facecolors='none', marker='.')
-        if nan_values and show_nan:
-            ax.scatter(*zip(*nan_values), c=nan_colors, marker='x', alpha=0.5, zorder=0)
-        ax.axhline(y=0, color='k', linestyle='--')
-
-        ax.set_xlabel('Path distance')
-        ax.set_ylabel(param_name)
-        ax.set_title(f'{param_name} distribution')
-
-
-    # ========================================================================
-    # FILE EXPORT
-    # ========================================================================
-
-    def export_morphology(self, file_name):
-        """
-        Write the SWC tree to an SWC file.
-
-        Parameters
-        ----------
-        version : str, optional
-            The version of the morphology appended to the morphology name.
-        """
-        path_to_file = self.path_manager.get_file_path('morphology', file_name, extension='swc')
-        
-        self.point_tree.to_swc(path_to_file)
-
-
-    def to_dict(self):
-        """
-        Return a dictionary representation of the model.
-
-        Returns
-        -------
-        dict
-            The dictionary representation of the model.
-        """
-        return {
-            'metadata': {
-            'name': self.name,
-            },
-            'd_lambda': self.d_lambda,
-            'domains': {domain: sorted(list(mechs)) for domain, mechs in self.domains_to_mechs.items()},
-            'groups': [
-            group.to_dict() for group in self._groups
-            ],
-            'params': {
-            param_name: {
-                group_name: distribution if isinstance(distribution, str) else distribution.to_dict()
-                for group_name, distribution in distributions.items()
-            }
-            for param_name, distributions in self.params.items()
-            },
-        }
-
-    def from_dict(self, data):
-        """
-        Load the model from a dictionary.
-
-        Parameters
-        ----------
-        data : dict
-            The dictionary representation of the model.
-        """
-        if not self.name == data['metadata']['name']:
-            raise ValueError('Model name does not match the data.')
-
-        self.d_lambda = data['d_lambda']
-
-        # Domains and mechanisms
-        self.domains_to_mechs = {
-            domain: set(mechs) for domain, mechs in data['domains'].items()
-        }
-        if self.verbose: print('Inserting mechanisms...')
-        for domain_name, mechs in self.domains_to_mechs.items():
-            for mech_name in mechs:
-                self.insert_mechanism(mech_name, domain_name, distribute=False)
-        # print('Distributing parameters...')
-        # self.distribute_all()
-
-        # Groups
-        if self.verbose: print('Adding groups...')
-        self._groups = [SegmentGroup.from_dict(group) for group in data['groups']]
-
-        if self.verbose: print('Distributing parameters...')
-        # Parameters
-        self.params = {
-            param_name: {
-                group_name: distribution if isinstance(distribution, str) else Distribution.from_dict(distribution)
-                for group_name, distribution in distributions.items()
-            }
-            for param_name, distributions in data['params'].items()
-        }
-
-        if self.verbose: print('Setting segmentation...')
-        if self.sec_tree is not None:
-            d_lambda = self.d_lambda
-            self.set_segmentation(d_lambda=d_lambda)
-            
-
-
-    def export_biophys(self, file_name, **kwargs):
-        """
-        Export the biophysical properties of the model to a JSON file.
-
-        Parameters
-        ----------
-        file_name : str
-            The name of the file to write to.
-        **kwargs : dict
-            Additional keyword arguments to pass to `json.dump`.
-        """        
-        
-        path_to_json = self.path_manager.get_file_path('biophys', file_name, extension='json')
-        if not kwargs.get('indent'):
-            kwargs['indent'] = 4
-
-        data = self.to_dict()
-        with open(path_to_json, 'w') as f:
-            json.dump(data, f, **kwargs)
-
-
-    def load_biophys(self, file_name, recompile=True):
-        """
-        Load the biophysical properties of the model from a JSON file.
-
-        Parameters
-        ----------
-        file_name : str
-            The name of the file to read from.
-        recompile : bool, optional
-            Whether to recompile the mechanisms after loading. Default is True.
-        """
-        self.add_default_mechanisms()
-        
-
-        path_to_json = self.path_manager.get_file_path('biophys', file_name, extension='json')
-
-        with open(path_to_json, 'r') as f:
-            data = json.load(f)
-
-        for mech_name in {mech for mechs in data['domains'].values() for mech in mechs}:
-            if mech_name in ['Leak', 'CaDyn', 'Independent']:
-                continue
-            self.add_mechanism(mech_name, dir_name='mod', recompile=recompile)            
-
-        self.from_dict(data)
-
-
-    def stimuli_to_dict(self):
-        """
-        Convert the stimuli to a dictionary representation.
-
-        Returns
-        -------
-        dict
-            The dictionary representation of the stimuli.
-        """
-        return {
-            'metadata': {
-                'name': self.name,
-            },
-            'simulation': {
-                **self.simulator.to_dict(),
-            },
-            'stimuli': {
-                'recordings': [
-                    {
-                        'name': f'rec_{i}',
-                        'var': var
-                    } 
-                    for var, recs in self.simulator.recordings.items()
-                    for i, _ in enumerate(recs)
-                ],
-                'iclamps': [
-                    {
-                        'name': f'iclamp_{i}',
-                        'amp': iclamp.amp,
-                        'delay': iclamp.delay,
-                        'dur': iclamp.dur
-                    }
-                    for i, (seg, iclamp) in enumerate(self.iclamps.items())
-                ],
-                'populations': {
-                    syn_type: [pop.to_dict() for pop in pops.values()]
-                    for syn_type, pops in self.populations.items()
-                }
-            },
-        }
-
-
-    def _stimuli_to_csv(self, path_to_csv=None):
-        """
-        Write the model to a CSV file.
-
-        Parameters
-        ----------
-        path_to_csv : str
-            The path to the CSV file to write.
-        """
-        
-        rec_data = {
-            'type': [],
-            'idx': [],
-            'sec_idx': [],
-            'loc': [],
-        }
-        for var, recs in self.simulator.recordings.items():
-            rec_data['type'].extend(['rec'] * len(recs))
-            rec_data['idx'].extend([i for i in range(len(recs))])
-            rec_data['sec_idx'].extend([seg._section.idx for seg in recs])
-            rec_data['loc'].extend([seg.x for seg in recs])
-
-        iclamp_data = {
-            'type': ['iclamp'] * len(self.iclamps),
-            'idx': [i for i in range(len(self.iclamps))],
-            'sec_idx': [seg._section.idx for seg in self.iclamps],
-            'loc': [seg.x for seg in self.iclamps],
-        }
-        
-        synapses_data = {
-            'type': [],
-            'idx': [],
-            'sec_idx': [],
-            'loc': [],
-        }
-
-        for syn_type, pops in self.populations.items():
-            for pop_name, pop in pops.items():
-                pop_data = pop.to_csv()
-                synapses_data['type'] += pop_data['syn_type']
-                synapses_data['idx'] += [int(name.rsplit('_', 1)[1]) for name in pop_data['name']]
-                synapses_data['sec_idx'] += pop_data['sec_idx']
-                synapses_data['loc'] += pop_data['loc']
-
-        df = pd.concat([
-            pd.DataFrame(rec_data),
-            pd.DataFrame(iclamp_data),
-            pd.DataFrame(synapses_data)
-        ], ignore_index=True)
-        df['idx'] = df['idx'].astype(int)
-        df['sec_idx'] = df['sec_idx'].astype(int)
-        if path_to_csv: df.to_csv(path_to_csv, index=False)
-
-        return df
-        
-
-    def export_stimuli(self, file_name, **kwargs):
-        """
-        Export the stimuli to a JSON and CSV file.
-
-        Parameters
-        ----------
-        file_name : str
-            The name of the file to write to.
-        **kwargs : dict
-            Additional keyword arguments to pass to `json.dump`.
-        """
-        path_to_json = self.path_manager.get_file_path('stimuli', file_name, extension='json')
-
-        data = self.stimuli_to_dict()
-
-        if not kwargs.get('indent'):
-            kwargs['indent'] = 4
-        with open(path_to_json, 'w') as f:
-            json.dump(data, f, **kwargs)
-
-        path_to_stimuli_csv = self.path_manager.get_file_path('stimuli', file_name, extension='csv')
-        self._stimuli_to_csv(path_to_stimuli_csv)
-
-
-    def load_stimuli(self, file_name):
-        """
-        Load the stimuli from a JSON file.
-
-        Parameters
-        ----------
-        file_name : str
-            The name of the file to read from.
-        """
-        
-        path_to_json = self.path_manager.get_file_path('stimuli', file_name, extension='json')
-        path_to_stimuli_csv = self.path_manager.get_file_path('stimuli', file_name, extension='csv')
-
-        with open(path_to_json, 'r') as f:
-            data = json.load(f)
-
-        if not self.name == data['metadata']['name']:
-            raise ValueError('Model name does not match the data.')
-
-        df_stimuli = pd.read_csv(path_to_stimuli_csv)
-
-        self.simulator.from_dict(data['simulation'])
-
-        # Clear all stimuli and recordings
-        self.remove_all_stimuli()
-        self.remove_all_recordings()
-
-        # IClamps -----------------------------------------------------------
-
-        df_iclamps = df_stimuli[df_stimuli['type'] == 'iclamp'].reset_index(drop=True, inplace=False)
-
-        for row in df_iclamps.itertuples(index=False):
-            self.add_iclamp(
-            self.sec_tree.sections[row.sec_idx], 
-            row.loc,
-            data['stimuli']['iclamps'][row.idx]['amp'],
-            data['stimuli']['iclamps'][row.idx]['delay'],
-            data['stimuli']['iclamps'][row.idx]['dur']
-            )
-
-        # Populations -------------------------------------------------------
-
-        syn_types = ['AMPA', 'NMDA', 'AMPA_NMDA', 'GABAa']
-
-        for syn_type in syn_types:
-
-            df_syn = df_stimuli[df_stimuli['type'] == syn_type]
-    
-            for i, pop_data in enumerate(data['stimuli']['populations'][syn_type]):
-
-                df_pop = df_syn[df_syn['idx'] == i]
-
-                segments = [self.sec_tree.sections[sec_idx](loc) 
-                            for sec_idx, loc in zip(df_pop['sec_idx'], df_pop['loc'])]
-                
-                pop = Population(idx=i, 
-                                segments=segments, 
-                                N=pop_data['N'], 
-                                syn_type=syn_type)
-                
-                syn_locs = [(self.sec_tree.sections[sec_idx], loc) for sec_idx, loc in zip(df_pop['sec_idx'].tolist(), df_pop['loc'].tolist())]
-                
-                pop.allocate_synapses(syn_locs=syn_locs)
-                pop.update_kinetic_params(**pop_data['kinetic_params'])
-                pop.update_input_params(**pop_data['input_params'])
-                self._add_population(pop)
-
-        # Recordings ---------------------------------------------------------
-
-        df_recs = df_stimuli[df_stimuli['type'] == 'rec'].reset_index(drop=True, inplace=False)
-        for row in df_recs.itertuples(index=False):
-            var = data['stimuli']['recordings'][row.idx]['var']
-            self.add_recording(
-            self.sec_tree.sections[row.sec_idx], row.loc, var
-            )
-
-
-    def export_to_NEURON(self, file_name, include_kinetic_params=True):
-        """
-        Export the model to a python file using NEURON.
-
-        Parameters
-        ----------
-        file_name : str
-            The name of the file to write to.
-        """
-        from dendrotweaks.model_io import render_template
-        from dendrotweaks.model_io import get_params_to_valid_domains
-        from dendrotweaks.model_io import filter_params
-        from dendrotweaks.model_io import get_neuron_domain
-
-        params_to_valid_domains = get_params_to_valid_domains(self)
-        params = self.params if include_kinetic_params else filter_params(self)
-        path_to_template = self.path_manager.get_file_path('templates', 'NEURON_template', extension='py')
-
-        output = render_template(path_to_template,
-        {
-            'param_dict': params,
-            'groups_dict': self.groups,
-            'params_to_mechs': self.params_to_mechs,
-            'domains_to_mechs': self.domains_to_mechs,
-            'iclamps': self.iclamps,
-            'recordings': self.simulator.recordings,
-            'params_to_valid_domains': params_to_valid_domains,
-            'domains_to_NEURON': {domain: get_neuron_domain(domain) for domain in self.domains},
-        })
-
-        if not file_name.endswith('.py'):
-            file_name += '.py'
-        path_to_model = self.path_manager.path_to_model
-        output_path = os.path.join(path_to_model, file_name)
-        with open(output_path, 'w') as f:
-            f.write(output)
-
-        
