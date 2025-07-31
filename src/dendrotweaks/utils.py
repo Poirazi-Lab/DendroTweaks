@@ -278,3 +278,70 @@ def apply_dark_theme():
         'text.color': 'white',
         'axes.prop_cycle': plt.cycler(color=plt.cm.tab10.colors),  # use standard matplotlib colors
     })
+
+def mse(y_true, y_pred):
+            return np.mean((np.array(y_true) - np.array(y_pred)) ** 2)
+
+def poly_fit(x, y, max_degree=6, tolerance=1e-6):
+    """
+    Fit a polynomial to the data and return the coefficients and predicted values.
+    """
+    for degree in range(max_degree + 1):
+        coeffs = np.polyfit(x, y, degree)
+        y_pred = np.polyval(coeffs, x)
+        if np.all(np.abs(np.array(y) - y_pred) < tolerance):
+            break
+    return coeffs, y_pred
+
+def step_fit(x, y):
+    """
+    Fit a single step function with variable-width transition zone.
+    Returns (high_val, low_val, start, end), and predicted y-values.
+    """
+    x = np.array(x)
+    y = np.array(y)
+
+    sort_idx = np.argsort(x)
+    x = x[sort_idx]
+    y = y[sort_idx]
+
+    best_mse = float('inf')
+    best_params = None
+    best_pred = None
+
+    n = len(x)
+    for i in range(n - 1):
+        for j in range(i + 1, n):
+            start = x[i]
+            end = x[j]
+            inside = (x > start) & (x < end)
+            outside = ~inside
+
+            if not np.any(inside) or not np.any(outside):
+                continue
+
+            high_val = np.nanmean(y[inside])
+            low_val = np.nanmean(y[outside])
+
+            pred = np.where(inside, high_val, low_val)
+            score = mse(y, pred)
+
+            if score < best_mse:
+                best_mse = score
+                best_params = (start, end, low_val, high_val)
+                best_pred = pred
+
+    return best_params, best_pred
+
+DEFAULT_FIT_MODELS = {
+    'poly': {
+        'fit': poly_fit,
+        'score': mse,
+        'complexity': lambda coeffs: len(coeffs) - 1  # degree of polynomial
+    },
+    'step': {
+        'fit': step_fit,
+        'score': mse,
+        'complexity': lambda params: 4
+    }
+}

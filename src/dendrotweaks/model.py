@@ -18,6 +18,7 @@ from dendrotweaks.biophys.distributions import Distribution
 from dendrotweaks.path_manager import PathManager
 import dendrotweaks.morphology.reduce as rdc
 from dendrotweaks.utils import INDEPENDENT_PARAMS, DOMAIN_TO_GROUP, POPULATIONS
+from dendrotweaks.utils import DEFAULT_FIT_MODELS
 
 # Mixins
 from dendrotweaks.model_io import IOMixin
@@ -746,39 +747,69 @@ class Model(IOMixin, SimulationMixin):
     # FITTING
     # -----------------------------------------------------------------------
 
-    def fit_distribution(self, param_name, segments, max_degree=20, tolerance=1e-7, plot=False):
-        from numpy import polyfit, polyval
+    def fit_distribution(self, param_name: str, segments, candidate_models=None, plot=True):
+        if candidate_models is None:
+            candidate_models = DEFAULT_FIT_MODELS
+
+        from dendrotweaks.utils import mse
+
         values = [seg.get_param_value(param_name) for seg in segments]
-        # if all values are NaN, return None
         if all(np.isnan(values)):
             return None
+
         distances = [seg.path_distance() for seg in segments]
-        sorted_pairs = sorted(zip(distances, values))
-        distances, values = zip(*sorted_pairs)
-        degrees = range(0, max_degree+1)
-        for degree in degrees:
-            coeffs = polyfit(distances, values, degree)
-            residuals = values - polyval(coeffs, distances)
-            if all(abs(residuals) < tolerance):
-                break
-        if not all(abs(residuals) < tolerance):
-            warnings.warn(f'Fitting failed for parameter {param_name} with the provided tolerance.\nUsing the last valid fit (degree={degree}). Maximum residual: {max(abs(residuals))}')
-        if plot and degree > 0:
+        distances, values = zip(*sorted(zip(distances, values)))
+
+        best_score = float('inf')
+        best_model = None
+        best_params = None
+        best_pred = None
+
+        results = []
+
+        for name, model in candidate_models.items():
+            try:
+                params, pred_values = model['fit'](distances, values)
+                score = model.get('score', mse)(values, pred_values)
+                complexity = model.get('complexity', 1)(params)
+                results.append((name, score, params, complexity, pred_values))
+            except Exception as e:
+                warnings.warn(f"Model {name} failed to fit: {e}")
+
+        # Sort results by score and complexity
+        results.sort(key=lambda x: (np.round(x[1], 10), x[3]))
+
+        best_model, best_score, best_params, _, best_pred = results[0]
+
+        if plot:
             self.plot_param(param_name, show_nan=False)
-            plt.plot(distances, polyval(coeffs, distances), label='Fitted', color='red', linestyle='--')
+            plt.plot(distances, best_pred, label=f'Best Fit: {best_model}', color='red', linestyle='--')
             plt.legend()
-        return coeffs
+
+        return {'model': best_model, 'params': best_params, 'score': best_score}
 
 
-    def _set_distribution(self, param_name, group_name, coeffs, plot=False):
-        # Set the distribution based on the degree of the polynomial fit
-        coeffs = np.where(np.round(coeffs) == 0, coeffs, np.round(coeffs, 10))
-        if len(coeffs) == 1:
-            self.params[param_name][group_name] = Distribution('constant', value=coeffs[0])
-        elif len(coeffs) == 2:
-            self.params[param_name][group_name] = Distribution('linear', slope=coeffs[0], intercept=coeffs[1])
-        else:
-            self.params[param_name][group_name] = Distribution('polynomial', coeffs=coeffs.tolist())
+    def _set_distribution(self, param_name, group_name, fit_result, plot=False):
+        if fit_result is None:
+            warnings.warn(f"No valid fit found for parameter {param_name}. Skipping distribution assignment.")
+            return
+
+        model_type = fit_result['model']
+        params = fit_result['params']
+
+        if model_type == 'poly':
+            coeffs = np.array(params)
+            coeffs = np.where(np.round(coeffs) == 0, coeffs, np.round(coeffs, 10))
+            if len(coeffs) == 1:
+                self.params[param_name][group_name] = Distribution('constant', value=coeffs[0])
+            elif len(coeffs) == 2:
+                self.params[param_name][group_name] = Distribution('linear', slope=coeffs[0], intercept=coeffs[1])
+            else:
+                self.params[param_name][group_name] = Distribution('polynomial', coeffs=coeffs.tolist())
+
+        elif model_type == 'step':
+            start, end, min_value, max_value = params
+            self.params[param_name][group_name] = Distribution('step', max_value=max_value, min_value=min_value, start=start, end=end)
 
 
     # -----------------------------------------------------------------------
@@ -985,16 +1016,13 @@ class Model(IOMixin, SimulationMixin):
             return
 
         root_segs = [seg for seg in root.segments]
-        params_to_coeffs = {}
+        params_to_fits = {}
         # for param_name in self.params:
         common_mechs.add('Independent')
         for mech in common_mechs:
             for param_name in self.mechs_to_params[mech]:
-                coeffs = self.fit_distribution(param_name, segments=root_segs, plot=False)
-                if coeffs is None:
-                    warnings.warn(f'Cannot fit distribution for parameter {param_name}. No values found.')
-                    continue
-                params_to_coeffs[param_name] = coeffs
+                fit_result = self.fit_distribution(param_name, segments=root_segs, plot=False)
+                params_to_fits[param_name] = fit_result
 
         
         # Create new domain
@@ -1014,9 +1042,9 @@ class Model(IOMixin, SimulationMixin):
         
                
         # # Fit distributions to data for the group
-        for param_name, coeffs in params_to_coeffs.items():
-            self._set_distribution(param_name, group_name, coeffs, plot=True)
-        
+        for param_name, fit_result in params_to_fits.items():
+            self._set_distribution(param_name, group_name, fit_result, plot=True)
+
         # # Distribute parameters
         self.distribute_all()
 
@@ -1027,5 +1055,5 @@ class Model(IOMixin, SimulationMixin):
             'segs_to_locs': segs_to_locs,
             'segs_to_reduced_segs': segs_to_reduced_segs,
             'reduced_segs_to_params': reduced_segs_to_params,
-            'params_to_coeffs': params_to_coeffs
+            'params_to_fits': params_to_fits
         }

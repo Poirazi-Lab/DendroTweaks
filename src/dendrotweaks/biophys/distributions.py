@@ -131,16 +131,16 @@ def gaussian(distance: float, amplitude: float, mean: float, std: float) -> floa
     return amplitude * exp(-((distance - mean) ** 2) / (2 * std ** 2))
 
 
-def step(distance: float, max_value: float,  min_value: float, start: float, end: float) -> float:
+def step(distance: float, start: float, end: float, min_value: float, max_value: float) -> float:
     """
     Step distribution function.
 
     Args:
         distance (float): The distance parameter.
-        min_value (float): The minimum value parameter.
-        max_value (float): The maximum value parameter.
         start (float): The start parameter.
         end (float): The end parameter.
+        min_value (float): The minimum value parameter.
+        max_value (float): The maximum value parameter.
 
     Returns:
         The result of the step equation: min_value if distance < start, max_value if distance > end, and a linear interpolation between min_value and max_value if start <= distance <= end.
