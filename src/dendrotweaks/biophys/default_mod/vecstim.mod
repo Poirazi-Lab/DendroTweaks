@@ -1,6 +1,7 @@
 :  Vector stream of events
 
 NEURON {
+	THREADSAFE
 	ARTIFICIAL_CELL VecStim
 	RANGE delay
 }
@@ -12,13 +13,8 @@ ASSIGNED {
 	delay
 }
 
-PARAMETER { 
-	:delay = 0.0
-} 
-
 INITIAL {
 	index = 0
-	:delay = 0
 	element()
 	if (index > 0) {
 		net_send(delay + etime - t, 1)
@@ -34,12 +30,6 @@ NET_RECEIVE (w) {
 		} 
 	}
 }
-
-VERBATIM
-extern double* vector_vec();
-extern int vector_capacity();
-extern void* vector_arg();
-ENDVERBATIM
 
 PROCEDURE element() {
 VERBATIM	
