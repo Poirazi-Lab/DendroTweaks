@@ -94,6 +94,10 @@ class MODFileConverter():
         self.reader.read_file(path_to_mod_file)
         self.reader.preprocess()
         blocks = self.reader.get_blocks(verbose)
+        if blocks.get('KINETIC'):
+            raise NotImplementedError(
+                "Conversion aborted: MOD files containing KINETIC blocks are not supported by DendroTweaks."
+            )
         
         if verbose: print(f"\nPARSING")
         self.parser.parse(blocks, verbose)

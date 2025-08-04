@@ -576,3 +576,13 @@ class CaDynamics(Mechanism):
             'kt': 0.0,
             'kd': 0.0
         }
+
+
+class FallbackChannel(IonChannel):
+    """
+    Fallback channel class in case of import failure.
+    """
+    def __init__(self, name):
+        super().__init__(name=name)
+        self.params = {'gbar': 0.0}
+        self.range_params = {'gbar': 0.0}

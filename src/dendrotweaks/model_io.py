@@ -12,8 +12,16 @@ from dendrotweaks.biophys.io import create_channel, standardize_channel
 from dendrotweaks.biophys.groups import SegmentGroup
 from dendrotweaks.biophys.distributions import Distribution
 from dendrotweaks.biophys.mechanisms import LeakChannel, CaDynamics
+from dendrotweaks.biophys.mechanisms import FallbackChannel
 from dendrotweaks.utils import DOMAIN_TO_GROUP, DOMAINS_TO_NEURON
 
+# Warnings configuration
+import warnings
+
+def custom_warning_formatter(message, category, filename, lineno, file=None, line=None):
+    return f"WARNING: {message}\n({os.path.basename(filename)}, line {lineno})\n"
+
+warnings.formatwarning = custom_warning_formatter
 
 class IOMixin():
     """
@@ -220,7 +228,17 @@ class IOMixin():
             mechanism_name, 
             python_template_name=python_template_name
         )
-        mech = create_channel(**paths)
+        try:
+            mech = create_channel(**paths)
+        except NotImplementedError as e:
+            if "KINETIC" in str(e):
+                warnings.warn(
+                    f"Could not import the '{mechanism_name}' channel because it uses an unsupported KINETIC block."
+                    " A minimal fallback channel will be created for simulation only, supporting only the 'gbar' parameter."
+                )
+                mech = FallbackChannel(mechanism_name)
+            else:
+                raise
         # Add the mechanism to the model
         self.mechanisms[mech.name] = mech
         # Update the global parameters
