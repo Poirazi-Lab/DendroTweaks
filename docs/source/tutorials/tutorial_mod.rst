@@ -341,3 +341,5 @@ The following MOD file features are not supported:
     FUNCTION ghk(v(mV), ci(mM), co(mM)) (.001 coul/cm3) {
       ...
     }
+
+- Use of vectors, e.g. using :code:`inf[2]` instead of separate variables like :code:`m_inf` and :code:`n_inf`.
