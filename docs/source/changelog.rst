@@ -8,14 +8,14 @@ Version 0.4.6
   adds prerun functionality for simulation stabilization, and further modularizes the model class implementation.
 
   Key Updates:
+
   - Enhanced the :code:`fit_distribution` method to support multiple candidate distribution types (polynomial and step functions by default), enabling accurate fitting of step-like distributions (e.g., for Ca2+ channels).
-  - Implemented a workaround for MOD files containing a KINETIC block by introducing a :code:`FallbackChannel` class.
-  When a KINETIC block is detected, a :code:`FallbackChannel` instance is created as a placeholder, allowing simulations to run. The fallback channel does not support typical visualization or standardization features, but it enables modification of the :code:`gbar` parameter.
+  - Implemented a workaround for MOD files containing a KINETIC block by introducing a :code:`FallbackChannel` class. When a KINETIC block is detected, a :code:`FallbackChannel` instance is created as a placeholder, allowing simulations to run. The fallback channel does not support typical visualization or standardization features, but it enables modification of the :code:`gbar` parameter.
   - Added a :code:`prerun` context manager for simulation stabilization, allowing users to run a pre-simulation period before the main simulation. For example, use :code:`model.run(duration=300, prerun_time=100)` to stabilize the model for a period of 100 ms before running the main simulation for 300 ms.
-  - Refactored the :code:`Model` class by introducing :code:`IOMixin` and :code:`SimulationMixin` classes, separating file I/O operations as well as simulation and stimulus management from the core model functionality.
-  This modular approach improves code maintainability while preserving a flat model interface.
+  - Refactored the :code:`Model` class by introducing :code:`IOMixin` and :code:`SimulationMixin` classes, separating file I/O operations as well as simulation and stimulus management from the core model functionality. This modular approach improves code maintainability while preserving a flat model interface.
 
   Minor Updates:
+  
   - Updated the :code:`path_to_data` property of :code:`PathManager` to ensure it returns the correct parent directory of :code:`path_to_model`.
   - Updated :code:`vecstim.mod` in the default MOD files for compatibility with Windows.
 
@@ -43,10 +43,12 @@ Version 0.4.5
   - Fixed minor issues with exporting distributions in reduced models.
 
   Known Issues:
+
   - Polynomial fitting fails to accurately represent step-like distributions when reducing morphologies (fixed in version 0.4.6).
 
 Version 0.4.4
 --------------
+
   This release addresses a bug introduced in version 0.4.3, where vectorized inputs to some
   distribution functions caused errors during parameter distribution using the :code:`model.distribute` method.
   The issue has been addressed by reverting to the non-vectorized implementation, as the performance impact 
@@ -66,11 +68,13 @@ Version 0.4.3
 
 Version 0.4.2
 --------------
+
   This release fixes a bug introduced in version 0.4.1 where segments were not properly updated
   in the :code:`set_segmentation` method.
 
 Version 0.4.1
 --------------
+
   This release addresses minor bugs and improves the separation of NEURON-specific code from core classes.
 
   Key Updates:
@@ -85,6 +89,7 @@ Version 0.4.1
 
 Version 0.4.0
 --------------
+
     This release enhances cross-platform compatibility and introduces a redesigned
     data structure for recording multiple variables, such as voltage and ion channel currents.
 
@@ -109,6 +114,7 @@ Version 0.4.0
 
 Version 0.3.1
 --------------
+
     This release includes a minor update to resolve issues encountered during the distribution upload process to PyPI.
 
 
@@ -135,6 +141,7 @@ Version 0.3.0
 
 Version 0.2.0
 --------------
+
     This release reintroduces morphology reduction functionality and provides the capability to export models in plain Python NEURON code.
 
     Key Updates:
@@ -155,6 +162,7 @@ Version 0.2.0
 
 Version 0.1.0
 -------------
+
     This release marks a step forward in modularizing DendroTweaks, separating the core functionalities into a standalone Python library that integrates with the web-based app. The codebase is now more coherent and robust, with improved handling of neuronal morphology, ion channel kinetics, and model validation.
 
     Key Updates:
