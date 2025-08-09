@@ -339,7 +339,7 @@ def plot_fI_curve(data, ax=None, vshift=200, **kwargs):
     
     ax.plot(amps, rates, color='gray', zorder=0)
     for a, r in zip(amps, rates):
-        ax.plot(a, r, 'o', color='red', zorder=1)
+        ax.plot(a, r, 'o', zorder=1)
     ax.set_xlabel('Current (nA)')
     ax.set_ylabel('Firing rate (Hz)')
     ax.set_title('f-I curve')

@@ -13,6 +13,7 @@ from dendrotweaks.biophys.groups import SegmentGroup
 from dendrotweaks.biophys.distributions import Distribution
 from dendrotweaks.biophys.mechanisms import LeakChannel, CaDynamics
 from dendrotweaks.biophys.mechanisms import FallbackChannel
+from dendrotweaks.stimuli import Population
 from dendrotweaks.utils import DOMAIN_TO_GROUP, DOMAINS_TO_NEURON
 
 # Warnings configuration
