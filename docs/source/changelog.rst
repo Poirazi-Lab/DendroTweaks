@@ -1,8 +1,28 @@
 Changelog
 =============
 
+Version 0.4.6
+--------------
+
+  This release resolves issues with fitting step-like distributions, introduces a workaround for channels with KINETIC blocks,
+  adds prerun functionality for simulation stabilization, and further modularizes the model class implementation.
+
+  Key Updates:
+  - Enhanced the :code:`fit_distribution` method to support multiple candidate distribution types (polynomial and step functions by default), enabling accurate fitting of step-like distributions (e.g., for Ca2+ channels).
+  - Implemented a workaround for MOD files containing a KINETIC block by introducing a :code:`FallbackChannel` class.
+  When a KINETIC block is detected, a :code:`FallbackChannel` instance is created as a placeholder, allowing simulations to run. The fallback channel does not support typical visualization or standardization features, but it enables modification of the :code:`gbar` parameter.
+  - Added a :code:`prerun` context manager for simulation stabilization, allowing users to run a pre-simulation period before the main simulation. For example, use :code:`model.run(duration=300, prerun_time=100)` to stabilize the model for a period of 100 ms before running the main simulation for 300 ms.
+  - Refactored the :code:`Model` class by introducing :code:`IOMixin` and :code:`SimulationMixin` classes, separating file I/O operations as well as simulation and stimulus management from the core model functionality.
+  This modular approach improves code maintainability while preserving a flat model interface.
+
+  Minor Updates:
+  - Updated the :code:`path_to_data` property of :code:`PathManager` to ensure it returns the correct parent directory of :code:`path_to_model`.
+  - Updated :code:`vecstim.mod` in the default MOD files for compatibility with Windows.
+
+
 Version 0.4.5
 --------------
+
   This release introduces refined validation protocols, 
   improvements in morphology reduction, and updates to the NMODL-to-Jaxley conversion template,
   along with several minor enhancements and bug fixes.
@@ -23,7 +43,7 @@ Version 0.4.5
   - Fixed minor issues with exporting distributions in reduced models.
 
   Known Issues:
-  - Polynomial fitting fails to accurately represent step-like distributions when reducing morphologies.
+  - Polynomial fitting fails to accurately represent step-like distributions when reducing morphologies (fixed in version 0.4.6).
 
 Version 0.4.4
 --------------
