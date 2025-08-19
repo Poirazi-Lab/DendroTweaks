@@ -75,9 +75,10 @@ We can access the segment groups of a model using the :code:`groups` attribute.
 By default a group is created for each domain and the group :code:`all` is created for the entire cell. 
 
 
-To define a new segment group, we must specify both a criterion 
-and the domains where we will search for matching segments. 
-The criterion can be one of three types: 
+To define a new segment group, we can specify both a criterion 
+and the domains where we will search for matching segments.
+
+The criterion can be one of four types:
 
 - :code:`diam` - diameter of the segment
 

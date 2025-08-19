@@ -59,10 +59,16 @@ The biophysical configuration files use a comprehensive JSON format inspired by 
 extended to handle complex ion channel distributions in detailed biophysical models. 
 The format captures three key aspects of neuronal biophysics:
 
+- **Domain-to-Mechanism Mapping**: Defines which ion channels and mechanisms are present in each morphological domain.
+- **Segment Groups Definition**: Defines collections of morphological segments that should share similar biophysical properties.
+- **Parameter-wise Group-to-Distribution Mapping**: For each parameter, specifies how its value is distributed across different segment groups using mathematical functions.
+
 **1. Domain-to-Mechanism Mapping**
 
 This section defines which ion channels and mechanisms are present in each morphological domain. 
-For example, to specify that apical dendrites contain calcium channels while the axon only has sodium and potassium channels:
+For example, to specify that the soma contains sodium (Na) and potassium (Kv) channels, while the apical dendrite contains in addition calcium (CaHVA, CaLVA) channels, one would use:
+
+
 
 .. code-block:: json
 
@@ -73,19 +79,48 @@ For example, to specify that apical dendrites contain calcium channels while the
             "Kv",
             "Na"
         ],
-        "axon": [
+        "soma": [
             "Kv",
             "Na"
         ]
     }
 
-This mapping ensures that calcium dynamics are only simulated in dendritic regions where they are physiologically relevant.
+
+
+Available domains (and their corresponding SWC file IDs) are:
+
+- :code:`soma` (1): Soma region
+- :code:`perisomatic` (11): Perisomatic region (e.g., proximal dendrites)
+- :code:`axon` (2): Axon
+- :code:`dend` (3): Dendritic regions (both basal and apical)
+- :code:`basal` (31): Basal dendrites
+- :code:`apic` (4): Apical dendrites
+- :code:`trunk` (41): The apical trunk
+- :code:`tuft` (42): The apical tuft
+- :code:`oblique` (43): Oblique dendrites
+- :code:`custom` (5): Custom domain defined by the user
+- :code:`neurite` (6): Generic neurite
+- :code:`glia` (7): Glial cell region
+- :code:`reduced` (8): Domain obtained during morphology reduction
+- :code:`undefined` (0): Undefined region
+
+Numerical indices can be added to :code:`custom` and :code:`reduced` domains, 
+resulting in names like :code:`custom_0` (50), :code:`custom_1` (51), etc.
+
+The channel names (e.g., :code:`CaHVA`, :code:`Kv`, :code:`Na`) correspond to the 
+MOD file names, which implement the biophysical properties of these channels.
+
+.. warning::
+
+    For consistency, DendroTweaks automatically ensures that the SUFFIX 
+    in each MOD file matches its filename. If there is a mismatch, the SUFFIX will be replaced with the MOD file name during import.
+
 
 **2. Segment Groups**
 
 Groups define collections of morphological segments that share similar biophysical properties. Here are examples of different group types:
 
-*Simple domain-based group:*
+*Domain-matching group:*
 
 .. code-block:: json
 
@@ -93,6 +128,27 @@ Groups define collections of morphological segments that share similar biophysic
         "name": "apical",
         "domains": ["apic"]
     }
+
+*A group spanning multiple domains:*
+
+.. code-block:: json
+
+    {
+        "name": "dendritic",
+        "domains": ["dend", "apic"]
+    }
+
+
+To define a segment group, we can specify not only the domains where we will search for matching segments, 
+but also a criterion to filter segments based on their properties.
+
+The criterion can be one of four types:
+
+- :code:`diam` - diameter of the segment (in micrometers)
+- :code:`section_diam` - diameter at the center of the section to which the segment belongs
+- :code:`distance` - distance of the segment center from the soma center (in micrometers)
+- :code:`domain_distance` - distance of the segment center to the closest parent segment in a different domain
+
 
 *Diameter-based filtering (thin dendrites only):*
 
@@ -105,22 +161,37 @@ Groups define collections of morphological segments that share similar biophysic
         "max_value": 0.8
     }
 
-*Distance-based filtering (proximal regions):*
+*Distance-based filtering (distal dendrites):*
 
 .. code-block:: json
 
     {
-        "name": "proximal_apical",
-        "domains": ["apic"],
+        "name": "distal_apical",
+        "domains": ["dend", "apic"],
         "select_by": "distance",
-        "max_value": 260
+        "min_value": 100
     }
 
-This allows you to target specific morphological regions with distinct biophysical properties, such as different channel densities in thin vs thick dendrites.
+*Distance-based filtering (apical Ca2+ "hot spot"):*
+
+.. code-block:: json
+
+    {
+        "name": "apical_hot_spot",
+        "domains": ["apic"],
+        "select_by": "distance",
+        "min_value": 260,
+        "max_value": 300
+    }
+
+
+
+This allows you to target specific morphological regions with distinct biophysical properties, such as different channel densities in proximal vs. distal dendrites.
 
 **3. Parameter Distributions**
 
-This section defines how biophysical parameters are distributed across different groups using various mathematical functions:
+To define how biophysical parameters are distributed across different groups, we can use mathematical functions.
+For each of the parameters, we associate a mapping from segment groups to functions that describe how the parameter varies across the segments in that group.
 
 *Constant value across a group:*
 
@@ -149,6 +220,17 @@ This section defines how biophysical parameters are distributed across different
         }
     }
 
+The following distribution functions are available, along with their expected parameters:
+
+- :code:`constant`: Requires a :code:`value` parameter.
+- :code:`linear`: Requires :code:`slope` and :code:`intercept` parameters.
+- :code:`exponential`: Requires :code:`vertical_shift`, :code:`scale_factor`, :code:`growth_rate`, and :code:`horizontal_shift` parameters.
+- :code:`sigmoid`: Requires :code:`vertical_shift`, :code:`scale_factor`, :code:`growth_rate`, and :code:`horizontal_shift` parameters.
+- :code:`sinusoidal`: Requires :code:`amplitude`, :code:`frequency`, and :code:`phase` parameters.
+- :code:`gaussian`: Requires :code:`amplitude`, :code:`mean`, and :code:`std` parameters.
+- :code:`step`: Requires :code:`start`, :code:`end`, :code:`min_value`, and :code:`max_value` parameters.
+- :code:`polynomial`: Requires :code:`coeffs` parameter, which is a list of coefficients for the polynomial function.
+
 To learn more about segment groups and parameter distributions, refer to the
 :doc:`tutorial</tutorials/tutorial_distributions>` on distributing parameters.
 
@@ -161,7 +243,16 @@ The stimulation protocol consists of two complementary files: a CSV file definin
 
 **CSV Format - Spatial Distribution**
 
-The CSV file specifies the exact locations of stimuli and recordings on the neuronal morphology. Here's a minimal example:
+The CSV file specifies the exact locations of stimuli and recordings on the neuronal morphology. 
+
+It contains the following columns:
+
+- **type**: Type of stimulus or recording (e.g., iclamp, AMPA, NMDA, GABAa, rec)
+- **idx**: Index identifier for grouping multiple instances of the same type
+- **sec_idx**: Section index in the morphology
+- **loc**: Location along the section (0.0 = start, 1.0 = end)
+
+Here is an example of a CSV file:
 
 .. table:: Example Data
     :widths: 25 25 25 25
@@ -170,19 +261,15 @@ The CSV file specifies the exact locations of stimuli and recordings on the neur
     type       idx        sec_idx    loc
     ========== ========== ========== ==========================================================
     rec        0          0          0.5
+    rec        1          20         0.5
+    iclamp     0          0          0.5
     AMPA       0          13         0.863
     AMPA       0          17         0.732
     ========== ========== ========== ==========================================================
 
-**CSV Format Specification**
-
-- **type**: Type of stimulus or recording (e.g., iclamp, AMPA, NMDA, GABAa, rec)
-- **idx**: Index identifier for grouping multiple instances
-- **sec_idx**: Section index in the morphology
-- **loc**: Location along the section (0.0 = start, 1.0 = end)
-
-The first row defines a voltage recording at the soma center (section 0, location 0.5), while the subsequent rows place AMPA synapses from the same population of 
-"virtual" presynaptic neurons at specific dendritic locations.
+The first two rows define two recordings, one at the soma center and another at a dendritic location.
+The third row defines a current clamp at the soma center.
+The last two rows define two AMPA synapses from the same population of "virtual" presynaptic neurons at specific dendritic locations.
 
 **JSON Format - Temporal Patterns and Parameters**
 
@@ -260,7 +347,7 @@ Each population contains:
 Downloading example data
 ------------------------------------------
 
-To follow along with this tutorial, you can download the example data from the DendroTweaks repository:
+You can download the example `data <https://github.com/Poirazi-Lab/DendroTweaks/tree/main/examples>`_ from the DendroTweaks repository.
 
 .. code-block:: python
 
