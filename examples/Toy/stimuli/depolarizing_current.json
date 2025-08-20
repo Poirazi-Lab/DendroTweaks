@@ -1,0 +1,33 @@
+{
+    "metadata": {
+        "name": "Toy"
+    },
+    "simulation": {
+        "temperature": 37,
+        "v_init": -70,
+        "dt": 0.025,
+        "duration": 1000
+    },
+    "stimuli": {
+        "recordings": [
+            {
+                "name": "rec_0",
+                "var": "v"
+            }
+        ],
+        "iclamps": [
+            {
+                "name": "iclamp_0",
+                "amp": 0.05,
+                "delay": 100.0,
+                "dur": 800.0
+            }
+        ],
+        "populations": {
+            "AMPA": [],
+            "NMDA": [],
+            "AMPA_NMDA": [],
+            "GABAa": []
+        }
+    }
+}

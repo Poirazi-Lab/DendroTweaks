@@ -29,3 +29,5 @@ tutorials/examples/
 docs/source/tutorials/examples/
 exploration.ipynb
 examples/_*/
+examples/*/_*
+examples/*/stimuli/_*/
