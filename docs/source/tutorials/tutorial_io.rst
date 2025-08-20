@@ -1,17 +1,17 @@
 Importing and Exporting Models
 =======================================================
 
-This tutorial will guide you through the process of creating, manipulating, and sharing computational neuron models using DendroTweaks. 
-You will learn how different components work together to simulate realistic neuronal behavior.
+This tutorial explains how to manage model data in DendroTweaks, including the structure and format of model files, and how to load, export, and organize model components for reproducible workflows.
 
-Understanding the model architecture
+
+Understanding the model structure
 ------------------------------------------
 
-At its core, a computational neuron model requires several key components:
+At its core, a computational neuron model requires three key components:
 
-1. **Morphology**: The physical structure of the neuron (dendrites, soma, axon)
-2. **Membrane Properties**: Ion channels and other biophysical mechanisms
-3. **Stimulation Protocols**: How we activate or inhibit the neuron via current injection or synaptic input
+1. **Morphology**: The physical structure of the neuron (dendrites, soma, axon).
+2. **Biophysical Properties**: Ion channels and other membrane mechanisms.
+3. **Stimulation Protocols**: The external stimuli applied to the model (e.g., current injections or synaptic inputs) and the measurements (e.g., voltage recordings) taken.
 
 DendroTweaks organizes these components in a structured directory:
 
@@ -41,16 +41,19 @@ DendroTweaks organizes these components in a structured directory:
                 ├── stim2.csv
                 └── stim2.json
 
-Each folder contains specific components of the model:
+Each model folder inside the :code:`data` directory contains the following components:
 
-- :code:`biophys/`: JSON files defining the distribution and properties of ion channels and other membrane mechanisms
-- :code:`mod/`: NEURON mechanism files (MOD) that implement specific ion channel kinetics and other biophysical processes
-- :code:`python/`: Python classes automatically generated from MOD files
 - :code:`morphology/`: SWC files describing the morphological structure of the neuron
-- :code:`stimuli/`: the temporal patterns (JSON) and spatial distribution (CSV) of inputs to the model and the corresponding recordings
+- :code:`biophys/`: JSON files defining the distribution and properties of ion channels and other membrane mechanisms
+- :code:`mod/`: NMODL mechanism files (MOD) that implement specific ion channel kinetics and other biophysical processes
+- :code:`python/`: Python classes automatically generated from MOD files
+- :code:`stimuli/`: the parameters (JSON) and spatial distribution (CSV) of inputs to the model and the corresponding recordings
 
 Data Format Specifications
 ------------------------------------------
+
+DendroTweaks uses a custom data format for biophysical configurations and stimulation protocols, 
+designed for single-cell models with complex morphological and biophysical properties.
 
 Biophysical Configuration Format
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -65,9 +68,9 @@ The format captures three key aspects of neuronal biophysics:
 
 **1. Domain-to-Mechanism Mapping**
 
-This section defines which ion channels and mechanisms are present in each morphological domain. 
-For example, to specify that the soma contains sodium (Na) and potassium (Kv) channels, while the apical dendrite contains in addition calcium (CaHVA, CaLVA) channels, one would use:
-
+This section defines which ion channels and mechanisms are present in each morphological domain.
+For example, to specify that the soma contains sodium (Na) and potassium (Kv) channels, 
+while the apical dendrite contains in addition calcium (CaHVA, CaLVA) channels, one would use:
 
 
 .. code-block:: json
@@ -118,7 +121,22 @@ MOD file names, which implement the biophysical properties of these channels.
 
 **2. Segment Groups**
 
-Groups define collections of morphological segments that share similar biophysical properties. Here are examples of different group types:
+Groups define collections of morphological segments that share similar biophysical properties. 
+
+In the JSON file, segment groups are defined in the :code:`groups` section, which contains a list of group definitions.
+
+.. code-block:: json
+
+    "groups": [
+        {
+          ...
+        },
+        {
+          ...
+        },
+    ],
+
+Here are examples of different group types:
 
 *Domain-matching group:*
 
@@ -129,7 +147,7 @@ Groups define collections of morphological segments that share similar biophysic
         "domains": ["apic"]
     }
 
-*A group spanning multiple domains:*
+*Groups spanning multiple domains:*
 
 .. code-block:: json
 
@@ -138,17 +156,24 @@ Groups define collections of morphological segments that share similar biophysic
         "domains": ["dend", "apic"]
     }
 
+.. code-block:: json
+
+    {
+        "name": "all",
+        "domains": ["soma", "axon", "dend", "apic"]
+    }
 
 To define a segment group, we can specify not only the domains where we will search for matching segments, 
 but also a criterion to filter segments based on their properties.
 
-The criterion can be one of four types:
+The criterion can be one of the following types:
 
-- :code:`diam` - diameter of the segment (in micrometers)
+- :code:`diam` - diameter of the segment (in :math:`\mu m`)
 - :code:`section_diam` - diameter at the center of the section to which the segment belongs
-- :code:`distance` - distance of the segment center from the soma center (in micrometers)
+- :code:`distance` - distance of the segment center from the soma center (in :math:`\mu m`)
 - :code:`domain_distance` - distance of the segment center to the closest parent segment in a different domain
 
+When using a criterion, we must specify the minimum and/or maximum value for the segments to be included in the group.
 
 *Diameter-based filtering (thin dendrites only):*
 
@@ -185,13 +210,26 @@ The criterion can be one of four types:
     }
 
 
-
-This allows you to target specific morphological regions with distinct biophysical properties, such as different channel densities in proximal vs. distal dendrites.
-
 **3. Parameter Distributions**
 
-To define how biophysical parameters are distributed across different groups, we can use mathematical functions.
+To define how biophysical parameters are distributed across different groups, we can use distribution functions.
 For each of the parameters, we associate a mapping from segment groups to functions that describe how the parameter varies across the segments in that group.
+
+This mapping is defined in the :code:`params` section of the JSON file, where each parameter can have a different distribution function for each group.
+
+.. code-block:: json
+
+    "params": {
+            "cm": {
+                   ...
+            },
+            "gbar_CaHVA": {
+                   ...
+            },
+            ...
+    }
+
+Here are some examples of how to define parameter distributions:
 
 *Constant value across a group:*
 
@@ -205,6 +243,9 @@ For each of the parameters, we associate a mapping from segment groups to functi
             }
         }
     }
+
+In this example, the membrane capacitance (:code:`cm`) is set to a constant value of 2 :math:`\mu F/cm^2` for the group named :code:`all`, which includes all segments in the model.
+Note that we don't need to assign functions to every group available in the model.
 
 *Linear gradient with distance:*
 
@@ -220,7 +261,7 @@ For each of the parameters, we associate a mapping from segment groups to functi
         }
     }
 
-The following distribution functions are available, along with their expected parameters:
+The following distribution functions (along with their expected parameters) are available:
 
 - :code:`constant`: Requires a :code:`value` parameter.
 - :code:`linear`: Requires :code:`slope` and :code:`intercept` parameters.
