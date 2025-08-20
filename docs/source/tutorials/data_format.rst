@@ -283,6 +283,18 @@ The following distribution functions (along with their expected parameters) are 
 - :code:`step`: Requires :code:`start`, :code:`end`, :code:`min_value`, and :code:`max_value` parameters.
 - :code:`polynomial`: Requires :code:`coeffs` parameter, which is a list of coefficients for the polynomial function.
 
+In addition to these functions, we can also use the following special values:
+
+- :code:`inherit`: Each segment in the group inherits the value of the parameter from its parent segment. 
+This is particularly useful for oblique dendrites, allowing them to inherit parameter values from their parent segments in the apical trunk, where the parameter may vary non-uniformly.
+
+*Inheritance from parent segments:*
+
+.. code-block:: json
+    "gbar_Kv": {
+        "oblique": "inherit"
+    }
+
 To learn more about segment groups and parameter distributions, refer to the
 :doc:`tutorial</tutorials/tutorial_distributions>` on distributing parameters.
 
