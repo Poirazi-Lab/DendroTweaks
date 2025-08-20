@@ -14,3 +14,4 @@ This set of tutorials is designed to provide a more in-depth look at the feature
    tutorials/tutorial_standardization
    tutorials/Channels
    tutorials/convert_to_jaxley
+   tutorials/data_format
