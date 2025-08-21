@@ -9,6 +9,11 @@
             "Leak",
             "Na"
         ],
+        "axon": [
+            "Kv",
+            "Leak",
+            "Na"
+        ],
         "dend": [
             "Kv",
             "Leak",
@@ -25,6 +30,7 @@
             "name": "all",
             "domains": [
                 "apic",
+                "axon",
                 "dend",
                 "soma"
             ]
@@ -33,6 +39,12 @@
             "name": "apical",
             "domains": [
                 "apic"
+            ]
+        },
+        {
+            "name": "axonal",
+            "domains": [
+                "axon"
             ]
         },
         {
@@ -89,6 +101,12 @@
                 }
             },
             "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.05
+                }
+            },
+            "axonal": {
                 "function": "constant",
                 "parameters": {
                     "value": 0.05
@@ -211,6 +229,12 @@
                 }
             },
             "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.005
+                }
+            },
+            "axonal": {
                 "function": "constant",
                 "parameters": {
                     "value": 0.005
