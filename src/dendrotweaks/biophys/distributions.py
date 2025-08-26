@@ -67,6 +67,30 @@ def linear(position, slope=1, intercept=0):
     """
     return slope * position + intercept
 
+def power(position, vertical_shift=0, scale_factor=1, exponent=-1, horizontal_shift=0):
+    """
+    Power function that returns a value raised to a given exponent for any position.
+
+    Parameters
+    ----------
+    position : float or numpy.ndarray
+        The position at which to evaluate the function.
+    vertical_shift : float
+        The vertical shift to be applied to the result.
+    scale_factor : float
+        The scale factor to be applied to the result.
+    exponent : float
+        The exponent to which the position is raised.
+    horizontal_shift : float
+        The horizontal shift to be applied to the position.
+
+    Returns
+    -------
+    float or numpy.ndarray
+        The value of the power function at the given position.
+    """
+    return vertical_shift + scale_factor * ((position + horizontal_shift) ** exponent)
+
 def exponential(distance: float, vertical_shift:float = 0, scale_factor: float =1, growth_rate: float=1, horizontal_shift: float = 0) -> float:
     """
     Exponential distribution function.

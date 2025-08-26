@@ -146,10 +146,12 @@ The following distribution functions are available, along with their expected pa
 
 - **constant**: Requires a `value` parameter.
 - **linear**: Requires `slope` and `intercept` parameters.
+- **power**: Requires `vertical_shift`, `scale_factor`, `exponent`, and `horizontal_shift` parameters.
 - **exponential**: Requires `vertical_shift`, `scale_factor`, `growth_rate`, and `horizontal_shift` parameters.
 - **sigmoid**: Requires `vertical_shift`, `scale_factor`, `growth_rate`, and `horizontal_shift` parameters.
 - **sinusoidal**: Requires `amplitude`, `frequency`, and `phase` parameters.
 - **gaussian**: Requires `amplitude`, `mean`, and `std` parameters.
+- **step**: Requires `start`, `end`, `min_value`, and `max_value` parameters.
 
 
 Setting parameter distributions

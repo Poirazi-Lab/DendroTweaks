@@ -276,6 +276,7 @@ The following distribution functions (along with their expected parameters) are 
 
 - :code:`constant`: Requires a :code:`value` parameter.
 - :code:`linear`: Requires :code:`slope` and :code:`intercept` parameters.
+- :code:`power`: Requires :code:`vertical_shift`, :code:`scale_factor`, :code:`exponent` and :code:`horizontal_shift` parameters.
 - :code:`exponential`: Requires :code:`vertical_shift`, :code:`scale_factor`, :code:`growth_rate`, and :code:`horizontal_shift` parameters.
 - :code:`sigmoid`: Requires :code:`vertical_shift`, :code:`scale_factor`, :code:`growth_rate`, and :code:`horizontal_shift` parameters.
 - :code:`sinusoidal`: Requires :code:`amplitude`, :code:`frequency`, and :code:`phase` parameters.
@@ -291,6 +292,7 @@ This is particularly useful for oblique dendrites, allowing them to inherit para
 *Inheritance from parent segments:*
 
 .. code-block:: json
+    
     "gbar_Kv": {
         "oblique": "inherit"
     }
