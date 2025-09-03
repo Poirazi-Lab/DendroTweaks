@@ -46,7 +46,8 @@ class PathManager:
             self.copy_default_mod_files()
         if not os.listdir(self.paths['templates']):
             self.copy_template_files()
-        
+
+
     @property
     def path_to_data(self):
         """
@@ -54,8 +55,10 @@ class PathManager:
         """
         return os.path.abspath(os.path.join(self.path_to_model, os.pardir))
 
+
     def __repr__(self):
         return f"PathManager({self.path_to_model})"
+
 
     def copy_default_mod_files(self):
         """
@@ -66,6 +69,7 @@ class PathManager:
             source = os.path.join(DEFAULT_MOD_DIR, file_name)
             destination = os.path.join(self.paths['default_mod'], file_name)
             shutil.copyfile(source, destination)
+
 
     def copy_template_files(self):
         """
@@ -78,55 +82,103 @@ class PathManager:
             shutil.copyfile(source, destination)
 
 
-    def get_path(self, file_type: str) -> str:
+    def remove_folder(self, relative_path: str) -> None:
         """
-        Get the path for a specific file type.
-        
+        Remove a folder and all its contents.
+
         Parameters
         ----------
-        file_type : str
-            The type of file (e.g., 'mod', 'swc').
-        
+        relative_path : str
+            The absolute path to the folder to be removed.
+        """
+        folder_path = self.get_abs_path(relative_path)
+        if os.path.isdir(folder_path):
+            shutil.rmtree(folder_path, ignore_errors=True)
+
+
+    def _resolve_root(self, relative_path: str) -> tuple[str, str]:
+        """
+        Given a relative path like 'stimuli/depolarizing/protocol.json',
+        resolve the absolute root and the remainder.
+        """
+        relative_path = os.path.normpath(relative_path.strip())
+        parts = relative_path.split(os.sep)
+        root_key = parts[0]
+
+        base_root = self.paths.get(root_key)
+        if base_root is None:
+            raise KeyError(
+                f"Unknown top-level folder '{root_key}'. "
+                f"Known roots: {list(self.paths.keys())}"
+            )
+
+        remainder = os.path.join(*parts[1:]) if len(parts) > 1 else ""
+        return base_root, remainder
+
+
+    def get_abs_path(self, relative_path: str, create_dirs: bool = False) -> str:
+        """
+        Get the absolute path to a file or directory based on a relative path.
+
+        Parameters
+        ----------
+        relative_path : str
+            Path relative to one of the registered roots.
+            Examples:
+                "stimuli/depolarizing_current/protocol.json"
+                "morphology/cell.swc"
+                "stimuli/depolarizing_current" (for a folder)
+        create_dirs : bool, default False
+            If True, create the parent directories if they don't exist.
+
         Returns
         -------
         str
-            The full directory path.
+            Absolute path in OS-native format.
         """
-        path = self.paths.get(file_type, None)
-        if os.path.isdir(path):
-            return path
-        raise FileNotFoundError(f"Directory for {file_type} does not exist.")
+        base_root, remainder = self._resolve_root(relative_path)
+        abs_path = os.path.join(base_root, remainder)
 
-    def get_file_path(self, file_type: str, file_name: str, extension: str) -> str:
+        if create_dirs and remainder:
+            os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+
+        return abs_path
+
+    def list_folders(self, relative_path: str) -> List[str]:
         """
-        Construct a file path with an optional extension for a specific type.
-        
+        List all folders in a given directory.
+
         Parameters
         ----------
-        file_type : str
-            The type of file (e.g., 'morphology', 'stimuli').
-        file_name : str
-            The name of the file.
-        extension : str
-            The file extension (e.g., 'mod', 'swc').
+        relative_path : str
+            Path relative to one of the registered roots.
+            Examples:
+                "stimuli"
+                "morphology"
+                "stimuli/depolarizing_current"
 
         Returns
         -------
-        str
-            The full file path.
+        List[str]
+            A list of folder names.
         """
-        dir_path = self.get_path(file_type)
-        file_name = f"{file_name}.{extension}"
-        return os.path.join(dir_path, file_name)
+        abs_path = self.get_abs_path(relative_path)
 
-    def list_files(self, file_type: str, extension: str = "") -> List[str]:
+        if not os.path.isdir(abs_path):
+            return []
+
+        return [f for f in os.listdir(abs_path) if os.path.isdir(os.path.join(abs_path, f))]
+
+
+    def list_files(self, relative_path: str, extension: str | None = None) -> List[str]:
         """
-        List all files of a given type and optional archive.
+        List all files in a given directory with an optional extension filter.
+        If the extension is None, su
         
         Parameters
         ----------
-        file_type : str
-            The type of file (e.g. 'morphology', 'stimuli').
+        relative_path : str
+            Path relative to one of the registered roots.
         extension : str
             The file extension to filter by (e.g., 'mod', 'swc').
         
@@ -135,12 +187,13 @@ class PathManager:
         List[str]
             A list of file names.
         """
-        directory = self.paths.get(file_type, "")
-        if not extension.startswith('.'): extension = f".{extension}"
-        if not os.path.isdir(directory):
+        abs_path = self.get_abs_path(relative_path)
+        if extension and not extension.startswith('.'): 
+            extension = f".{extension}"
+        if not os.path.isdir(abs_path):
             return []
         return [f.replace(extension, '') 
-                for f in os.listdir(directory) if f.endswith(extension)]
+                for f in os.listdir(abs_path) if f.endswith(extension)]
 
 
     def list_morphologies(self, extension: str = '.swc') -> List[str]:
@@ -155,7 +208,7 @@ class PathManager:
         return self.list_files('morphology', extension=extension)
 
 
-    def list_stimuli(self, extension: str = '.json') -> List[str]:
+    def list_stimuli(self) -> List[str]:
         """
         List all JSON files.
         
@@ -164,7 +217,7 @@ class PathManager:
         List[str]
             A list of JSON file names.
         """
-        return self.list_files('stimuli', extension=extension)
+        return self.list_folders('stimuli')
 
 
     def list_biophys(self):
@@ -206,6 +259,7 @@ class PathManager:
 
         print_tree(base_path)
 
+
     def get_channel_paths(self, mechanism_name: str, 
                           python_template_name: str = None) -> Dict[str, str]:
         """
@@ -225,10 +279,11 @@ class PathManager:
         """
         python_template_name = python_template_name or "default"
         return {
-            'path_to_mod_file': self.get_file_path('mod', mechanism_name, 'mod'),
-            'path_to_python_file': self.get_file_path('python', mechanism_name, 'py'),
-            'path_to_python_template': self.get_file_path('templates', python_template_name, 'py'),
+            'path_to_mod_file': self.get_abs_path(f'mod/{mechanism_name}.mod'),
+            'path_to_python_file': self.get_abs_path(f'python/{mechanism_name}.py'),
+            'path_to_python_template': self.get_abs_path(f'templates/{python_template_name}.py'),
         }
+
 
     def get_standard_channel_paths(self, mechanism_name: str,
                                    python_template_name: str = None,
@@ -254,6 +309,6 @@ class PathManager:
         mod_template_name = mod_template_name or "standard_channel"
         return {
             # **self.get_channel_paths(mechanism_name, python_template_name),
-            'path_to_mod_template': self.get_file_path('templates', mod_template_name, 'mod'),
-            'path_to_standard_mod_file': self.get_file_path('mod', f"std{mechanism_name}", 'mod'),
+            'path_to_mod_template': self.get_abs_path(f'templates/{mod_template_name}.mod'),
+            'path_to_standard_mod_file': self.get_abs_path(f'mod/std{mechanism_name}.mod'),
         }

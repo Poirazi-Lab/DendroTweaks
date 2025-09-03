@@ -94,7 +94,7 @@ class IOMixin():
         """
         # self.name = file_name.split('.')[0]
         self.morphology_name = file_name.replace('.swc', '')
-        path_to_swc_file = self.path_manager.get_file_path('morphology', file_name, extension='swc')
+        path_to_swc_file = self.path_manager.get_abs_path(f'morphology/{file_name}.swc')
         point_tree = create_point_tree(path_to_swc_file)
         # point_tree.remove_overlaps()
         point_tree.change_soma_notation(soma_notation)
@@ -160,7 +160,7 @@ class IOMixin():
         version : str, optional
             The version of the morphology appended to the morphology name.
         """
-        path_to_file = self.path_manager.get_file_path('morphology', file_name, extension='swc')
+        path_to_file = self.path_manager.get_abs_path(f'morphology/{file_name}')
         
         self.point_tree.to_swc(path_to_file)
 
@@ -278,8 +278,8 @@ class IOMixin():
         recompile : bool, optional
             Whether to recompile the mechanism.
         """
-        path_to_mod_file = self.path_manager.get_file_path(
-            dir_name, mechanism_name, extension='mod'
+        path_to_mod_file = self.path_manager.get_abs_path(
+            f"{dir_name}/{mechanism_name}.mod"
         )
         self.mod_loader.load_mechanism(
             path_to_mod_file=path_to_mod_file, recompile=recompile
@@ -435,7 +435,7 @@ class IOMixin():
             Additional keyword arguments to pass to `json.dump`.
         """        
         
-        path_to_json = self.path_manager.get_file_path('biophys', file_name, extension='json')
+        path_to_json = self.path_manager.get_abs_path(f'biophys/{file_name}.json', create_dirs=True)
         if not kwargs.get('indent'):
             kwargs['indent'] = 4
 
@@ -458,7 +458,7 @@ class IOMixin():
         self.add_default_mechanisms()
         
 
-        path_to_json = self.path_manager.get_file_path('biophys', file_name, extension='json')
+        path_to_json = self.path_manager.get_abs_path(f'biophys/{file_name}.json')
 
         with open(path_to_json, 'r') as f:
             data = json.load(f)
@@ -588,7 +588,7 @@ class IOMixin():
         **kwargs : dict
             Additional keyword arguments to pass to `json.dump`.
         """
-        path_to_json = self.path_manager.get_file_path('stimuli', file_name, extension='json')
+        path_to_json = self.path_manager.get_abs_path(f'stimuli/{file_name}/{file_name}.json', create_dirs=True)
 
         data = self.stimuli_to_dict()
 
@@ -597,7 +597,7 @@ class IOMixin():
         with open(path_to_json, 'w') as f:
             json.dump(data, f, **kwargs)
 
-        path_to_stimuli_csv = self.path_manager.get_file_path('stimuli', file_name, extension='csv')
+        path_to_stimuli_csv = self.path_manager.get_abs_path(f'stimuli/{file_name}/{file_name}.csv', create_dirs=True)
         self._stimuli_to_csv(path_to_stimuli_csv)
 
 
@@ -611,9 +611,9 @@ class IOMixin():
             The name of the file to read from.
         """
         
-        path_to_json = self.path_manager.get_file_path('stimuli', file_name, extension='json')
-        path_to_stimuli_csv = self.path_manager.get_file_path('stimuli', file_name, extension='csv')
-
+        path_to_json = self.path_manager.get_abs_path(f'stimuli/{file_name}/{file_name}.json')
+        path_to_stimuli_csv = self.path_manager.get_abs_path(f'stimuli/{file_name}/{file_name}.csv')
+        
         with open(path_to_json, 'r') as f:
             data = json.load(f)
 
@@ -693,7 +693,7 @@ class IOMixin():
 
         params_to_valid_domains = get_params_to_valid_domains(self)
         params = self.params if include_kinetic_params else filter_params(self)
-        path_to_template = self.path_manager.get_file_path('templates', 'NEURON_template', extension='py')
+        path_to_template = self.path_manager.get_abs_path('templates/NEURON_template.py', create_dirs=True)
 
         output = render_template(path_to_template,
         {

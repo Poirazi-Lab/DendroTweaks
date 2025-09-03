@@ -54,10 +54,7 @@ class SimulationMixin:
         Load stimuli from a temporary file and clean up.
         """
         self.load_stimuli(file_name='_temp_stimuli')
-        for ext in ['json', 'csv']:
-            temp_path = self.path_manager.get_file_path('stimuli', '_temp_stimuli', extension=ext)
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
+        self.path_manager.remove_folder('stimuli/_temp_stimuli')
 
 
     def set_segmentation(self, d_lambda=0.1, f=100):
@@ -119,7 +116,7 @@ class SimulationMixin:
         if self.iclamps.get(seg):
             self.remove_iclamp(sec, loc)
         iclamp = IClamp(sec, loc, amp, delay, dur)
-        print(f'IClamp added to sec {sec} at loc {loc}.')
+        if self.verbose: print(f'IClamp added to sec {sec} at loc {loc}.')
         self.iclamps[seg] = iclamp
 
 
@@ -266,7 +263,7 @@ class SimulationMixin:
             The variable to record. Default is 'v'.
         """
         self.simulator.add_recording(sec, loc, var)
-        print(f'Recording added to sec {sec} at loc {loc}.')
+        if self.verbose: print(f'Recording added to sec {sec} at loc {loc}.')
 
 
     def remove_recording(self, sec, loc, var='v'):
