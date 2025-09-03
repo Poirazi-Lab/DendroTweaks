@@ -66,7 +66,7 @@ class IOMixin():
         """
         List the stimuli configurations available for the model.
         """
-        return self.path_manager.list_files('stimuli', extension=extension)
+        return self.path_manager.list_folders('stimuli')
 
 
     # -----------------------------------------------------------------------
@@ -654,7 +654,7 @@ class IOMixin():
             self.set_segmentation(d_lambda=d_lambda)
 
         # IClamps -----------------------------------------------------------
-        if path_to_iclamps_csv:
+        if os.path.exists(path_to_iclamps_csv):
 
             df_iclamps = pd.read_csv(path_to_iclamps_csv)
 
@@ -669,7 +669,7 @@ class IOMixin():
 
         # Populations -------------------------------------------------------
 
-        if path_to_synapses_csv:
+        if os.path.exists(path_to_synapses_csv):
 
             df_all_syn = pd.read_csv(path_to_synapses_csv)
 
@@ -703,7 +703,7 @@ class IOMixin():
 
         # Recordings ---------------------------------------------------------
 
-        if path_to_recordings_csv:
+        if os.path.exists(path_to_recordings_csv):
 
             df_recs = pd.read_csv(path_to_recordings_csv)
 
