@@ -550,6 +550,7 @@ class IOMixin():
             rec_data['loc'].extend([seg.x for seg in recs])
 
         df = pd.DataFrame(rec_data)
+        if df.empty: return
         if path_to_csv: self._write_csv(df, path_to_csv)
         return df
 
@@ -566,6 +567,7 @@ class IOMixin():
             'dur': [iclamp.dur for iclamp in self.iclamps.values()],
         }
         df = pd.DataFrame(iclamp_data)
+        if df.empty: return
         if path_to_csv: self._write_csv(df, path_to_csv)
         return df
         
@@ -587,6 +589,7 @@ class IOMixin():
             synapses_data['loc'] += pop_data['loc']
 
         df = pd.DataFrame(synapses_data)
+        if df.empty: return
         if path_to_csv: self._write_csv(df, path_to_csv)
         return df
 

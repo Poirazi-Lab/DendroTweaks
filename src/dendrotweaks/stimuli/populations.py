@@ -268,6 +268,7 @@ class Population():
                     syn._clear_stim()
                 if syn._ref_con:
                     syn._clear_con()
+                syn._clear_syn()
         self.synapses.clear()
 
     

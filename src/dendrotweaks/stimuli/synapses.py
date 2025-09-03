@@ -58,6 +58,13 @@ class Synapse():
             return self._ref_stim[1].to_python()
         return []
 
+    def _clear_syn(self):
+        """
+        Clears the synapse (Model) object.
+        """
+        del self._ref_syn
+        self._ref_syn = None
+
     def _clear_stim(self):
         """
         Clears the stimulus (NetStim) object.
