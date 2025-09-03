@@ -520,36 +520,56 @@ class IOMixin():
             },
         }
 
-
-    def _stimuli_to_csv(self, path_to_csv=None):
+    def _write_csv(self, df, path_to_csv):
         """
-        Write the model to a CSV file.
-
-        Parameters
-        ----------
-        path_to_csv : str
-            The path to the CSV file to write.
+        Write a DataFrame to a CSV file.
         """
-        
+        if 'idx' in df.columns:
+            df['idx'] = df['idx'].astype(int)
+        if 'sec_idx' in df.columns:
+            df['sec_idx'] = df['sec_idx'].astype(int)
+        df.to_csv(path_to_csv, index=False)
+
+
+
+    def _recordings_to_csv(self, path_to_csv=None):
+        """
+        Write the recordings to a CSV file.
+        """
         rec_data = {
-            'type': [],
             'idx': [],
             'sec_idx': [],
             'loc': [],
         }
+
         for var, recs in self.simulator.recordings.items():
-            rec_data['type'].extend(['rec'] * len(recs))
             rec_data['idx'].extend([i for i in range(len(recs))])
             rec_data['sec_idx'].extend([seg._section.idx for seg in recs])
             rec_data['loc'].extend([seg.x for seg in recs])
 
+        df = pd.DataFrame(rec_data)
+        if path_to_csv: self._write_csv(df, path_to_csv)
+        return df
+
+
+    def _iclamps_to_csv(self, path_to_csv=None):
+        """
+        Write the IClamp data to a CSV file.
+        """
         iclamp_data = {
-            'type': ['iclamp'] * len(self.iclamps),
             'idx': [i for i in range(len(self.iclamps))],
             'sec_idx': [seg._section.idx for seg in self.iclamps],
             'loc': [seg.x for seg in self.iclamps],
         }
+        df = pd.DataFrame(iclamp_data)
+        if path_to_csv: self._write_csv(df, path_to_csv)
+        return df
         
+
+    def _synapses_to_csv(self, path_to_csv=None):
+        """
+        Write the synapse data to a CSV file.
+        """
         synapses_data = {
             'type': [],
             'idx': [],
@@ -565,15 +585,8 @@ class IOMixin():
                 synapses_data['sec_idx'] += pop_data['sec_idx']
                 synapses_data['loc'] += pop_data['loc']
 
-        df = pd.concat([
-            pd.DataFrame(rec_data),
-            pd.DataFrame(iclamp_data),
-            pd.DataFrame(synapses_data)
-        ], ignore_index=True)
-        df['idx'] = df['idx'].astype(int)
-        df['sec_idx'] = df['sec_idx'].astype(int)
-        if path_to_csv: df.to_csv(path_to_csv, index=False)
-
+        df = pd.DataFrame(synapses_data)
+        if path_to_csv: self._write_csv(df, path_to_csv)
         return df
 
 
@@ -588,7 +601,10 @@ class IOMixin():
         **kwargs : dict
             Additional keyword arguments to pass to `json.dump`.
         """
-        path_to_json = self.path_manager.get_abs_path(f'stimuli/{file_name}/{file_name}.json', create_dirs=True)
+        path_to_json = self.path_manager.get_abs_path(
+            f'stimuli/{file_name}/config.json', 
+            create_dirs=True
+        )
 
         data = self.stimuli_to_dict()
 
@@ -597,8 +613,13 @@ class IOMixin():
         with open(path_to_json, 'w') as f:
             json.dump(data, f, **kwargs)
 
-        path_to_stimuli_csv = self.path_manager.get_abs_path(f'stimuli/{file_name}/{file_name}.csv', create_dirs=True)
-        self._stimuli_to_csv(path_to_stimuli_csv)
+        path_to_recordings_csv = self.path_manager.get_abs_path(f'stimuli/{file_name}/recordings.csv')
+        path_to_iclamps_csv = self.path_manager.get_abs_path(f'stimuli/{file_name}/iclamps.csv')
+        path_to_synapses_csv = self.path_manager.get_abs_path(f'stimuli/{file_name}/synapses.csv')
+
+        self._recordings_to_csv(path_to_recordings_csv)
+        self._iclamps_to_csv(path_to_iclamps_csv)
+        self._synapses_to_csv(path_to_synapses_csv)
 
 
     def load_stimuli(self, file_name):
@@ -611,16 +632,13 @@ class IOMixin():
             The name of the file to read from.
         """
         
-        path_to_json = self.path_manager.get_abs_path(f'stimuli/{file_name}/{file_name}.json')
-        path_to_stimuli_csv = self.path_manager.get_abs_path(f'stimuli/{file_name}/{file_name}.csv')
+        path_to_json = self.path_manager.get_abs_path(f'stimuli/{file_name}/config.json')
+        path_to_recordings_csv = self.path_manager.get_abs_path(f'stimuli/{file_name}/recordings.csv')
+        path_to_iclamps_csv = self.path_manager.get_abs_path(f'stimuli/{file_name}/iclamps.csv')
+        path_to_synapses_csv = self.path_manager.get_abs_path(f'stimuli/{file_name}/synapses.csv')
         
         with open(path_to_json, 'r') as f:
             data = json.load(f)
-
-        if not self.name == data['metadata']['name']:
-            raise ValueError('Model name does not match the data.')
-
-        df_stimuli = pd.read_csv(path_to_stimuli_csv)
 
         self.simulator.from_dict(data['simulation'])
 
@@ -629,53 +647,61 @@ class IOMixin():
         self.remove_all_recordings()
 
         # IClamps -----------------------------------------------------------
+        if path_to_iclamps_csv:
 
-        df_iclamps = df_stimuli[df_stimuli['type'] == 'iclamp'].reset_index(drop=True, inplace=False)
+            df_iclamps = pd.read_csv(path_to_iclamps_csv)
 
-        for row in df_iclamps.itertuples(index=False):
-            self.add_iclamp(
-            self.sec_tree.sections[row.sec_idx], 
-            row.loc,
-            data['stimuli']['iclamps'][row.idx]['amp'],
-            data['stimuli']['iclamps'][row.idx]['delay'],
-            data['stimuli']['iclamps'][row.idx]['dur']
-            )
+            for row in df_iclamps.itertuples(index=False):
+                self.add_iclamp(
+                self.sec_tree.sections[row.sec_idx], 
+                row.loc,
+                data['stimuli']['iclamps'][row.idx]['amp'],
+                data['stimuli']['iclamps'][row.idx]['delay'],
+                data['stimuli']['iclamps'][row.idx]['dur']
+                )
 
         # Populations -------------------------------------------------------
 
-        syn_types = ['AMPA', 'NMDA', 'AMPA_NMDA', 'GABAa']
+        if path_to_synapses_csv:
 
-        for syn_type in syn_types:
+            df_all_syn = pd.read_csv(path_to_synapses_csv)
 
-            df_syn = df_stimuli[df_stimuli['type'] == syn_type]
-    
-            for i, pop_data in enumerate(data['stimuli']['populations'][syn_type]):
+            syn_types = ['AMPA', 'NMDA', 'AMPA_NMDA', 'GABAa']
 
-                df_pop = df_syn[df_syn['idx'] == i]
+            for syn_type in syn_types:
 
-                segments = [self.sec_tree.sections[sec_idx](loc) 
-                            for sec_idx, loc in zip(df_pop['sec_idx'], df_pop['loc'])]
-                
-                pop = Population(idx=i, 
-                                segments=segments, 
-                                N=pop_data['N'], 
-                                syn_type=syn_type)
-                
-                syn_locs = [(self.sec_tree.sections[sec_idx], loc) for sec_idx, loc in zip(df_pop['sec_idx'].tolist(), df_pop['loc'].tolist())]
-                
-                pop.allocate_synapses(syn_locs=syn_locs)
-                pop.update_kinetic_params(**pop_data['kinetic_params'])
-                pop.update_input_params(**pop_data['input_params'])
-                self._add_population(pop)
+                df_syn = df_all_syn[df_all_syn['type'] == syn_type]
+        
+                for i, pop_data in enumerate(data['stimuli']['populations'][syn_type]):
+
+                    df_pop = df_syn[df_syn['idx'] == i]
+
+                    segments = [self.sec_tree.sections[sec_idx](loc) 
+                                for sec_idx, loc in zip(df_pop['sec_idx'], df_pop['loc'])]
+                    
+                    pop = Population(idx=i, 
+                                    segments=segments, 
+                                    N=pop_data['N'], 
+                                    syn_type=syn_type)
+                    
+                    syn_locs = [(self.sec_tree.sections[sec_idx], loc) for sec_idx, loc in zip(df_pop['sec_idx'].tolist(), df_pop['loc'].tolist())]
+                    
+                    pop.allocate_synapses(syn_locs=syn_locs)
+                    pop.update_kinetic_params(**pop_data['kinetic_params'])
+                    pop.update_input_params(**pop_data['input_params'])
+                    self._add_population(pop)
 
         # Recordings ---------------------------------------------------------
 
-        df_recs = df_stimuli[df_stimuli['type'] == 'rec'].reset_index(drop=True, inplace=False)
-        for row in df_recs.itertuples(index=False):
-            var = data['stimuli']['recordings'][row.idx]['var']
-            self.add_recording(
-            self.sec_tree.sections[row.sec_idx], row.loc, var
-            )
+        if path_to_recordings_csv:
+
+            df_recs = pd.read_csv(path_to_recordings_csv)
+
+            for row in df_recs.itertuples(index=False):
+                var = data['stimuli']['recordings'][row.idx]['var']
+                self.add_recording(
+                self.sec_tree.sections[row.sec_idx], row.loc, var
+                )
 
     # ========================================================================
     # EXPORT TO PLAIN SIMULATOR CODE
