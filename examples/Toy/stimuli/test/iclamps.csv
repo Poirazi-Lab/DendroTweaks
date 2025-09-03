@@ -1,2 +1,2 @@
-idx,sec_idx,loc
-0,0,0.5
+sec_idx,loc,amp,delay,dur
+0,0.5,0.05,100.0,800.0
