@@ -447,7 +447,7 @@ def calculate_dendritic_nonlinearity(model, duration=1000, prerun_time=0, max_we
     recorded_segs = list(model.recordings['v'].keys())
     seg = recorded_segs[0]
 
-    populations = [pop for pops in model.populations.values() for pop in pops.values()]
+    populations = list(model.populations.values())
     if len(populations) != 1:
         print("Only one population is supported")
         return None

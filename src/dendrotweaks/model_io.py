@@ -514,9 +514,10 @@ class IOMixin():
                     for i, (seg, iclamp) in enumerate(self.iclamps.items())
                 ],
                 'populations': {
-                    syn_type: [pop.to_dict() for pop in pops.values()]
-                    for syn_type, pops in self.populations.items()
+                    pop_name: {'idx': i, **pop.to_dict()}
+                    for i, (pop_name, pop) in enumerate(self.populations.items())
                 }
+
             },
         }
 
@@ -571,19 +572,16 @@ class IOMixin():
         Write the synapse data to a CSV file.
         """
         synapses_data = {
-            'type': [],
             'idx': [],
             'sec_idx': [],
             'loc': [],
         }
 
-        for syn_type, pops in self.populations.items():
-            for pop_name, pop in pops.items():
-                pop_data = pop.to_csv()
-                synapses_data['type'] += pop_data['syn_type']
-                synapses_data['idx'] += [int(name.rsplit('_', 1)[1]) for name in pop_data['name']]
-                synapses_data['sec_idx'] += pop_data['sec_idx']
-                synapses_data['loc'] += pop_data['loc']
+        for i, (pop_name, pop) in enumerate(self.populations.items()):
+            pop_data = pop.to_csv()
+            synapses_data['idx'] += [i] * len(pop_data['name'])
+            synapses_data['sec_idx'] += pop_data['sec_idx']
+            synapses_data['loc'] += pop_data['loc']
 
         df = pd.DataFrame(synapses_data)
         if path_to_csv: self._write_csv(df, path_to_csv)
@@ -666,30 +664,33 @@ class IOMixin():
 
             df_all_syn = pd.read_csv(path_to_synapses_csv)
 
-            syn_types = ['AMPA', 'NMDA', 'AMPA_NMDA', 'GABAa']
+            for pop_name, pop_data in data['stimuli']['populations'].items():
 
-            for syn_type in syn_types:
+                df_pop = df_all_syn[df_all_syn['idx'] == pop_data['idx']]
 
-                df_syn = df_all_syn[df_all_syn['type'] == syn_type]
-        
-                for i, pop_data in enumerate(data['stimuli']['populations'][syn_type]):
-
-                    df_pop = df_syn[df_syn['idx'] == i]
-
-                    segments = [self.sec_tree.sections[sec_idx](loc) 
-                                for sec_idx, loc in zip(df_pop['sec_idx'], df_pop['loc'])]
-                    
-                    pop = Population(idx=i, 
-                                    segments=segments, 
-                                    N=pop_data['N'], 
-                                    syn_type=syn_type)
-                    
-                    syn_locs = [(self.sec_tree.sections[sec_idx], loc) for sec_idx, loc in zip(df_pop['sec_idx'].tolist(), df_pop['loc'].tolist())]
-                    
-                    pop.allocate_synapses(syn_locs=syn_locs)
-                    pop.update_kinetic_params(**pop_data['kinetic_params'])
-                    pop.update_input_params(**pop_data['input_params'])
-                    self._add_population(pop)
+                segments = [self.sec_tree.sections[sec_idx](loc) 
+                            for sec_idx, loc in zip(df_pop['sec_idx'], df_pop['loc'])]
+                
+                pop = Population(name=pop_name, 
+                                segments=segments, 
+                                N=pop_data['N'], 
+                                syn_type=pop_data['syn_type'])
+                
+                syn_locs = [
+                    (
+                        self.sec_tree.sections[sec_idx], 
+                        loc
+                    ) 
+                    for sec_idx, loc in zip(
+                        df_pop['sec_idx'].tolist(), 
+                        df_pop['loc'].tolist()
+                    )
+                ]
+                
+                pop.allocate_synapses(syn_locs=syn_locs)
+                pop.update_kinetic_params(**pop_data['kinetic_params'])
+                pop.update_input_params(**pop_data['input_params'])
+                self._add_population(pop)
 
         # Recordings ---------------------------------------------------------
 

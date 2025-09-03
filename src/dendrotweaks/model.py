@@ -17,7 +17,7 @@ from dendrotweaks.biophys.groups import SegmentGroup
 from dendrotweaks.biophys.distributions import Distribution
 from dendrotweaks.path_manager import PathManager
 import dendrotweaks.morphology.reduce as rdc
-from dendrotweaks.utils import INDEPENDENT_PARAMS, DOMAIN_TO_GROUP, POPULATIONS
+from dendrotweaks.utils import INDEPENDENT_PARAMS, DOMAIN_TO_GROUP
 from dendrotweaks.utils import DEFAULT_FIT_MODELS
 
 # Mixins
@@ -128,7 +128,7 @@ class Model(IOMixin, SimulationMixin):
 
         # Stimuli
         self.iclamps = {}
-        self.populations = POPULATIONS
+        self.populations = {}
 
         # Simulator
         if simulator_name == 'NEURON':

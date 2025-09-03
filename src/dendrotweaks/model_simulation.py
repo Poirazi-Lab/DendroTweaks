@@ -154,15 +154,17 @@ class SimulationMixin:
     # -----------------------------------------------------------------------
 
     def _add_population(self, population):
-        self.populations[population.syn_type][population.name] = population
+        self.populations[population.name] = population
 
 
-    def add_population(self, segments, N, syn_type):
+    def add_population(self, name, segments, N, syn_type):
         """
         Add a population of synapses to the model.
 
         Parameters
         ----------
+        name : str
+            The name of the population.
         segments : list[Segment]
             The segments to add the synapses to.
         N : int
@@ -170,8 +172,7 @@ class SimulationMixin:
         syn_type : str
             The type of synapse to add.
         """
-        idx = len(self.populations[syn_type])
-        population = Population(idx, segments, N, syn_type)
+        population = Population(name, segments, N, syn_type)
         population.allocate_synapses()
         population.create_inputs()
         self._add_population(population)
@@ -188,8 +189,7 @@ class SimulationMixin:
         params : dict
             The parameters to update.
         """
-        syn_type, idx = pop_name.rsplit('_', 1)
-        population = self.populations[syn_type][pop_name]
+        population = self.populations[pop_name]
         population.update_kinetic_params(**params)
         print(population.kinetic_params)
 
@@ -205,8 +205,7 @@ class SimulationMixin:
         params : dict
             The parameters to update.
         """
-        syn_type, idx = pop_name.rsplit('_', 1)
-        population = self.populations[syn_type][pop_name]
+        population = self.populations[pop_name]
         population.update_input_params(**params)
         print(population.input_params)
 
@@ -220,8 +219,7 @@ class SimulationMixin:
         name : str
             The name of the population
         """
-        syn_type, idx = name.rsplit('_', 1)
-        population = self.populations[syn_type].pop(name)
+        population = self.populations.pop(name)
         population.clean()
         
 
@@ -229,12 +227,11 @@ class SimulationMixin:
         """
         Remove all populations of synapses from the model.
         """
-        for syn_type in self.populations:
-            for name in list(self.populations[syn_type].keys()):
-                self.remove_population(name)
+        for name in list(self.populations.keys()):
+            self.remove_population(name)
         if any(self.populations.values()):
             warnings.warn(f'Not all populations were removed: {self.populations}')
-        self.populations = POPULATIONS
+        self.populations = {}
 
 
     def remove_all_stimuli(self):

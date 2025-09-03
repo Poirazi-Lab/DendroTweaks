@@ -53,8 +53,8 @@ class Population():
 
     Parameters
     ----------
-    idx : str
-        The index of the population.
+    name : str
+        The name of the population.
     segments : List[Segment]
         The segments on which the synapses are placed.
     N : int
@@ -64,8 +64,8 @@ class Population():
 
     Attributes
     ----------
-    idx : str
-        The index of the population.
+    name : str
+        The name of the population.
     segments : List[Segment]
         The segments on which the synapses are placed.
     N : int
@@ -80,9 +80,9 @@ class Population():
         The kinetic parameters of the synapses in the population.
     """
 
-    def __init__(self, idx: str, segments: List[Segment], N: int, syn_type: str) -> None:
+    def __init__(self, name: str, segments: List[Segment], N: int, syn_type: str) -> None:
 
-        self.idx = idx
+        self.name = name
         self.segments = segments
         self.sections = list(set([seg._section for seg in segments]))
         self._excluded_segments = [seg for sec in self.sections for seg in sec if seg not in segments]
@@ -106,11 +106,6 @@ class Population():
     def __repr__(self):
         return f"<Population({self.name}, N={self.N})>"
     
-    @property
-    def name(self):
-        """A unique name for the population."""
-        return f"{self.syn_type}_{self.idx}"
-
 
     @property
     def spike_times(self):
@@ -242,9 +237,12 @@ class Population():
     @property
     def flat_synapses(self):
         """
-        Return a flat list of synapses.
+        Return a flat, sorted list of synapses by (sec.idx, loc).
         """
-        return [syn for syns in self.synapses.values() for syn in syns]
+        return sorted(
+            [syn for syns in self.synapses.values() for syn in syns],
+            key=lambda syn: (syn.sec.idx, syn.loc)
+        )
 
     def to_csv(self):
         """
@@ -252,7 +250,6 @@ class Population():
         """
         flat_synapses = self.flat_synapses
         return {
-            'syn_type': [self.syn_type] * len(flat_synapses),
             'name': [self.name] * len(flat_synapses),
             'sec_idx': [syn.sec.idx for syn in flat_synapses],
             'loc': [round(syn.loc, 8) for syn in flat_synapses],
