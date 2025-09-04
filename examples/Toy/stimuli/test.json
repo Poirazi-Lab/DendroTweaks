@@ -31,10 +31,10 @@
                     "syn_type": "AMPA",
                     "N": 5,
                     "input_params": {
-                        "rate": 30,
+                        "rate": 15,
                         "noise": 1,
                         "start": 100,
-                        "end": 800,
+                        "end": 900,
                         "weight": 1,
                         "delay": 0
                     },
@@ -48,7 +48,27 @@
             ],
             "NMDA": [],
             "AMPA_NMDA": [],
-            "GABAa": []
+            "GABAa": [
+                {
+                    "name": "GABAa_0",
+                    "syn_type": "GABAa",
+                    "N": 7,
+                    "input_params": {
+                        "rate": 30,
+                        "noise": 1,
+                        "start": 100,
+                        "end": 900,
+                        "weight": 1,
+                        "delay": 0
+                    },
+                    "kinetic_params": {
+                        "gmax": 0.001,
+                        "tau_rise": 0.1,
+                        "tau_decay": 8,
+                        "e": -70
+                    }
+                }
+            ]
         }
     }
 }

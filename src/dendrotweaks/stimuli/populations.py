@@ -99,7 +99,7 @@ class Population():
             'end': 200,
             'weight': 1,
             'delay': 0,
-            'seed': 42
+            'seed': None
         }
 
         self.kinetic_params = KINETIC_PARAMS[syn_type]
@@ -201,12 +201,30 @@ class Population():
 
     # CREATION METHODS
 
+    def _generate_synapse_seeds(self):
+        """
+        Generate unique seeds for each synapse in the population.
+        """
+        pop_seed = self.input_params['seed']
+
+        if pop_seed is not None:
+            ss = np.random.SeedSequence(pop_seed)
+            child_seeds = ss.spawn(self.N)
+            seed_iter = iter(int(seed.generate_state(1)[0]) for seed in child_seeds)
+        else:
+            seed_iter = iter([None] * self.N)
+
+        return seed_iter
+
+
     def create_inputs(self):
         """
         Create and reference the synapses in a simulator.
         
         This method should be called after the synapses have been allocated.
         """
+        seed_iter = self._generate_synapse_seeds()
+
         for syns in self.synapses.values():
             for syn in syns:
 
@@ -215,7 +233,7 @@ class Population():
                     noise=self.input_params['noise'],
                     duration=self.input_params['end'] - self.input_params['start'],
                     delay=self.input_params['start'],
-                    seed=self.input_params['seed']
+                    seed=next(seed_iter)
                 )
 
                 syn.create_con(

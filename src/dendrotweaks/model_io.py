@@ -565,12 +565,12 @@ class IOMixin():
         synapses_data = {
             'sec_idx': [],
             'loc': [],
-            'idx': [],
+            'pop_idx': [],
         }
 
         for i, (pop_name, pop) in enumerate(self.populations.items()):
             pop_data = pop.to_csv()
-            synapses_data['idx'] += [i] * len(pop_data['name'])
+            synapses_data['pop_idx'] += [i] * len(pop_data['name'])
             synapses_data['sec_idx'] += pop_data['sec_idx']
             synapses_data['loc'] += pop_data['loc']
 
@@ -654,7 +654,7 @@ class IOMixin():
 
         for pop_name, pop_data in data['stimuli']['populations'].items():
 
-            df_pop = df_all_syn[df_all_syn['idx'] == pop_data['idx']]
+            df_pop = df_all_syn[df_all_syn['pop_idx'] == pop_data['idx']]
 
             segments = [self.sec_tree.sections[sec_idx](loc) 
                         for sec_idx, loc in zip(df_pop['sec_idx'], df_pop['loc'])]
