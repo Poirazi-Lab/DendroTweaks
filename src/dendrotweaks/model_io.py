@@ -475,6 +475,10 @@ class IOMixin():
     # STIMULI I/O
     # ========================================================================
 
+    # -----------------------------------------------------------------------
+    # EXPORT
+    # -----------------------------------------------------------------------
+
     def stimuli_to_dict(self):
         """
         Convert the stimuli to a dictionary representation.
@@ -497,30 +501,13 @@ class IOMixin():
                 **self.simulator.to_dict(),
             },
             'stimuli': {
-                # 'recordings': [
-                #     {
-                #         'name': f'rec_{i}',
-                #         'var': var
-                #     } 
-                #     for var, recs in self.simulator.recordings.items()
-                #     for i, _ in enumerate(recs)
-                # ],
-                # 'iclamps': [
-                #     {
-                #         'name': f'iclamp_{i}',
-                #         'amp': iclamp.amp,
-                #         'delay': iclamp.delay,
-                #         'dur': iclamp.dur
-                #     }
-                #     for i, (seg, iclamp) in enumerate(self.iclamps.items())
-                # ],
                 'populations': {
                     pop_name: {'idx': i, **pop.to_dict()}
                     for i, (pop_name, pop) in enumerate(self.populations.items())
                 }
-
             },
         }
+
 
     def _write_csv(self, df, path_to_csv):
         """
@@ -533,15 +520,14 @@ class IOMixin():
         df.to_csv(path_to_csv, index=False)
 
 
-
     def _recordings_to_csv(self, path_to_csv=None):
         """
         Write the recordings to a CSV file.
         """
         rec_data = {
-            'var': [],
             'sec_idx': [],
-            'loc': []
+            'loc': [],
+            'var': [],
         }
 
         for var, recs in self.simulator.recordings.items():
@@ -577,9 +563,9 @@ class IOMixin():
         Write the synapse data to a CSV file.
         """
         synapses_data = {
-            'idx': [],
             'sec_idx': [],
             'loc': [],
+            'idx': [],
         }
 
         for i, (pop_name, pop) in enumerate(self.populations.items()):
@@ -626,7 +612,110 @@ class IOMixin():
         self._synapses_to_csv(path_to_synapses_csv)
 
 
+    # -----------------------------------------------------------------------
+    # IMPORT
+    # -----------------------------------------------------------------------
+
+    def _load_recordings(self, path_to_recordings_csv):
+        """
+        Load recordings from a CSV file.
+        """
+        df_recs = pd.read_csv(path_to_recordings_csv)
+
+        for row in df_recs.itertuples(index=False):
+            self.add_recording(
+                self.sec_tree.sections[row.sec_idx], 
+                row.loc, 
+                var=row.var
+            )
+
+
+    def _load_iclamps(self, path_to_csv):
+        """
+        Load IClamps from a CSV file.
+        """
+        df_iclamps = pd.read_csv(path_to_csv)
+
+        for row in df_iclamps.itertuples(index=False):
+            self.add_iclamp(
+                self.sec_tree.sections[row.sec_idx], 
+                row.loc,
+                row.amp,
+                row.delay,
+                row.dur
+            )
+    
+
+    def _load_populations(self, path_to_csv, data):
+        """
+        Load populations from a CSV and JSON file.
+        """
+        df_all_syn = pd.read_csv(path_to_csv)
+
+        for pop_name, pop_data in data['stimuli']['populations'].items():
+
+            df_pop = df_all_syn[df_all_syn['idx'] == pop_data['idx']]
+
+            segments = [self.sec_tree.sections[sec_idx](loc) 
+                        for sec_idx, loc in zip(df_pop['sec_idx'], df_pop['loc'])]
+            
+            pop = Population(name=pop_name, 
+                            segments=segments, 
+                            N=pop_data['N'], 
+                            syn_type=pop_data['syn_type'])
+            
+            syn_locs = [
+                (
+                    self.sec_tree.sections[sec_idx], 
+                    loc
+                ) 
+                for sec_idx, loc in zip(
+                    df_pop['sec_idx'].tolist(), 
+                    df_pop['loc'].tolist()
+                )
+            ]
+            
+            pop.allocate_synapses(syn_locs=syn_locs)
+            pop.update_kinetic_params(**pop_data['kinetic_params'])
+            pop.update_input_params(**pop_data['input_params'])
+            self._add_population(pop)
+
+
     def load_stimuli(self, file_name):
+        """
+        Load the stimuli from a JSON file.
+
+        Parameters
+        ----------
+        file_name : str
+            The name of the file to read from.
+        """
+        try:
+            self._load_stimuli(file_name)
+        except FileNotFoundError as e:
+            warnings.warn(
+                f"Stimuli configuration for '{file_name}' not found in the current format.\nAttempting to load using the legacy v0.4.6 format. "
+                "\n(Note: Support for the legacy stimuli format is deprecated and will be removed in future releases.)"
+            )
+            self._load_legacy_stimuli(file_name)
+        except Exception as e:
+            raise RuntimeError(f"An error occurred while loading stimuli '{file_name}': {e}")
+
+
+    def _clear_and_setup_simulation(self, data):
+        """Common setup for both formats."""
+        self.simulator.from_dict(data['simulation'])
+        self.remove_all_stimuli()
+        self.remove_all_recordings()
+        
+        # TODO: Check for cases when nseg is changed manually
+        d_lambda = data['simulation'].get('d_lambda')
+        if d_lambda is not None and self.d_lambda != d_lambda:
+            self.d_lambda = d_lambda
+            self.set_segmentation(d_lambda=d_lambda)
+
+
+    def _load_stimuli(self, file_name):
         """
         Load the stimuli from a JSON file.
 
@@ -644,60 +733,79 @@ class IOMixin():
         with open(path_to_json, 'r') as f:
             data = json.load(f)
 
+        self._clear_and_setup_simulation(data)
+
+        if os.path.exists(path_to_iclamps_csv):
+            self._load_iclamps(path_to_iclamps_csv)
+      
+        if os.path.exists(path_to_synapses_csv):
+            self._load_populations(path_to_synapses_csv, data)
+
+        if os.path.exists(path_to_recordings_csv):
+            self._load_recordings(path_to_recordings_csv)
+
+    # -----------------------------------------------------------------------
+    # LEGACY IMPORT
+    # -----------------------------------------------------------------------
+
+    def _load_legacy_stimuli(self, file_name):
+        """
+        Load the stimuli from a legacy JSON and CSV file format.
+
+        Parameters
+        ----------
+        file_name : str
+            The name of the file to read from.
+        """
+        
+        path_to_json = self.path_manager.get_abs_path(f'stimuli/{file_name}.json')
+        path_to_stimuli_csv = self.path_manager.get_abs_path(f'stimuli/{file_name}.csv')
+
+        with open(path_to_json, 'r') as f:
+            data = json.load(f)
+
+        df_stimuli = pd.read_csv(path_to_stimuli_csv)
+
         self.simulator.from_dict(data['simulation'])
 
         # Clear all stimuli and recordings
         self.remove_all_stimuli()
         self.remove_all_recordings()
 
-        # TODO: Check for cases when nseg is changed manually
-        d_lambda = data['simulation'].get('d_lambda', 0.1)
-        if self.d_lambda != d_lambda:
-            self.d_lambda = d_lambda
-            self.set_segmentation(d_lambda=d_lambda)
-
         # IClamps -----------------------------------------------------------
-        if os.path.exists(path_to_iclamps_csv):
 
-            df_iclamps = pd.read_csv(path_to_iclamps_csv)
+        df_iclamps = df_stimuli[df_stimuli['type'] == 'iclamp'].reset_index(drop=True, inplace=False)
 
-            for row in df_iclamps.itertuples(index=False):
-                self.add_iclamp(
-                self.sec_tree.sections[row.sec_idx], 
-                row.loc,
-                row.amp,
-                row.delay,
-                row.dur
-                )
+        for row in df_iclamps.itertuples(index=False):
+            self.add_iclamp(
+            self.sec_tree.sections[row.sec_idx], 
+            row.loc,
+            data['stimuli']['iclamps'][row.idx]['amp'],
+            data['stimuli']['iclamps'][row.idx]['delay'],
+            data['stimuli']['iclamps'][row.idx]['dur']
+            )
 
         # Populations -------------------------------------------------------
 
-        if os.path.exists(path_to_synapses_csv):
+        syn_types = ['AMPA', 'NMDA', 'AMPA_NMDA', 'GABAa']
 
-            df_all_syn = pd.read_csv(path_to_synapses_csv)
+        for syn_type in syn_types:
 
-            for pop_name, pop_data in data['stimuli']['populations'].items():
+            df_syn = df_stimuli[df_stimuli['type'] == syn_type]
+    
+            for i, pop_data in enumerate(data['stimuli']['populations'][syn_type]):
 
-                df_pop = df_all_syn[df_all_syn['idx'] == pop_data['idx']]
+                df_pop = df_syn[df_syn['idx'] == i]
 
                 segments = [self.sec_tree.sections[sec_idx](loc) 
                             for sec_idx, loc in zip(df_pop['sec_idx'], df_pop['loc'])]
                 
-                pop = Population(name=pop_name, 
-                                segments=segments, 
+                pop = Population(name=f"{syn_type}_{i}",
+                                segments=segments,
                                 N=pop_data['N'], 
-                                syn_type=pop_data['syn_type'])
+                                syn_type=syn_type)
                 
-                syn_locs = [
-                    (
-                        self.sec_tree.sections[sec_idx], 
-                        loc
-                    ) 
-                    for sec_idx, loc in zip(
-                        df_pop['sec_idx'].tolist(), 
-                        df_pop['loc'].tolist()
-                    )
-                ]
+                syn_locs = [(self.sec_tree.sections[sec_idx], loc) for sec_idx, loc in zip(df_pop['sec_idx'].tolist(), df_pop['loc'].tolist())]
                 
                 pop.allocate_synapses(syn_locs=syn_locs)
                 pop.update_kinetic_params(**pop_data['kinetic_params'])
@@ -706,16 +814,13 @@ class IOMixin():
 
         # Recordings ---------------------------------------------------------
 
-        if os.path.exists(path_to_recordings_csv):
+        df_recs = df_stimuli[df_stimuli['type'] == 'rec'].reset_index(drop=True, inplace=False)
+        for row in df_recs.itertuples(index=False):
+            var = data['stimuli']['recordings'][row.idx]['var']
+            self.add_recording(
+            self.sec_tree.sections[row.sec_idx], row.loc, var
+            )
 
-            df_recs = pd.read_csv(path_to_recordings_csv)
-
-            for row in df_recs.itertuples(index=False):
-                self.add_recording(
-                    self.sec_tree.sections[row.sec_idx], 
-                    row.loc, 
-                    var=row.var
-                )
 
     # ========================================================================
     # EXPORT TO PLAIN SIMULATOR CODE

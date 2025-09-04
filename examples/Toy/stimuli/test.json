@@ -1,0 +1,54 @@
+{
+    "metadata": {
+        "name": "Toy",
+        "comment": "Legacy test stimuli"
+    },
+    "simulation": {
+        "temperature": 37.0,
+        "v_init": -70.0,
+        "dt": 0.1,
+        "duration": 1000
+    },
+    "stimuli": {
+        "recordings": [
+            {
+                "name": "rec_0",
+                "var": "v"
+            }
+        ],
+        "iclamps": [
+            {
+                "name": "iclamp_0",
+                "amp": 0.05,
+                "delay": 100.0,
+                "dur": 800.0
+            }
+        ],
+        "populations": {
+            "AMPA": [
+                {
+                    "name": "AMPA_0",
+                    "syn_type": "AMPA",
+                    "N": 5,
+                    "input_params": {
+                        "rate": 30,
+                        "noise": 1,
+                        "start": 100,
+                        "end": 800,
+                        "weight": 1,
+                        "delay": 0
+                    },
+                    "kinetic_params": {
+                        "gmax": 0.001,
+                        "tau_rise": 0.1,
+                        "tau_decay": 2.5,
+                        "e": 0
+                    }
+                }
+            ],
+            "NMDA": [],
+            "AMPA_NMDA": [],
+            "GABAa": []
+        }
+    }
+}
