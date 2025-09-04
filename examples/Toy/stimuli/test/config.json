@@ -26,7 +26,8 @@
                     "start": 100,
                     "end": 900,
                     "weight": 1,
-                    "delay": 0
+                    "delay": 0,
+                    "seed": 42
                 },
                 "kinetic_params": {
                     "gmax": 0.001,
@@ -46,7 +47,8 @@
                     "start": 100,
                     "end": 900,
                     "weight": 1,
-                    "delay": 0
+                    "delay": 0,
+                    "seed": 42
                 },
                 "kinetic_params": {
                     "gmax": 0.001,

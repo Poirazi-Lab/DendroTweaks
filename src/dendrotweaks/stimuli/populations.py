@@ -98,7 +98,8 @@ class Population():
             'start': 100,
             'end': 200,
             'weight': 1,
-            'delay': 0
+            'delay': 0,
+            'seed': 42
         }
 
         self.kinetic_params = KINETIC_PARAMS[syn_type]
@@ -213,7 +214,8 @@ class Population():
                     rate=self.input_params['rate'],
                     noise=self.input_params['noise'],
                     duration=self.input_params['end'] - self.input_params['start'],
-                    delay=self.input_params['start']
+                    delay=self.input_params['start'],
+                    seed=self.input_params['seed']
                 )
 
                 syn.create_con(

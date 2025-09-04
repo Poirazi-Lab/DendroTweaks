@@ -121,7 +121,7 @@ class Synapse():
                                  weight)
 
 
-def create_spike_times(rate=1, noise=1, duration=300, delay=0):
+def create_spike_times(rate=1, noise=1, duration=300, delay=0, seed=None):
     """
     Create a spike train with a given regularity.
 
@@ -144,12 +144,12 @@ def create_spike_times(rate=1, noise=1, duration=300, delay=0):
     """
 
     if noise == 1:
-        return delay + generate_poisson_process(rate, duration)
+        return delay + generate_poisson_process(rate, duration, seed)
     else:
-        return delay + generate_jittered_spikes(rate, duration, noise)
+        return delay + generate_jittered_spikes(rate, duration, noise, seed)
 
 
-def generate_poisson_process(lam, dur):
+def generate_poisson_process(lam, dur, seed=None):
     """
     Generate a Poisson process.
 
@@ -165,8 +165,10 @@ def generate_poisson_process(lam, dur):
     np.array
         The spike times as a vector, in ms.    
     """
+    rng = np.random.default_rng(seed)
+
     dur_s = dur / 1000
-    intervals = np.random.exponential(1/lam, int(lam*dur_s))
+    intervals = rng.exponential(1/lam, int(lam*dur_s))
     spike_times = np.cumsum(intervals)
     spike_times = spike_times[spike_times <= dur_s]
     spike_times_ms = spike_times * 1000
@@ -174,7 +176,7 @@ def generate_poisson_process(lam, dur):
     return spike_times_ms
 
 
-def generate_jittered_spikes(rate, dur, noise):
+def generate_jittered_spikes(rate, dur, noise, seed=None):
     """
     Generate a jittered spike train.
 
@@ -198,7 +200,8 @@ def generate_jittered_spikes(rate, dur, noise):
     spike_times = np.arange(0, dur_s, 1/rate)
 
     # Add noise
-    noise_values = np.random.normal(0, noise/rate, len(spike_times))
+    rng = np.random.default_rng(seed)
+    noise_values = rng.normal(0, noise/rate, len(spike_times))
     spike_times += noise_values
 
     # Ensure spike times are within the duration and sort them
