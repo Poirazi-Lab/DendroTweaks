@@ -118,39 +118,39 @@ class Cell():
         
         for sec in self.dend:
             
-            sec.insert('CaDyn')
             sec.insert('CaHVA')
-            sec.insert('CaLVA')
-            sec.insert('Ka')
-            sec.insert('KCa')
             sec.insert('Km')
-            sec.insert('Kv')
-            sec.insert('Leak')
-            sec.insert('Na')
-        
-        for sec in self.dend_80:
-            
+            sec.insert('Ka')
             sec.insert('CaDyn')
-            sec.insert('CaHVA')
-            sec.insert('CaLVA')
-            sec.insert('Ka')
-            sec.insert('KCa')
-            sec.insert('Km')
-            sec.insert('Kv')
-            sec.insert('Leak')
             sec.insert('Na')
+            sec.insert('KCa')
+            sec.insert('Leak')
+            sec.insert('CaLVA')
+            sec.insert('Kv')
         
         for sec in self.soma:
             
-            sec.insert('CaDyn')
             sec.insert('CaHVA')
-            sec.insert('CaLVA')
-            sec.insert('Ka')
-            sec.insert('KCa')
             sec.insert('Km')
-            sec.insert('Kv')
-            sec.insert('Leak')
+            sec.insert('Ka')
+            sec.insert('CaDyn')
             sec.insert('Na')
+            sec.insert('KCa')
+            sec.insert('Leak')
+            sec.insert('CaLVA')
+            sec.insert('Kv')
+        
+        for sec in self.dend_80:
+            
+            sec.insert('CaHVA')
+            sec.insert('Km')
+            sec.insert('Ka')
+            sec.insert('CaDyn')
+            sec.insert('Na')
+            sec.insert('KCa')
+            sec.insert('Leak')
+            sec.insert('CaLVA')
+            sec.insert('Kv')
         
 
     ### Parameter distribution methods ###
@@ -218,7 +218,7 @@ class Cell():
                     
                 
             if domain in ['dend_80']:
-                self.set_param(seg, "gbar_Leak", "Leak", 9.09090909091e-05)
+                self.set_param(seg, "gbar_Leak", "Leak", 9.090909090909092e-05)
                     
                 
             
@@ -236,7 +236,7 @@ class Cell():
                     
                 
             if domain in ['dend_80']:
-                self.set_param(seg, "depth_CaDyn", "CaDyn", 0.1)
+                self.set_param(seg, "depth_CaDyn", "CaDyn", 0.10000000000000003)
                     
                 
             
@@ -254,7 +254,7 @@ class Cell():
                     
                 
             if domain in ['dend_80']:
-                self.set_param(seg, "cainf_CaDyn", "CaDyn", 0.0001)
+                self.set_param(seg, "cainf_CaDyn", "CaDyn", 0.00010000000000000003)
                     
                 
             
@@ -298,7 +298,7 @@ class Cell():
                     
                 
             if domain in ['dend_80']:
-                self.set_param(seg, "gbar_CaHVA", "CaHVA", polyval([-8.262931836258014e-21, 1.971950757914398e-17, -1.824859569173951e-14, 8.193065596345116e-12, -1.7943109010846506e-09, 1.5712558195257194e-07, 7.300593303687083e-07], distance))
+                self.set_param(seg, "gbar_CaHVA", "CaHVA", polyval([1.7032189556395108e-11, -1.6954734210882405e-08, 5.594679565797893e-06], distance))
                     
                 
             
@@ -324,7 +324,7 @@ class Cell():
                     
                 
             if domain in ['dend_80']:
-                self.set_param(seg, "gbar_CaLVA", "CaLVA", polyval([1.8458350192370913e-23, -9.896693345804685e-20, 1.7136787278509579e-16, -1.3872021051490662e-13, 5.789953572630973e-11, -1.2142225926585131e-08, 1.0432195767833978e-06, 2.007592121337978e-06], distance))
+                self.set_param(seg, "gbar_CaLVA", "CaLVA", step(distance, **{'max_value': 1.0665014791956131e-05, 'min_value': 2.2260606391136923e-05, 'start': 127.41514951428192, 'end': 722.0191805809309}))
                     
                 
             
@@ -341,7 +341,7 @@ class Cell():
                     
                 
             if domain in ['dend_80']:
-                self.set_param(seg, "gbar_KCa", "KCa", 0.00021)
+                self.set_param(seg, "gbar_KCa", "KCa", 0.0002100000000000001)
                     
                 
             
@@ -375,7 +375,7 @@ class Cell():
                     
                 
             if domain in ['dend_80']:
-                self.set_param(seg, "gbar_Ka", "Ka", polyval([-2.4636374092169176e-21, 7.854876990208138e-18, -1.0439132429239066e-14, 7.4782274127363e-12, -3.113731467589767e-09, 7.557217031738589e-07, -0.00010134573599726263, 0.006671812749754805, -0.07369134521544159], distance))
+                self.set_param(seg, "gbar_Ka", "Ka", polyval([-1.506424241964441e-17, 2.9420148862904975e-14, -1.9401604372182844e-11, 4.3884415415457785e-09, -2.2910866230864434e-08, 3.919078433180825e-05, 0.07384108596642196], distance))
                     
                 
             
@@ -392,7 +392,7 @@ class Cell():
                     
                 
             if domain in ['dend_80']:
-                self.set_param(seg, "gbar_Km", "Km", 0.000127)
+                self.set_param(seg, "gbar_Km", "Km", 0.00012700000000000008)
                     
                 
             
@@ -427,7 +427,7 @@ class Cell():
                     
                 
             if domain in ['dend_80']:
-                self.set_param(seg, "gbar_Kv", "Kv", 0.00015)
+                self.set_param(seg, "gbar_Kv", "Kv", 0.00015000000000000007)
                     
                 
             
@@ -462,7 +462,7 @@ class Cell():
                     
                 
             if domain in ['dend_80']:
-                self.set_param(seg, "gbar_Na", "Na", 0.0303)
+                self.set_param(seg, "gbar_Na", "Na", 0.030300000000000007)
                     
                 
             
@@ -471,7 +471,7 @@ class Cell():
                     
                 
             if domain in ['dend_80']:
-                self.set_param(seg, "Rma_Na", "Na", 0.182)
+                self.set_param(seg, "Rma_Na", "Na", 0.18200000000000008)
                     
                 
             
@@ -480,7 +480,7 @@ class Cell():
                     
                 
             if domain in ['dend_80']:
-                self.set_param(seg, "Rmb_Na", "Na", 0.1400000000000001)
+                self.set_param(seg, "Rmb_Na", "Na", 0.14000000000000007)
                     
                 
             
@@ -507,7 +507,7 @@ class Cell():
                     
                 
             if domain in ['dend_80']:
-                self.set_param(seg, "Rhb_Na", "Na", 0.0091)
+                self.set_param(seg, "Rhb_Na", "Na", 0.009100000000000004)
                     
                 
             
@@ -516,7 +516,7 @@ class Cell():
                     
                 
             if domain in ['dend_80']:
-                self.set_param(seg, "Rha_Na", "Na", 0.024)
+                self.set_param(seg, "Rha_Na", "Na", 0.024000000000000007)
                     
                 
             
@@ -587,14 +587,6 @@ class Cell():
         
         rec = h.Vector()
         rec.record(self.soma[0](0.5)._ref_v)
-        recordings.append(rec)
-        
-        rec = h.Vector()
-        rec.record(self.soma[0](0.5)._ref_i_Kv)
-        recordings.append(rec)
-        
-        rec = h.Vector()
-        rec.record(self.soma[0](0.5)._ref_i_Na)
         recordings.append(rec)
         return recordings
 
