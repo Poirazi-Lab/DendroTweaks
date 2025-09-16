@@ -124,10 +124,6 @@ class PathManager:
         ----------
         relative_path : str
             Path relative to one of the registered roots.
-            Examples:
-                "stimuli/depolarizing_current/protocol.json"
-                "morphology/cell.swc"
-                "stimuli/depolarizing_current" (for a folder)
         create_dirs : bool, default False
             If True, create the parent directories if they don't exist.
 
@@ -135,6 +131,12 @@ class PathManager:
         -------
         str
             Absolute path in OS-native format.
+
+        Examples
+        --------
+        >>> pm = PathManager('/path/to/model')
+        >>> pm.get_abs_path('stimuli/depolarizing/protocol.json')
+        '/path/to/model/stimuli/depolarizing/protocol.json'
         """
         base_root, remainder = self._resolve_root(relative_path)
         abs_path = os.path.join(base_root, remainder)
@@ -152,15 +154,17 @@ class PathManager:
         ----------
         relative_path : str
             Path relative to one of the registered roots.
-            Examples:
-                "stimuli"
-                "morphology"
-                "stimuli/depolarizing_current"
 
         Returns
         -------
         List[str]
             A list of folder names.
+
+        Examples
+        --------
+        >>> pm = PathManager('/path/to/model')
+        >>> pm.list_folders('stimuli')
+        ['depolarizing_current', 'hyperpolarizing_current']
         """
         abs_path = self.get_abs_path(relative_path)
 

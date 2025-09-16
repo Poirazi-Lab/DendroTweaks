@@ -287,6 +287,7 @@ The following distribution functions (along with their expected parameters) are 
 In addition to these functions, we can also use the following special values:
 
 - :code:`inherit`: Each segment in the group inherits the value of the parameter from its parent segment. 
+
 This is particularly useful for oblique dendrites, allowing them to inherit parameter values from their parent segments in the apical trunk, where the parameter may vary non-uniformly.
 
 *Inheritance from parent segments:*
