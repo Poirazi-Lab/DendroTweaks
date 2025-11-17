@@ -17,7 +17,7 @@ from dendrotweaks.biophys.groups import SegmentGroup
 from dendrotweaks.biophys.distributions import Distribution
 from dendrotweaks.path_manager import PathManager
 import dendrotweaks.morphology.reduce as rdc
-from dendrotweaks.utils import INDEPENDENT_PARAMS, DOMAIN_TO_GROUP
+from dendrotweaks.utils import DOMAINS_TO_GROUPS
 from dendrotweaks.utils import DEFAULT_FIT_MODELS
 
 # Mixins
@@ -289,8 +289,39 @@ class Model(IOMixin, SimulationMixin):
     # ========================================================================
     # DOMAINS
     # ========================================================================
+    def _add_domain(self, type_idx, name, color):
+        """
+        Adds a new empty domain to the model.
 
-    def define_domain(self, domain_name: str, sections, distribute=True):
+        Parameters
+        ----------
+        name : str
+            The name of the domain.
+        color : str
+            The color assigned to the domain.
+        type_idx : int
+            The type index of the domain.
+        """
+        # Validation
+        unique_domain_names = set(domain.name for domain in self.domains.values())
+        unique_type_ids = set(point.type_idx for point in self.point_tree.points)
+        unique_domain_colors = set(point.domain_color for point in self.point_tree.points)
+
+        if name in unique_domain_names:
+            raise ValueError(f'Domain name {name} already exists.')
+        if type_idx in unique_type_ids:
+            raise ValueError(f'Type index {type_idx} is already used by another domain.')
+        if color in unique_domain_colors:
+            raise ValueError(f'Color {color} is already used by another domain.')
+
+        domain = Domain(type_idx, name, color)
+        self._add_domain_groups(domain.name)
+        self.domains[domain.name] = domain
+        self.domains_to_mechs[domain.name] = set()
+
+
+    def define_domain(self, sections, 
+        type_idx, name, color, distribute=True):
         """
         Adds a new domain to the cell and ensures proper partitioning 
         of the section tree graph.
@@ -303,36 +334,40 @@ class Model(IOMixin, SimulationMixin):
 
         Parameters
         ----------
-        domain_name : str
-            The name of the domain to be added or extended.
         sections : list[Section] or Callable
             The sections to include in the domain. If a callable is provided, 
             it should be a filter function applied to the list of all sections 
             in the model.
+        name : str
+            The name of the domain to be added or extended.
         distribute : bool, optional
             Whether to re-distribute the parameters after defining the domain. 
             Default is True.
+        type_idx : int, optional
+            The type index to assign to the domain. Must be unique.
+        color : str, optional
+            The color to assign to the domain. Must be unique.
         """
         if isinstance(sections, Callable):
             sections = self.get_sections(sections)
 
-        if domain_name not in self.domains:
-            domain = Domain(domain_name)
-            self._add_domain_groups(domain.name)
-            self.domains[domain_name] = domain
-            self.domains_to_mechs[domain_name] = set()
-        else:
-            domain = self.domains[domain_name]
+        # Add the domain if it does not exist
+        if name not in self.domains:
+            self._add_domain(type_idx, name, color)
 
+        # Select the newly added or existed domain
+        domain = self.domains[name]
+
+        # Find sections that are not in the domain yet
         sections_to_move = [sec for sec in sections 
-            if sec.domain != domain_name]
-
+                            if sec.domain_name != name]
         if not sections_to_move:
-            warnings.warn(f'Sections already in domain {domain_name}.')
+            warnings.warn(f'Sections already in domain {name}.')
             return
 
+        # Remove sections from their old domains
         for sec in sections_to_move:
-            old_domain = self.domains[sec.domain]
+            old_domain = self.domains[sec.domain_name]
             old_domain.remove_section(sec)
             for mech_name in self.domains_to_mechs[old_domain.name]:
                 # TODO: What if section is already in domain? Can't be as
@@ -340,7 +375,6 @@ class Model(IOMixin, SimulationMixin):
                 mech = self.mechanisms[mech_name]
                 sec.uninsert_mechanism(mech)
             
-
         # Add sections to the new domain
         for sec in sections_to_move:
             domain.add_section(sec)
@@ -353,6 +387,7 @@ class Model(IOMixin, SimulationMixin):
                 sec.insert_mechanism(mech)
 
         self._remove_empty()
+        self.sec_tree.sort(sort_children=True, force=True)
 
         if distribute:
             self.distribute_all()
@@ -366,7 +401,7 @@ class Model(IOMixin, SimulationMixin):
         if self.groups.get('all'):
             self.groups['all'].domains.append(domain_name)
         # Create a new group for the domain
-        group_name = DOMAIN_TO_GROUP.get(domain_name, domain_name)
+        group_name = DOMAINS_TO_GROUPS.get(domain_name, domain_name)
         self.add_group(group_name, domains=[domain_name])
     
 
@@ -829,7 +864,6 @@ class Model(IOMixin, SimulationMixin):
         show_nan : bool, optional
             Whether to show NaN values. Default is True.            
         """
-        from dendrotweaks.utils import get_domain_color
 
         if ax is None:
             fig, ax = plt.subplots(figsize=(10, 2))
@@ -838,7 +872,7 @@ class Model(IOMixin, SimulationMixin):
             warnings.warn(f'Parameter {param_name} not found.')
 
         values = [(seg.path_distance(), seg.get_param_value(param_name)) for seg in self.seg_tree]
-        colors = [get_domain_color(seg.domain) for seg in self.seg_tree]
+        colors = [seg.domain_color for seg in self.seg_tree]
 
         valid_values = [(x, y) for (x, y), color in zip(values, colors) if not pd.isna(y) and y != 0]
         zero_values = [(x, y) for (x, y), color in zip(values, colors) if y == 0]
@@ -933,7 +967,7 @@ class Model(IOMixin, SimulationMixin):
         domain_name = root.domain
         parent = root.parent
         domains_in_subtree = [self.domains[domain_name] 
-            for domain_name in set([sec.domain for sec in root.subtree])]
+            for domain_name in set([sec.domain_name for sec in root.subtree])]
         if len(domains_in_subtree) > 1:
             # ensure the domains have the same mechanisms using self.domains_to_mechs
             domains_to_mechs = {domain_name: mech_names for domain_name, mech_names
@@ -1027,9 +1061,14 @@ class Model(IOMixin, SimulationMixin):
         
         # Create new domain
         reduced_domains = [domain_name for domain_name in self.domains if domain_name.startswith('reduced')]
+        new_reduced_domain_type_idx = int(f'8{len(reduced_domains)}')
         new_reduced_domain_name = f'reduced_{len(reduced_domains)}'
         group_name = new_reduced_domain_name
-        self.define_domain(new_reduced_domain_name, sections=[root], distribute=False)
+        self.define_domain(sections=[root],
+                           type_idx=new_reduced_domain_type_idx,
+                           name=new_reduced_domain_name,
+                           color='#808080',
+                           distribute=False)
         
 
         # Reinsert active mechanisms after creating the new domain

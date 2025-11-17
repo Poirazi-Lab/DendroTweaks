@@ -58,7 +58,7 @@ class SegmentGroup:
         return None
 
     def __contains__(self, segment) -> bool:
-        if segment.domain not in self.domains:
+        if segment.domain_name not in self.domains:
             return False
         if self.select_by is None:
             return True

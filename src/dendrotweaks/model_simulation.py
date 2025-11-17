@@ -7,7 +7,6 @@ from dendrotweaks.stimuli.iclamps import IClamp
 from dendrotweaks.morphology.io import create_segment_tree
 from dendrotweaks.prerun import prerun
 from dendrotweaks.utils import calculate_lambda_f
-from dendrotweaks.utils import POPULATIONS
 
 # Warnings configuration
 import warnings

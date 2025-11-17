@@ -17,17 +17,28 @@ class Domain:
         The name of the domain.
     """
 
-    def __init__(self, name: str, sections = None) -> None:
-        self.name = name
-        self._sections = sections if sections else []
+    def __init__(self, type_idx, name, color) -> None:
+        self._name = name
+        self._type_idx = type_idx
+        self._color = color
+        self._sections = []
 
 
     def __repr__(self):
-        return f'<Domain({self.name}, {len(self.sections)} sections)>'
+        return f'<Domain({self.type_idx}, {self.name}, {self.color}, {len(self.sections)} sections)>'
 
+    def __getitem__(self, idx):
+        return self._sections[idx]
 
-    def __contains__(self, section):
-        return section in self.sections
+    def __len__(self):
+        return len(self._sections)
+
+    def __iter__(self):
+        for sec in self._sections:
+            yield sec
+
+    def __contains__(self, sec):
+        return sec in self._sections
 
 
     @property
@@ -36,6 +47,38 @@ class Domain:
         A list of sections in the domain.
         """
         return self._sections
+
+
+    @property
+    def name(self):
+        """
+        The name of the domain.
+        """
+        return self._name
+
+
+    @property
+    def type_idx(self):
+        """
+        The type index of the domain.
+        """
+        return self._type_idx
+
+    
+    @property
+    def color(self):
+        """
+        The color of the domain.
+        """
+        return self._color
+
+    
+    @color.setter
+    def color(self, value):
+        self._color = value
+        for sec in self._sections:
+            for point in sec.points:
+                point.domain_color = value
 
 
     # def merge(self, other):
@@ -63,8 +106,12 @@ class Domain:
         if sec in self._sections:
             warnings.warn(f'Section {sec} already in domain {self.name}.')
             return
-        sec.domain = self.name
-        sec.domain_idx = len(self._sections)
+        sec._domain = self
+        sec.idx_within_domain = len(self._sections)
+        for point in sec.points:
+            point.domain_name = self.name
+            point.type_idx = self.type_idx
+            point.domain_color = self.color
         self._sections.append(sec)
 
 
@@ -83,8 +130,12 @@ class Domain:
         if sec not in self.sections:
             warnings.warn(f'Section {sec} not in domain {self.name}.')
             return
-        sec.domain = None
-        sec.domain_idx = None
+        sec._domain = None
+        sec.idx_within_domain = None
+        for point in sec.points:
+            point.domain_name = None
+            point.type_idx = None
+            point.domain_color = None
         if hasattr(sec, 'path_distance_within_domain'):
             # Remove cached property if it exists
             del sec.path_distance_within_domain

@@ -15,7 +15,6 @@ from functools import cached_property
 
 import warnings
 
-from dendrotweaks.utils import get_domain_color
 
 def custom_warning_formatter(message, category, filename, lineno, file=None, line=None):
     return f"{category.__name__}: {message} ({os.path.basename(filename)}, line {lineno})\n"
@@ -47,19 +46,23 @@ class Section(Node):
         The segments to which the section is divided.
     _ref : h.Section
         The reference to the NEURON section.
+    domain : Domain
+        The domain to which the section belongs.
+    idx_within_domain : int
+        The index of the section within its domain.
     """
 
     def __init__(self, idx: str, parent_idx: str, points: List[Node]) -> None:
         super().__init__(idx, parent_idx)
-        self.domain_idx = None
         self.points = points
         self.segments = []
+        self._domain = None
+        self.idx_within_domain = None
         self._ref = None
         self._nseg = None
-        self._domain = self.points[0].domain
         self._cell = None
 
-        if not all(pt.domain == self._domain for pt in points):
+        if not all(pt.domain_name == self.domain_name for pt in points):
             raise ValueError('All points in a section must belong to the same domain.')
 
 
@@ -96,18 +99,27 @@ class Section(Node):
     # PROPERTIES
 
     @property
-    def domain(self):
+    def domain_name(self):
         """
         The morphological or functional domain of the node.
         """
-        return self._domain
+        return self.points[0].domain_name
 
 
-    @domain.setter
-    def domain(self, domain):
-        self._domain = domain
-        for pt in self.points:
-            pt.domain = domain
+    @property
+    def type_idx(self):
+        """
+        The type index of the section based on its domain.
+        """
+        return self.points[0].type_idx
+
+
+    @property
+    def domain_color(self):
+        """
+        The color of the section based on its domain.
+        """
+        return self.points[0].domain_color
 
 
     @property
@@ -311,7 +323,7 @@ class Section(Node):
             return 0
 
         while node.parent:
-            if node.domain != self.domain:
+            if node.domain_name != self.domain_name:
                 break
             distance += node.length
             node = node.parent
@@ -440,7 +452,7 @@ class Section(Node):
         
         # Determine section color based on domain if not provided
         if section_color is None:
-            section_color = get_domain_color(self.domain)
+            section_color = self.domain_color
         
         # Extract coordinates
         xs = np.array([p.x for p in self.points])
@@ -475,7 +487,7 @@ class Section(Node):
         # Add overall title if we created the figure
         if ax is not None and show_labels:
             fig = ax_xz.get_figure()
-            fig.suptitle(f"Section {self.idx} ({self.domain})", fontsize=14)
+            fig.suptitle(f"Section {self.idx} ({self.domain_name})", fontsize=14)
             fig.tight_layout()
         
         return ax
@@ -507,7 +519,7 @@ class Section(Node):
         
         # Plot section radii
         ax.plot(normalized_distances, self.radii, 'o-', color=section_color, 
-                label=f"{self.domain} ({self.idx})", linewidth=2)
+                label=f"{self.domain_name} ({self.idx})", linewidth=2)
         
         # Plot reference NEURON segments if available
         if hasattr(self, '_ref') and self._ref:
@@ -523,7 +535,7 @@ class Section(Node):
             # Plot segment radii as bars
             ax.bar(normalized_seg_centers, seg_radii, width=bar_width, 
                    alpha=0.5, color=section_color, edgecolor='white',
-                   label=f"{self.domain} segments")
+                   label=f"{self.domain_name} segments")
         
         # Plot parent section if requested
         if plot_parent and self.parent:
@@ -536,7 +548,7 @@ class Section(Node):
             # Plot parent radii
             ax.plot(normalized_parent_distances, self.parent.radii, 'o-', 
                     color=parent_color, linewidth=2,
-                    label=f"Parent {self.parent.domain} ({self.parent.idx})")
+                    label=f"Parent {self.parent.domain_name} ({self.parent.idx})")
             
             # Plot parent reference segments if available
             if hasattr(self.parent, '_ref') and self.parent._ref:
@@ -607,14 +619,14 @@ class Section(Node):
                 'dend': 'blue',
                 'apic': 'green'
             }
-            section_color = domain_colors.get(self.domain, 'purple')
+            section_color = domain_colors.get(self.domain_name, 'purple')
         
         # Plot radius distribution
         self._plot_radii_distribution(ax, include_parent, section_color, parent_color)
         
         # Add title if creating a standalone plot
         if ax.get_figure().get_axes()[0] == ax:  # If this is the only axes in the figure
-            ax.set_title(f"Radius Distribution - Section {self.idx} ({self.domain})")
+            ax.set_title(f"Radius Distribution - Section {self.idx} ({self.domain_name})")
             plt.tight_layout()
         
         return ax
@@ -778,11 +790,18 @@ class SectionTree(Tree):
         Create domains using the data from the sections (from the points in the sections).
         """
 
-        unique_domain_names = set([sec.domain for sec in self.sections])
-        self.domains = {name: Domain(name) for name in sorted(unique_domain_names)}
+        unique_domain_precursors = set([
+            (sec.type_idx, sec.domain_name, sec.domain_color)
+            for sec in self.sections
+            ])
+
+        self.domains = {
+            name: Domain(type_idx, name, color) 
+            for type_idx, name, color in sorted(unique_domain_precursors)
+            }
 
         for sec in self.sections:
-            self.domains[sec.domain].add_section(sec)
+            self.domains[sec.domain_name].add_section(sec)
 
 
     # PROPERTIES    
@@ -838,7 +857,7 @@ class SectionTree(Tree):
             points = sec.points if sec.parent is None or sec.parent.parent is None else sec.points[1:]
             for pt in points:
                 data['idx'].append(pt.idx)
-                data['domain'].append(pt.domain)
+                data['domain'].append(pt.domain_name)
                 data['x'].append(pt.x)
                 data['y'].append(pt.y)
                 data['z'].append(pt.z)
@@ -848,6 +867,26 @@ class SectionTree(Tree):
                 data['parent_section_idx'].append(sec.parent_idx)
 
         return pd.DataFrame(data)
+
+    # SORTING METHODS
+
+    def _sort_children(self):
+        """
+        Iterate through all nodes in the tree and sort their children based on
+        the number of bifurcations (nodes with more than one child) in each child's
+        subtree. Nodes with fewer bifurcations in their subtrees are placed earlier in the list
+        of the node's children, ensuring that the shortest paths are traversed first.
+
+        Returns
+        -------
+            None
+        """
+        for node in self._nodes:
+            node.children = sorted(
+                node.children, 
+                key=lambda x: (x.type_idx, sum(1 for n in x.subtree if len(n.children) > 1)),
+                reverse=False
+            )
 
 
     def sort(self, **kwargs):
@@ -1012,7 +1051,7 @@ class SectionTree(Tree):
             # Assign colors based on domains or section index
             color = plt.cm.jet(1 - sec.idx / section_count)
             if show_domains:
-                color = get_domain_color(sec.domain)
+                color = sec.domain_color
             if highlight_sections and sec in highlight_sections:
                 color = 'red'
 
@@ -1060,7 +1099,7 @@ class SectionTree(Tree):
         for sec in self.sections:
             if not show_soma and sec.parent is None:
                 continue
-            color = get_domain_color(sec.domain)
+            color = sec.domain_color
             if highlight and sec.idx in highlight:
                 ax.plot(
                     [pt.path_distance() for pt in sec.points], 
@@ -1081,41 +1120,5 @@ class SectionTree(Tree):
         ax.set_ylabel('Radius')
 
 
-    # EXPORT METHODS
-
-    def to_swc(self, path_to_file: str):
-        """
-        Save the SectionTree as an SWC file.
-
-        Parameters
-        ----------
-        path_to_file : str
-            The path to save the SWC file.
-        """
-        if not self.is_sorted or not self._point_tree.is_sorted:
-            raise ValueError('The tree must be sorted before saving.')
-
-        data = {
-            'idx': [],
-            'type_idx': [],
-            'x': [],
-            'y': [],
-            'z': [],
-            'r': [],
-            'parent_idx': []
-        }
-
-        for sec in self.sections:
-            points = sec.points if sec.parent is None or sec.parent.parent is None else sec.points[1:]
-            for pt in points:
-                data['idx'].append(pt.idx)
-                data['type_idx'].append(pt.type_idx)
-                data['x'].append(pt.x)
-                data['y'].append(pt.y)
-                data['z'].append(pt.z)
-                data['r'].append(pt.r)
-                data['parent_idx'].append(pt.parent_idx)
-
-        df = pd.DataFrame(data)
-        df.to_csv(path_to_file, sep=' ', index=False, header=False)
+    
 

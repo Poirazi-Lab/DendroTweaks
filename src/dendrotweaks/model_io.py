@@ -15,7 +15,7 @@ from dendrotweaks.biophys.distributions import Distribution
 from dendrotweaks.biophys.mechanisms import LeakChannel, CaDynamics
 from dendrotweaks.biophys.mechanisms import FallbackChannel
 from dendrotweaks.stimuli import Population
-from dendrotweaks.utils import DOMAIN_TO_GROUP, DOMAINS_TO_NEURON
+from dendrotweaks.utils import DOMAINS_TO_GROUPS, DOMAINS_TO_NEURON
 
 # Warnings configuration
 import warnings
@@ -135,7 +135,7 @@ class IOMixin():
     def _add_default_segment_groups(self):
         self.add_group('all', list(self.domains.keys()))
         for domain_name in self.domains:
-            group_name = DOMAIN_TO_GROUP.get(domain_name, domain_name)
+            group_name = DOMAINS_TO_GROUPS.get(domain_name, domain_name)
             self.add_group(group_name, [domain_name])
 
 
@@ -160,7 +160,8 @@ class IOMixin():
         version : str, optional
             The version of the morphology appended to the morphology name.
         """
-        path_to_file = self.path_manager.get_abs_path(f'morphology/{file_name}')
+        if file_name.endswith('.swc'): file_name = file_name[:-4]
+        path_to_file = self.path_manager.get_abs_path(f'morphology/{file_name}.swc')
         
         self.point_tree.to_swc(path_to_file)
 
@@ -434,7 +435,7 @@ class IOMixin():
         **kwargs : dict
             Additional keyword arguments to pass to `json.dump`.
         """        
-        
+        if file_name.endswith('.json'): file_name = file_name[:-5]
         path_to_json = self.path_manager.get_abs_path(f'biophys/{file_name}.json', create_dirs=True)
         if not kwargs.get('indent'):
             kwargs['indent'] = 4

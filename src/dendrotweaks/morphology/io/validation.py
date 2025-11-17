@@ -184,7 +184,7 @@ def validate_section_tree(section_tree):
 
     print("Checking that all points in a section belong to the same domain...")
     for sec in section_tree:
-        if not all(pt.domain == sec.domain for pt in sec.points):
+        if not all(pt.domain_name == sec.domain_name for pt in sec.points):
             warnings.warn('All points in a section must belong to the same domain.')
 
     print("Checking that all sections have a non-zero length...")
@@ -196,8 +196,16 @@ def validate_section_tree(section_tree):
         warnings.warn('Found sections with an incorrect number of children.')
 
     print("Checking that the root section has domain soma...")
-    if not section_tree.root.domain == 'soma':
+    if not section_tree.root.domain_name == 'soma':
         warnings.warn('Root section must have domain soma.')
+
+    print("Checking that points in the point tree match those in the sections...")
+    for pt1, pt2 in zip(section_tree._point_tree.points,
+                        sorted([pt for sec in section_tree 
+                                for pt in sec.points],
+                               key=lambda p: p.idx)):
+        if pt1 is not pt2:
+            warnings.warn(f'Point mismatch between point tree and section tree at point idx {pt1.idx}.')
 
 
 # =============================================================================

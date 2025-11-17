@@ -57,7 +57,7 @@ class Simulator:
         for seg, x in self.recordings[var].items():
             if segments and seg not in segments:
                 continue
-            ax.plot(self.t, x, label=f'{var} {seg.domain} {seg.idx}', **kwargs)
+            ax.plot(self.t, x, label=f'{var} {seg.domain_name} {seg.idx}', **kwargs)
         if len(segments) < 10:
             ax.legend()
         ax.set_xlabel('Time (ms)')

@@ -36,11 +36,19 @@ class Segment(Node):
     # PROPERTIES
 
     @property
-    def domain(self):
+    def domain_name(self):
         """
         The morphological or functional domain of the segment.
         """
-        return self._section.domain
+        return self._section.domain_name
+
+    
+    @property
+    def domain_color(self):
+        """
+        The color associated with the domain of the segment.
+        """
+        return self._section.domain_color
 
 
     @property

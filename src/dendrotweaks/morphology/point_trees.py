@@ -9,8 +9,6 @@ from dendrotweaks.utils import timeit
 from dendrotweaks.morphology.trees import Node, Tree
 
 from dendrotweaks.utils import timeit
-from dendrotweaks.utils import get_swc_idx, get_domain_name
-from dendrotweaks.utils import get_domain_color
 
 from contextlib import contextmanager
 import random
@@ -56,35 +54,22 @@ class Point(Node):
     """
 
     def __init__(self, idx: str, type_idx: int, 
-                 x: float, y: float, z: float, r: float, 
-                 parent_idx: str) -> None:
+                 x: float, y: float, z: float, r: float, parent_idx: str, 
+                 domain_name: str, domain_color: str) -> None:
         super().__init__(idx, parent_idx)
         self.type_idx = int(type_idx)
         self.x = x
         self.y = y
         self.z = z
         self.r = r
+        self.domain_name = domain_name
+        self.domain_color = domain_color
         self._section = None
 
 
     @property
-    def domain(self):
-        """
-        The morphological or functional domain of the node.
-        """
-        return get_domain_name(self.type_idx)
-
-
-    @domain.setter
-    def domain(self, value):
-        if isinstance(value, str):
-            self.type_idx = get_swc_idx(value)
-        elif value is None:
-            self.type_idx = None
-
-
-    @property
     def distance_to_parent(self):
+        # TODO: could this be cached?
         """
         The Euclidean distance from this node to its parent.
         """
@@ -113,7 +98,7 @@ class Point(Node):
             if ancestor and node.parent == ancestor:
                 break  # Stop if we reach the specified ancestor
 
-            if within_domain and node.parent.domain != node.domain:
+            if within_domain and node.parent.domain_name != node.domain_name:
                 break  # Stop if domain changes
             
             distance += node.distance_to_parent
@@ -122,36 +107,6 @@ class Point(Node):
         return distance
 
 
-
-    @property
-    def df(self):
-        """
-        Return a DataFrame representation of the node.
-        """
-        return pd.DataFrame({'idx': [self.idx],
-                             'type_idx': [self.type_idx],
-                             'x': [self.x],
-                             'y': [self.y],
-                             'z': [self.z],
-                             'r': [self.r],
-                             'parent_idx': [self.parent_idx]})
-
-    def info(self):
-        """
-        Print information about the node.
-        """
-        info = (
-            f"Node {self.idx}:\n"
-            f"  Type: {get_domain_name(self.type_idx)}\n"
-            f"  Coordinates: ({self.x}, {self.y}, {self.z})\n"
-            f"  Radius: {self.r}\n"
-            f"  Parent: {self.parent_idx}\n"
-            f"  Children: {[child.idx for child in self.children]}\n"
-            f"  Siblings: {[sibling.idx for sibling in self.siblings]}\n"
-            f"  Section: {self._section.idx if self._section else 'None'}"
-        )
-        print(info)
-
     def copy(self):
         """
         Create a copy of the node.
@@ -159,8 +114,9 @@ class Point(Node):
         Returns:
             Point: A copy of the node with the same attributes.
         """
-        new_node = Point(self.idx, self.type_idx, self.x,
-                            self.y, self.z, self.r, self.parent_idx)
+        new_node = Point(self.idx, self.type_idx, 
+                         self.x, self.y, self.z, self.r, self.parent_idx,
+                         self.domain_name, self.domain_color)
         return new_node
 
 
@@ -269,11 +225,13 @@ class PointTree(Tree):
         data = {
             'idx': [node.idx for node in self._nodes],
             'type_idx': [node.type_idx for node in self._nodes],
+            'domain_name': [node.domain_name for node in self._nodes],
+            'domain_color': [node.domain_color for node in self._nodes],
             'x': [node.x for node in self._nodes],
             'y': [node.y for node in self._nodes],
             'z': [node.z for node in self._nodes],
             'r': [node.r for node in self._nodes],
-            'parent_idx': [node.parent_idx for node in self._nodes],
+            'parent_idx': [node.parent_idx for node in self._nodes]
         }
         return pd.DataFrame(data)
 
@@ -319,7 +277,9 @@ class PointTree(Tree):
                 y=pt.y,
                 z=pt.z,
                 r=pt.r,
-                parent_idx=pt.idx)
+                parent_idx=pt.idx,
+                domain_name=pt.domain_name,
+                domain_color=pt.domain_color)
 
             pt_right = Point(
                 idx=3,
@@ -328,7 +288,9 @@ class PointTree(Tree):
                 y=pt.y,
                 z=pt.z,
                 r=pt.r,
-                parent_idx=pt.idx)
+                parent_idx=pt.idx,
+                domain_name=pt.domain_name,
+                domain_color=pt.domain_color)
 
             self.add_subtree(pt_right, pt)
             self.add_subtree(pt_left, pt)
@@ -480,7 +442,7 @@ class PointTree(Tree):
         """
         Remove overlapping nodes from the tree.
         """
-        nodes_before = len(self.points)
+        n_nodes_before = len(self.points)
 
         overlapping_nodes = [
             pt for pt in self.traverse() 
@@ -490,9 +452,9 @@ class PointTree(Tree):
             self.remove_node(pt)
 
         self._is_extended = False
-        nodes_after = len(self.points)
-        if nodes_before != nodes_after:
-            print(f'Removed {nodes_before - nodes_after} overlapping nodes.')
+        n_nodes_after = len(self.points)
+        if n_nodes_before != n_nodes_after:
+            print(f'Removed {n_nodes_before - n_nodes_after} overlapping nodes.')
 
 
     def extend_sections(self):
@@ -501,7 +463,7 @@ class PointTree(Tree):
         overlapping with the parent node for geometrical continuity.
         """
         
-        nodes_before = len(self.points)
+        n_nodes_before = len(self.points)
 
         if self._is_extended:
             print('Tree is already extended.')
@@ -517,12 +479,18 @@ class PointTree(Tree):
                 if child.overlaps_with(pt):
                     raise ValueError(f'Child {child} already overlaps with parent {pt}.')
                 new_node = pt.copy()
-                new_node.domain = child.domain
-                self.insert_node_before(new_node, child)           
+                new_node.type_idx = child.type_idx
+                new_node.domain_name = child.domain_name
+                new_node.domain_color = child.domain_color
+                if child._section is not None:
+                    new_node._section = child._section
+                    if not new_node in new_node._section.points:
+                        new_node._section.points[0] = new_node
+                self.insert_node_before(new_node, child)
 
         self._is_extended = True
-        nodes_after = len(self.points)
-        print(f'Extended {nodes_after - nodes_before} nodes.')
+        n_nodes_after = len(self.points)
+        print(f'Extended {n_nodes_after - n_nodes_before} nodes.')
 
 
     def to_swc(self, path_to_file):
@@ -530,7 +498,9 @@ class PointTree(Tree):
         Save the tree to an SWC file.
         """
         with remove_overlaps(self):
-            df = self.df.astype({
+            df = self.df.drop(
+                columns=['domain_name', 'domain_color']
+                ).astype({
                 'idx': int,
                 'type_idx': int,
                 'x': float,
@@ -539,9 +509,41 @@ class PointTree(Tree):
                 'r': float,
                 'parent_idx': int
             })
+
+            # Shift to 1-based indexing (SWC standard)
             df['idx'] += 1
             df.loc[df['parent_idx'] >= 0, 'parent_idx'] += 1
-            df.to_csv(path_to_file, sep=' ', index=False, header=False)
+
+            # Collect mapping: type_idx → domain / color
+            domain_map = {}
+            color_map = {}
+
+            for pt in self.points:
+                domain_map[pt.type_idx] = pt.domain_name
+                color_map[pt.type_idx] = pt.domain_color
+
+            # Sort keys for stable output
+            sorted_types = sorted(domain_map.keys())
+
+            # Create strings
+            domain_info = " ".join(f"{t}:{domain_map[t]}" for t in sorted_types)
+            color_info  = " ".join(f"{t}:{color_map[t]}" for t in sorted_types)
+
+            # Write header
+            with open(path_to_file, "w") as f:
+                f.write("# Generated by DendroTweaks\n")
+                f.write(f"# DOMAIN_NAMES {domain_info}\n")
+                f.write(f"# DOMAIN_COLORS {color_info}\n")
+                f.write("# ID TYPE_ID X Y Z R PARENT_ID\n")
+
+            # Append data for SWC table
+            df.to_csv(
+                path_to_file,
+                sep=" ",
+                index=False,
+                header=False,
+                mode="a"
+            )
 
 
     # PLOTTING METHODS
@@ -600,7 +602,7 @@ class PointTree(Tree):
         # Assign colors based on domains
         if show_domains:
             for pt in points_to_plot:
-                colors = [get_domain_color(pt.domain) for pt in points_to_plot]
+                colors = [pt.domain_color for pt in points_to_plot]
         else:
             colors = 'C0'
 
@@ -628,14 +630,14 @@ class PointTree(Tree):
 
 
     def plot_radii_distribution(self, ax=None, highlight=None, 
-    domains=True, show_soma=False):
+        domains=True, show_soma=False):
         if ax is None:
             fig, ax = plt.subplots(figsize=(8, 3))
 
         for pt in self.points:
-            if not show_soma and pt.domain == 'soma':
+            if not show_soma and pt.domain_name == 'soma':
                 continue
-            color = get_domain_color(pt.domain)
+            color = pt.domain_color
             if highlight and pt.idx in highlight:
                 ax.plot(
                     pt.path_distance(), 

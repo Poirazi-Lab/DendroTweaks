@@ -63,7 +63,7 @@ def calculate_input_resistance(model):
     v_onset = v[int(start_ts)]
     v_offset = v[int(stop_ts)]
     
-    R_in = (v_onset - v_offset) / amp
+    R_in = (v_offset - v_onset) / amp
     print(f"Input resistance: {R_in:.2f} MOhm")
 
     return {

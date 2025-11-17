@@ -9,42 +9,12 @@ import zipfile
 import urllib.request
 import matplotlib.pyplot as plt
 
-SWC_ID_TO_DOMAIN = {
-    0: 'undefined',
-    1: 'soma',
-    11: 'perisomatic',
-    2: 'axon',
-    3: 'dend',
-    31: 'basal',
-    4: 'apic',
-    41: 'trunk',
-    42: 'tuft',
-    43: 'oblique',
-    5: 'custom',
-    6: 'neurite',
-    7: 'glia',
-    8: 'reduced',
-}
 
-POPULATIONS = {'AMPA': {}, 'NMDA': {}, 'AMPA_NMDA': {}, 'GABAa': {}}
-
-INDEPENDENT_PARAMS = {
-    'cm': 1, # uF/cm2
-    'Ra': 100, # Ohm cm
-    'ena': 50, # mV
-    'ek': -77, # mV
-    'eca': 140 # mV
-}
-
-DOMAIN_TO_GROUP = {
+DOMAINS_TO_GROUPS = {
     'soma': 'somatic',
     'axon': 'axonal',
     'dend': 'dendritic',
     'apic': 'apical',
-}
-
-DOMAIN_TO_SWC_ID = {
-    v: k for k, v in SWC_ID_TO_DOMAIN.items()
 }
 
 DOMAINS_TO_NEURON = {
@@ -62,39 +32,6 @@ DOMAINS_TO_NEURON = {
     'undefined': 'dend_0',
 }
 
-DOMAINS_TO_COLORS = {
-    'soma': '#E69F00',
-    'apic': '#0072B2',
-    'dend': '#019E73',
-    'basal': '#31A354',
-    'axon': '#F0E442',
-    'trunk': '#56B4E9',
-    'tuft': '#A55194',
-    'oblique': '#8C564B',
-    'perisomatic': '#D55E00',
-    'custom': '#D62728',
-    'reduced': '#E377C2',
-    'undefined': '#7F7F7F',
-}
-
-def get_swc_idx(domain_name):
-    base_domain, _, idx = domain_name.partition('_')
-    if base_domain == 'reduced':
-        return int(f'8{idx}')
-    elif base_domain == 'custom':
-        return int(f'5{idx}')
-    return DOMAIN_TO_SWC_ID.get(base_domain, 0)
-
-def get_domain_name(swc_idx):
-    if str(swc_idx).startswith('8'):
-        return 'reduced_' + str(swc_idx)[1:]
-    elif str(swc_idx).startswith('5'):
-        return 'custom_' + str(swc_idx)[1:]
-    return SWC_ID_TO_DOMAIN.get(swc_idx, 'undefined')
-
-def get_domain_color(domain_name):
-    base_domain, _, idx = domain_name.partition('_')
-    return DOMAINS_TO_COLORS.get(base_domain, '#7F7F7F')
 
 def timeit(func):
     def wrapper(*args, **kwargs):

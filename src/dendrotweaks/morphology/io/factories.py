@@ -6,8 +6,7 @@ from dendrotweaks.morphology.seg_trees import NeuronSegment, Segment, SegmentTre
 from dendrotweaks.morphology.io.reader import SWCReader
 
 from typing import List, Union
-import numpy as np
-from pandas import DataFrame
+from pandas import DataFrame, isna
 
 from dendrotweaks.morphology.io.validation import validate_tree
 
@@ -36,7 +35,11 @@ def create_point_tree(source: Union[str, DataFrame]) -> PointTree:
         raise ValueError("Source must be a file path (str) or a DataFrame.")
 
     nodes = [
-        Point(row.Index, row.Type, row.X, row.Y, row.Z, row.R, row.Parent)
+        Point(row.Index, row.Type, 
+              row.X, row.Y, row.Z, row.R, row.Parent, 
+              domain_name=None if isna(row.Domain) else row.Domain,
+              domain_color=None if isna(row.Color) else row.Color
+              )
         for row in df.itertuples(index=False)
     ]
     point_tree =  PointTree(nodes)
@@ -119,7 +122,7 @@ def _merge_soma(sections: List[Section], point_tree: PointTree):
     true_soma.parent_idx = -1
 
     false_somas = [sec for sec in sections 
-        if sec.domain == 'soma' and sec is not true_soma]
+        if sec.domain_name == 'soma' and sec is not true_soma]
     if len(false_somas) != 2:
         print(false_somas)
         raise ValueError('Soma must have exactly 2 children of domain soma.')
