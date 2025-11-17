@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2025 Poirazi Lab <dendrotweaks@dendrites.gr>
+# SPDX-License-Identifier: MPL-2.0
+
 from dendrotweaks.morphology.trees import Tree
 from dendrotweaks.morphology.point_trees import PointTree
 from dendrotweaks.morphology.sec_trees import SectionTree

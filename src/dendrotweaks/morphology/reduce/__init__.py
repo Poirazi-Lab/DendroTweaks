@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2025 Poirazi Lab <dendrotweaks@dendrites.gr>
+# SPDX-License-Identifier: MPL-2.0
+
 from dendrotweaks.morphology.reduce.reduce import map_segs_to_params
 from dendrotweaks.morphology.reduce.reduce import map_segs_to_locs
 from dendrotweaks.morphology.reduce.reduce import map_segs_to_reduced_segs

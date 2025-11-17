@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2025 Poirazi Lab <dendrotweaks@dendrites.gr>
+# SPDX-License-Identifier: MPL-2.0
+
 from typing import Callable, Dict, List
 from numpy import  ndarray, full_like
 from numpy import exp, sin, polyval

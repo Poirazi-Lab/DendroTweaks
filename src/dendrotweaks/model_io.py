@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2025 Poirazi Lab <dendrotweaks@dendrites.gr>
+# SPDX-License-Identifier: MPL-2.0
+
 # Imports
 import os
 import json

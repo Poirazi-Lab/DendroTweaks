@@ -1,10 +1,9 @@
-"""
-This module contains functions for reducing dendritic subtrees into single cylinders.
-The module incorporates code from neuron_reduce, which implements the algorithm described in:
-Amsalem, O., Eyal, G., Rogozinski, N. et al. An efficient analytical reduction of detailed nonlinear neuron models. Nat Commun 11, 288 (2020). https://doi.org/10.1038/s41467-019-13932-6
-The original code can be found at: https://github.com/orena1/neuron_reduce. Licensed under MIT License.
-"""
-
+# SPDX-License-Identifier: MIT
+#
+# This module incorporates code from neuron_reduce with modifications:
+# Amsalem, O., Eyal, G., Rogozinski, N. et al. (2020)
+# https://github.com/orena1/neuron_reduce
+# Licensed under the MIT License.
 
 import math
 import cmath

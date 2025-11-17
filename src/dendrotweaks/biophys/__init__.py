@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2025 Poirazi Lab <dendrotweaks@dendrites.gr>
+# SPDX-License-Identifier: MPL-2.0
+
 from dendrotweaks.biophys.mechanisms import Mechanism, IonChannel, StandardIonChannel
 from dendrotweaks.biophys.mechanisms import CaDynamics, LeakChannel
 from dendrotweaks.biophys.mechanisms import LeakChannel

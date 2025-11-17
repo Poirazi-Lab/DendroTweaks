@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2025 Poirazi Lab <dendrotweaks@dendrites.gr>
+# SPDX-License-Identifier: MPL-2.0
+
 from dendrotweaks.biophys.io.reader import MODFileReader
 from dendrotweaks.biophys.io.parser import MODFileParser
 from dendrotweaks.biophys.io.code_generators import PythonCodeGenerator
