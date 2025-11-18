@@ -185,8 +185,9 @@ class Population():
             if sec(x) not in self._excluded_segments]
         
         syn_locs = [valid_locs[np.random.choice(len(valid_locs))] for _ in range(self.N)]
+        sorted_syn_locs = sorted(syn_locs, key=lambda pair: (pair[0].idx, pair[1]))
         
-        return syn_locs
+        return sorted_syn_locs
 
 
     def allocate_synapses(self, syn_locs=None):
