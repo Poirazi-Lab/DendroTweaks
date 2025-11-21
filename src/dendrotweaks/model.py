@@ -103,6 +103,7 @@ class Model(IOMixin, SimulationMixin):
         # Morphology
         self.point_tree = None
         self.sec_tree = None
+        self.domains = {}
 
         # Mechanisms
         self.mechanisms = {}
@@ -167,15 +168,6 @@ class Model(IOMixin, SimulationMixin):
     def verbose(self, value):
         self._verbose = value
         self.mod_loader.verbose = value
-
-
-    @property
-    def domains(self):
-        """
-        The morphological or functional domains of the model.
-        Reference to the domains in the section tree.
-        """
-        return self.sec_tree.domains
 
 
     @property
@@ -292,7 +284,7 @@ class Model(IOMixin, SimulationMixin):
     # ========================================================================
     # DOMAINS
     # ========================================================================
-    def _add_domain(self, type_idx, name, color):
+    def add_domain(self, name, type_idx, color, sections, distribute=True):
         """
         Adds a new empty domain to the model.
 
@@ -304,62 +296,171 @@ class Model(IOMixin, SimulationMixin):
             The color assigned to the domain.
         type_idx : int
             The type index of the domain.
+        sections : list[Section]
+            The sections to include in the domain.
+        distribute : bool, optional
+            Whether to re-distribute the parameters after defining the domain. 
+            Default is True.
+
+        Notes
+        -----
+        This method does not automatically insert mechanisms into the newly 
+        created domain. It is the user's responsibility to insert mechanisms 
+        into the domain after its creation.
+
+        Suggested type indices and colors:
+                1: soma: orange
+                2: axon: gold
+                3: dend: forestgreen
+                31: basal: seagreen
+                4: apic: steelblue
+                41: trunk: skyblue
+                42: tuft: plum
+                43: oblique: rosybrown
         """
-        # Validation
-        unique_domain_names = set(domain.name for domain in self.domains.values())
-        unique_type_ids = set(point.type_idx for point in self.point_tree.points)
-        unique_domain_colors = set(point.domain_color for point in self.point_tree.points)
+        if name in self.domains:
+            raise ValueError(f"Domain '{name}' already exists.")
+        if not name or not name.strip():
+            raise ValueError("Domain name cannot be empty.")
+        if not sections:
+            raise ValueError('No sections provided to define the domain.')
+            
+        complement_sections = set(self.sec_tree.sections) - set(sections)
+        self._validate_domain_type_idx(complement_sections, type_idx)
+        self._validate_domain_color(complement_sections, color)
 
-        if name in unique_domain_names:
-            raise ValueError(f'Domain name {name} already exists.')
-        if type_idx in unique_type_ids:
-            raise ValueError(f'Type index {type_idx} is already used by another domain.')
-        if color in unique_domain_colors:
-            raise ValueError(f'Color {color} is already used by another domain.')
-
-        domain = Domain(type_idx, name, color)
+        domain = Domain(name, type_idx, color)
         self._add_domain_groups(domain.name)
         self.domains[domain.name] = domain
         self.domains_to_mechs[domain.name] = set()
 
+        self.extend_domain(name, sections, distribute=distribute)
 
-    def define_domain(self, sections, 
-        type_idx, name, color, distribute=True):
+
+    def _validate_domain_type_idx(self, complement_sections, type_idx):
+
+        unique_complement_type_ids = set(sec.type_idx for sec in complement_sections)
+        if type_idx in unique_complement_type_ids:
+            raise ValueError(f'Type index {type_idx} is already used by another domain.')
+
+
+    def _validate_domain_color(self, complement_sections, color):
+
+        unique_complement_colors = set(sec.domain_color for sec in complement_sections)
+        if color in unique_complement_colors:
+            raise ValueError(f'Color {color} is already used by another domain.')
+    
+
+    def update_domain_name(self, old_name, new_name):
         """
-        Adds a new domain to the cell and ensures proper partitioning 
-        of the section tree graph.
-
-        This method does not automatically insert mechanisms into the newly 
-        created domain. It is the user's responsibility to insert mechanisms 
-        into the domain after its creation. However, if the domain already 
-        exists and is being extended, mechanisms will be inserted automatically 
-        into the newly added sections.
+        Update the name of a domain.
 
         Parameters
         ----------
-        sections : list[Section] or Callable
-            The sections to include in the domain. If a callable is provided, 
-            it should be a filter function applied to the list of all sections 
-            in the model.
-        name : str
-            The name of the domain to be added or extended.
-        distribute : bool, optional
-            Whether to re-distribute the parameters after defining the domain. 
-            Default is True.
-        type_idx : int, optional
-            The type index to assign to the domain. Must be unique.
-        color : str, optional
-            The color to assign to the domain. Must be unique.
+        old_name : str
+            The current name of the domain.
+        new_name : str
+            The new name to assign to the domain.
         """
-        if isinstance(sections, Callable):
-            sections = self.get_sections(sections)
+        
+        if new_name in self.domains:
+            raise ValueError(f'Domain {new_name} already exists.')
+        
+        domain = self.domains[old_name]
+        domain.name = new_name
+        self.domains[domain.name] = domain
+        self.domains.pop(old_name)
+        # Update groups
+        self._add_domain_groups(domain.name)
+        self._remove_domain_groups(old_name)
+        # Update domains_to_mechs
+        self.domains_to_mechs[domain.name] = self.domains_to_mechs.pop(old_name)
+        self._remove_empty()
 
-        # Add the domain if it does not exist
-        if name not in self.domains:
-            self._add_domain(type_idx, name, color)
 
-        # Select the newly added or existed domain
+    def update_domain_type_idx(self, name, new_type_idx):
+        """
+        Update the type index of a domain.
+
+        Notes
+        -----
+        Suggested type indices:
+                1: soma
+                2: axon
+                3: dend
+                31: basal
+                4: apic
+                41: trunk
+                42: tuft
+                43: oblique
+        """
+
         domain = self.domains[name]
+
+        if new_type_idx is not None:
+            if new_type_idx == domain.type_idx:
+                return
+            existing_type_ids = set(domain.type_idx for domain in self.domains.values()) - {domain.type_idx}
+            if new_type_idx in existing_type_ids:
+                raise ValueError(f'Type index {new_type_idx} is already used by another domain.')
+            domain.type_idx = new_type_idx
+
+
+    def update_domain_color(self, name, new_color, force=False):
+        """
+        Update the color of a domain.
+
+        Notes
+        -----
+        Suggested colors:
+                soma: orange
+                axon: gold
+                dend: forestgreen
+                basal: seagreen
+                apic: steelblue
+                trunk: skyblue
+                tuft: plum
+                oblique: rosybrown
+        """
+
+        domain = self.domains[name]
+
+        if new_color is not None:
+            if new_color == domain.color:
+                return
+            existing_colors = set(domain.color for domain in self.domains.values()) - {domain.color}
+            if new_color in existing_colors and not force:
+                raise ValueError(f'Color {new_color} is already used by another domain.')
+            domain.color = new_color
+
+
+    def extend_domain(self, name, sections, distribute=True):
+        """
+        Extends an existing domain by adding sections to it.
+
+        Parameters
+        ----------
+        name : str
+            The name of the domain to extend.
+        sections : list[Section]
+            The sections to add to the domain.
+        distribute : bool, optional
+            Whether to re-distribute the parameters after extending the domain. 
+            Default is True.
+
+        Notes
+        -----
+        If the domain already exists and is being extended, 
+        mechanisms will be inserted automatically 
+        into the newly added sections.
+        """
+
+        domain = self.domains.get(name)
+        if domain is None:
+            raise ValueError(f'Domain {name} does not exist.')
+
+        if not sections:
+            raise ValueError('No sections provided to extend the domain.')
 
         # Find sections that are not in the domain yet
         sections_to_move = [sec for sec in sections 
@@ -406,6 +507,15 @@ class Model(IOMixin, SimulationMixin):
         # Create a new group for the domain
         group_name = DOMAINS_TO_GROUPS.get(domain_name, domain_name)
         self.add_group(group_name, domains=[domain_name])
+
+
+    def _remove_domain_groups(self, domain_name):
+        """
+        Manage groups when a domain is removed.
+        """
+        for group in self._groups:
+            if domain_name in group.domains:
+                group.domains.remove(domain_name)
     
 
     def _remove_empty(self):
@@ -423,10 +533,7 @@ class Model(IOMixin, SimulationMixin):
             warnings.warn(f'Domain {domain.name} is empty and will be removed.')
             self.domains.pop(domain.name)
             self.domains_to_mechs.pop(domain.name)
-            for group in self._groups:
-                if domain.name in group.domains:
-                    group.domains.remove(domain.name)
-            # self.groups['all'].domains.remove(domain.name)
+            self._remove_domain_groups(domain.name)
 
 
     def _remove_uninserted_mechanisms(self):
@@ -926,17 +1033,20 @@ class Model(IOMixin, SimulationMixin):
         return [seg for group_name in group_names for seg in self.seg_tree.segments if seg in self.groups[group_name]]
 
 
-    def remove_subtree(self, sec):
+    def remove_subtree(self, section):
         """
         Remove a subtree from the model.
 
         Parameters
         ----------
-        sec : Section
+        section : Section
             The root section of the subtree to remove.
         """
-        self.sec_tree.remove_subtree(sec)
-        self.sec_tree.sort()
+        for domain in self.domains.values():
+            for sec in section.subtree:
+                if sec in domain.sections:
+                    domain.remove_section(sec)
+        self.sec_tree.remove_subtree(section)
         self._remove_empty()
 
 
@@ -967,7 +1077,7 @@ class Model(IOMixin, SimulationMixin):
             the calculated average values. Default is True.
         """
 
-        domain_name = root.domain
+        domain_name = root.domain_name
         parent = root.parent
         domains_in_subtree = [self.domains[domain_name] 
             for domain_name in set([sec.domain_name for sec in root.subtree])]
@@ -1049,8 +1159,16 @@ class Model(IOMixin, SimulationMixin):
         rdc.set_avg_params_to_reduced_segs(reduced_segs_to_params)
         rdc.interpolate_missing_values(reduced_segs_to_params, root)
 
+
+        data = {
+            'segs_to_params': segs_to_params,
+            'segs_to_locs': segs_to_locs,
+            'segs_to_reduced_segs': segs_to_reduced_segs,
+            'reduced_segs_to_params': reduced_segs_to_params,
+        }
+
         if not fit:
-            return
+            return data
 
         root_segs = [seg for seg in root.segments]
         params_to_fits = {}
@@ -1060,29 +1178,19 @@ class Model(IOMixin, SimulationMixin):
             for param_name in self.mechs_to_params[mech]:
                 fit_result = self.fit_distribution(param_name, segments=root_segs, plot=False)
                 params_to_fits[param_name] = fit_result
-
+        
         
         # Create new domain
         reduced_domains = [domain_name for domain_name in self.domains if domain_name.startswith('reduced')]
-        new_reduced_domain_type_idx = int(f'8{len(reduced_domains)}')
         new_reduced_domain_name = f'reduced_{len(reduced_domains)}'
+        new_reduced_domain_type_idx = int(f'8{len(reduced_domains)}')
         group_name = new_reduced_domain_name
-        self.define_domain(sections=[root],
-                           type_idx=new_reduced_domain_type_idx,
-                           name=new_reduced_domain_name,
-                           color='#808080',
-                           distribute=False)
-        
 
-        # Reinsert active mechanisms after creating the new domain
-        # The new domain by default has no mechanisms. Here we re-insert the
-        # exact same mechanisms as in the original domain of the root section.
-        for mech_name in inserted_mechs:
-            mech = self.mechanisms[mech_name]
-            root.insert_mechanism(mech)
-        self.domains_to_mechs[new_reduced_domain_name] = set(inserted_mechs.keys())
-        
-               
+        old_domain = root.domain_name
+        self.update_domain_name(old_domain, new_reduced_domain_name)
+        self.update_domain_type_idx(new_reduced_domain_name, new_reduced_domain_type_idx)
+        self.update_domain_color(new_reduced_domain_name, 'palevioletred')
+            
         # # Fit distributions to data for the group
         for param_name, fit_result in params_to_fits.items():
             self._set_distribution(param_name, group_name, fit_result, plot=True)
@@ -1090,12 +1198,8 @@ class Model(IOMixin, SimulationMixin):
         # # Distribute parameters
         self.distribute_all()
 
-        return {
+        data.update({
+            'params_to_fits': params_to_fits,
             'domain_name': new_reduced_domain_name, 
-            'group_name': group_name,
-            'segs_to_params': segs_to_params,
-            'segs_to_locs': segs_to_locs,
-            'segs_to_reduced_segs': segs_to_reduced_segs,
-            'reduced_segs_to_params': reduced_segs_to_params,
-            'params_to_fits': params_to_fits
-        }
+            'group_name': group_name,})
+        return data

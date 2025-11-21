@@ -238,7 +238,7 @@ class Cell():
         {% for var, recs in recordings.items() %}
         {% for seg, rec in recs.items() %}
         rec = h.Vector()
-        rec.record(self.{{seg._section.domain}}[{{seg._section.idx_within_domain}}]({{seg.x}})._ref_{{ var }})
+        rec.record(self.{{seg.domain_name}}[{{seg._section.idx_within_domain}}]({{seg.x}})._ref_{{ var }})
         recordings.append(rec)
         {%- endfor -%}
         {% endfor %}
@@ -247,7 +247,7 @@ class Cell():
     def add_iclamps(self):
         iclamps = []
         {% for seg, iclamp in iclamps.items() %}
-        iclamp = h.IClamp(self.{{seg._section.domain}}[{{seg._section.idx_within_domain}}]({{seg.x}}))
+        iclamp = h.IClamp(self.{{seg.domain_name}}[{{seg._section.idx_within_domain}}]({{seg.x}}))
         iclamp.delay = {{ iclamp.delay }}
         iclamp.dur = {{ iclamp.dur }}
         iclamp.amp = {{ iclamp.amp }}

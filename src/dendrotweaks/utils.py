@@ -222,6 +222,9 @@ def apply_dark_theme():
 def mse(y_true, y_pred):
             return np.mean((np.array(y_true) - np.array(y_pred)) ** 2)
 
+def max_error(y_true, y_pred):
+    return np.max(np.abs(np.array(y_true) - np.array(y_pred)))
+
 def poly_fit(x, y, max_degree=6, tolerance=1e-6):
     """
     Fit a polynomial to the data and return the coefficients and predicted values.
@@ -245,7 +248,7 @@ def step_fit(x, y):
     x = x[sort_idx]
     y = y[sort_idx]
 
-    best_mse = float('inf')
+    best_score = float('inf')
     best_params = None
     best_pred = None
 
@@ -263,11 +266,14 @@ def step_fit(x, y):
             high_val = np.nanmean(y[inside])
             low_val = np.nanmean(y[outside])
 
-            pred = np.where(inside, high_val, low_val)
-            score = mse(y, pred)
+            if low_val >= high_val:
+                continue
 
-            if score < best_mse:
-                best_mse = score
+            pred = np.where(inside, high_val, low_val)
+            score = max_error(y, pred)
+
+            if score < best_score:
+                best_score = score
                 best_params = (start, end, low_val, high_val)
                 best_pred = pred
 
@@ -276,12 +282,12 @@ def step_fit(x, y):
 DEFAULT_FIT_MODELS = {
     'poly': {
         'fit': poly_fit,
-        'score': mse,
+        'score': max_error,
         'complexity': lambda coeffs: len(coeffs) - 1  # degree of polynomial
     },
     'step': {
         'fit': step_fit,
-        'score': mse,
+        'score': max_error,
         'complexity': lambda params: 4
     }
 }

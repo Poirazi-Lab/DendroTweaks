@@ -132,7 +132,8 @@ class SWCReader():
             items = color_line.replace("# DOMAIN_COLORS", "").strip().split()
             for item in items:
                 t, col = item.split(":", 1)
-                color_map[int(t)] = col
+                domain_name = domain_map.get(int(t))
+                color_map[domain_name] = col
 
         return domain_map, color_map
 

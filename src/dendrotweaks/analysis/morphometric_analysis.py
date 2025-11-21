@@ -58,24 +58,23 @@ def calculate_section_statistics(sections, param_name=None):
     return stats
 
 
-def calculate_cell_statistics(tree):
+def calculate_cell_statistics(model):
 
     all_sections = []
-    for domain in tree.domains.values():
+    for domain in model.domains.values():
         all_sections.extend(domain.sections)
 
     return calculate_section_statistics(all_sections)
 
 
-def calculate_domain_statistics(tree, domain_names=None, param_name=None):
+def calculate_domain_statistics(model, domain_names=None, param_name=None):
 
     if domain_names is None:
-        return calculate_cell_statistics(tree)
+        return calculate_cell_statistics(model)
     if not isinstance(domain_names, list):
         raise ValueError("domain_names must be a list of strings")
 
-    domains = [domain for domain in tree.domains.values() if domain.name in domain_names]
-
+    domains = [domain for domain in model.domains.values() if domain.name in domain_names]
     stats = {}
 
     for domain in domains:

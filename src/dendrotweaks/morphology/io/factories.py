@@ -5,6 +5,7 @@ from dendrotweaks.morphology.trees import Node, Tree
 from dendrotweaks.morphology.point_trees import Point, PointTree
 from dendrotweaks.morphology.sec_trees import NeuronSection, Section, SectionTree
 from dendrotweaks.morphology.seg_trees import NeuronSegment, Segment, SegmentTree
+from dendrotweaks.morphology.domains import Domain
 
 from dendrotweaks.morphology.io.reader import SWCReader
 
@@ -215,4 +216,24 @@ def _create_segments(sec_tree) -> List[Segment]:
     add_segments(sec_tree.root, parent_idx=-1, idx_counter=0)
 
     return segments
-        
+
+
+def create_domains(section_tree):
+    """
+    Create domains using the data from the sections (from the points in the sections).
+    """
+
+    unique_domain_precursors = set([
+        (sec.domain_name, sec.type_idx, sec.domain_color)
+        for sec in section_tree.sections
+        ])
+
+    domains = {
+        name: Domain(name, type_idx, color) 
+        for name, type_idx, color in sorted(unique_domain_precursors)
+        }
+
+    for sec in section_tree.sections:
+        domains[sec.domain_name].add_section(sec)
+
+    return domains

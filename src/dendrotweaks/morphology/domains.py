@@ -19,7 +19,7 @@ class Domain:
         The name of the domain.
     """
 
-    def __init__(self, type_idx, name, color) -> None:
+    def __init__(self, name, type_idx, color) -> None:
         self._name = name
         self._type_idx = type_idx
         self._color = color
@@ -27,7 +27,7 @@ class Domain:
 
 
     def __repr__(self):
-        return f'<Domain({self.type_idx}, {self.name}, {self.color}, {len(self.sections)} sections)>'
+        return f'<Domain({self.name}, {self.type_idx}, {self.color}, {len(self.sections)} sections)>'
 
     def __getitem__(self, idx):
         return self._sections[idx]
@@ -58,6 +58,13 @@ class Domain:
         """
         return self._name
 
+    @name.setter
+    def name(self, value):
+        self._name = value
+        for sec in self._sections:
+            for point in sec.points:
+                point.domain_name = value
+
 
     @property
     def type_idx(self):
@@ -65,6 +72,13 @@ class Domain:
         The type index of the domain.
         """
         return self._type_idx
+
+    @type_idx.setter
+    def type_idx(self, value):
+        self._type_idx = value
+        for sec in self._sections:
+            for point in sec.points:
+                point.type_idx = value
 
     
     @property
@@ -81,17 +95,6 @@ class Domain:
         for sec in self._sections:
             for point in sec.points:
                 point.domain_color = value
-
-
-    # def merge(self, other):
-    #     """
-    #     Merge the sections of the other domain into this domain.
-    #     """
-    #     self.inserted_mechanisms.update(other.inserted_mechanisms)
-    #     sections = self.sections + other.sections
-    #     self._sections = []
-    #     for sec in sections:
-    #         self.add_section(sec)
 
 
     def add_section(self, sec: "Section"):

@@ -779,7 +779,7 @@ class SectionTree(Tree):
 
     def __init__(self, sections: list[Section]) -> None:
         super().__init__(sections)
-        self._create_domains()
+        # self._create_domains()
         self._point_tree = None
         self._seg_tree = None
 
@@ -788,23 +788,23 @@ class SectionTree(Tree):
         return f"SectionTree(root={self.root!r}, num_nodes={len(self._nodes)})"
 
 
-    def _create_domains(self):
-        """
-        Create domains using the data from the sections (from the points in the sections).
-        """
+    # def _create_domains(self):
+    #     """
+    #     Create domains using the data from the sections (from the points in the sections).
+    #     """
 
-        unique_domain_precursors = set([
-            (sec.type_idx, sec.domain_name, sec.domain_color)
-            for sec in self.sections
-            ])
+    #     unique_domain_precursors = set([
+    #         (sec.domain_name, sec.type_idx, sec.domain_color)
+    #         for sec in self.sections
+    #         ])
 
-        self.domains = {
-            name: Domain(type_idx, name, color) 
-            for type_idx, name, color in sorted(unique_domain_precursors)
-            }
+    #     self.domains = {
+    #         name: Domain(name, type_idx, color) 
+    #         for name, type_idx, color in sorted(unique_domain_precursors)
+    #         }
 
-        for sec in self.sections:
-            self.domains[sec.domain_name].add_section(sec)
+    #     for sec in self.sections:
+    #         self.domains[sec.domain_name].add_section(sec)
 
 
     # PROPERTIES    
@@ -923,10 +923,10 @@ class SectionTree(Tree):
         """
         super().remove_subtree(section)
         # Domains
-        for domain in self.domains.values():
-            for sec in section.subtree:
-                if sec in domain.sections:
-                    domain.remove_section(sec)
+        # for domain in self.domains.values():
+        #     for sec in section.subtree:
+        #         if sec in domain.sections:
+        #             domain.remove_section(sec)
         # Points
         self._point_tree.remove_subtree(section.points[0])
         # Segments
@@ -937,6 +937,7 @@ class SectionTree(Tree):
             h.disconnect(sec=section._ref)
             for sec in section.subtree:
                 h.delete_section(sec=sec._ref)
+        self.sort()
 
 
     def remove_zero_length_sections(self):
@@ -986,25 +987,6 @@ class SectionTree(Tree):
                 sec.points.remove(pt)
             
         self._point_tree.sort()
-
-            
-    # def plot_sections_as_matrix(self, ax=None):
-    #     """
-    #     Plot the sections as a connectivity matrix.
-    #     """
-    #     if ax is None:
-    #         fig, ax = plt.subplots()
-
-    #     n = len(self.sections)
-    #     matrix = np.zeros((n, n))
-    #     for section in self.sections:
-    #         if section.parent:
-    #             matrix[section.idx, section.parent.idx] = section.idx
-    #     matrix[matrix == 0] = np.nan
-
-    #     ax.imshow(matrix.T, cmap='jet_r')
-    #     ax.set_xlabel('Section ID')
-    #     ax.set_ylabel('Parent ID')
 
 
     # PLOTTING METHODS

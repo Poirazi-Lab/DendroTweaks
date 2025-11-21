@@ -12,6 +12,7 @@ import pandas as pd
 # DendroTweaks imports
 from dendrotweaks import __version__
 from dendrotweaks.morphology.io import create_point_tree, create_section_tree, create_segment_tree
+from dendrotweaks.morphology.io import create_domains
 from dendrotweaks.biophys.io import create_channel, standardize_channel
 from dendrotweaks.biophys.groups import SegmentGroup
 from dendrotweaks.biophys.distributions import Distribution
@@ -111,6 +112,8 @@ class IOMixin():
         sec_tree = create_section_tree(point_tree)
         sec_tree.sort(sort_children=sort_children, force=force)
         self.sec_tree = sec_tree
+
+        self.domains = create_domains(sec_tree)
 
         self.create_and_reference_sections_in_simulator()
         seg_tree = create_segment_tree(sec_tree)
@@ -844,6 +847,7 @@ class IOMixin():
         params = self.params if include_kinetic_params else filter_params(self)
         path_to_template = self.path_manager.get_abs_path('templates/NEURON_template.py', create_dirs=True)
 
+        
         output = render_template(path_to_template,
         {
             'param_dict': params,
