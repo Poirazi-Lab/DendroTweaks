@@ -1,8 +1,0 @@
-type,idx,sec_idx,loc
-rec,0,0,0.5
-rec,1,9,0.5
-rec,2,17,0.5
-rec,3,18,0.5
-rec,4,21,0.5
-rec,5,22,0.5
-iclamp,0,22,0.5

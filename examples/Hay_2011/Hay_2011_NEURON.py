@@ -114,18 +114,15 @@ class Cell():
         
         for sec in self.apic:
             
-            sec.insert('CaLVAst')
-            sec.insert('NaTa_t')
-            sec.insert('Nap_Et2')
-            sec.insert('Ih')
-            sec.insert('CaDyn')
-            sec.insert('Im')
             sec.insert('Leak')
+            sec.insert('CaDyn')
+            sec.insert('Ih')
             sec.insert('SKv3_1')
+            sec.insert('NaTa_t')
             sec.insert('CaHVA')
+            sec.insert('Im')
+            sec.insert('CaLVAst')
             sec.insert('SK_E2')
-            sec.insert('K_Tst')
-            sec.insert('K_Pst')
         
         for sec in self.axon:
             
@@ -133,18 +130,17 @@ class Cell():
         
         for sec in self.soma:
             
-            sec.insert('CaLVAst')
-            sec.insert('NaTa_t')
-            sec.insert('Nap_Et2')
-            sec.insert('Ih')
-            sec.insert('CaDyn')
-            sec.insert('Im')
             sec.insert('Leak')
+            sec.insert('CaDyn')
+            sec.insert('Ih')
             sec.insert('SKv3_1')
-            sec.insert('CaHVA')
-            sec.insert('SK_E2')
             sec.insert('K_Tst')
+            sec.insert('Nap_Et2')
+            sec.insert('NaTa_t')
             sec.insert('K_Pst')
+            sec.insert('CaHVA')
+            sec.insert('CaLVAst')
+            sec.insert('SK_E2')
         
         for sec in self.dend_31:
             
@@ -288,12 +284,12 @@ class Cell():
                     
                 
             
-            if domain in ['apic', 'soma']:
-                self.set_param(seg, "gbar_Im", "Im", 0.0)
+            if domain in ['soma']:
+                self.set_param(seg, "gbar_K_Tst", "K_Tst", 0.0)
                     
                 
-            if domain in ['apic']:
-                self.set_param(seg, "gbar_Im", "Im", 6.75e-05)
+            if domain in ['soma']:
+                self.set_param(seg, "gbar_K_Tst", "K_Tst", 0.0812)
                     
                 
             
@@ -302,21 +298,34 @@ class Cell():
                     
                 
             
-            if domain in ['apic', 'soma']:
-                self.set_param(seg, "gbar_NaTa_t", "NaTa_t", 0.0)
+            if domain in ['soma']:
+                self.set_param(seg, "gbar_K_Pst", "K_Pst", 0.0)
                     
                 
             if domain in ['soma']:
-                self.set_param(seg, "gbar_NaTa_t", "NaTa_t", 2.04)
-                    
-                
-            if domain in ['apic']:
-                self.set_param(seg, "gbar_NaTa_t", "NaTa_t", 0.0213)
+                self.set_param(seg, "gbar_K_Pst", "K_Pst", 0.00223)
                     
                 
             
-            if domain in ['apic', 'axon', 'soma', 'dend_31']:
-                self.set_param(seg, "ena", "Independent", 50)
+            if domain in ['apic', 'soma']:
+                self.set_param(seg, "gbar_SK_E2", "SK_E2", 0.0)
+                    
+                
+            if domain in ['soma']:
+                self.set_param(seg, "gbar_SK_E2", "SK_E2", 0.0441)
+                    
+                
+            if domain in ['apic']:
+                self.set_param(seg, "gbar_SK_E2", "SK_E2", 0.0012)
+                    
+                
+            
+            if domain in ['apic']:
+                self.set_param(seg, "gbar_Im", "Im", 0.0)
+                    
+                
+            if domain in ['apic']:
+                self.set_param(seg, "gbar_Im", "Im", 6.75e-05)
                     
                 
             
@@ -338,20 +347,30 @@ class Cell():
                     
                 
             
-            if domain in ['apic', 'soma', 'dend_31']:
-                self.set_param(seg, "gbar_Ih", "Ih", 0.0)
+            if domain in ['soma']:
+                self.set_param(seg, "gbar_Nap_Et2", "Nap_Et2", 0.0)
                     
                 
             if domain in ['soma']:
-                self.set_param(seg, "gbar_Ih", "Ih", 0.0002)
+                self.set_param(seg, "gbar_Nap_Et2", "Nap_Et2", 0.00172)
                     
                 
-            if domain in ['dend_31']:
-                self.set_param(seg, "gbar_Ih", "Ih", 0.0002)
+            
+            if domain in ['apic', 'axon', 'soma', 'dend_31']:
+                self.set_param(seg, "ena", "Independent", 50)
+                    
+                
+            
+            if domain in ['apic', 'soma']:
+                self.set_param(seg, "gbar_NaTa_t", "NaTa_t", 0.0)
+                    
+                
+            if domain in ['soma']:
+                self.set_param(seg, "gbar_NaTa_t", "NaTa_t", 2.04)
                     
                 
             if domain in ['apic']:
-                self.set_param(seg, "gbar_Ih", "Ih", exponential(distance, **{'vertical_shift': -0.000174, 'scale_factor': 0.0004, 'growth_rate': 0.0028, 'horizontal_shift': -0.398}))
+                self.set_param(seg, "gbar_NaTa_t", "NaTa_t", 0.0213)
                     
                 
             
@@ -369,28 +388,6 @@ class Cell():
                 
             
             if domain in ['apic', 'soma']:
-                self.set_param(seg, "gbar_SK_E2", "SK_E2", 0.0)
-                    
-                
-            if domain in ['soma']:
-                self.set_param(seg, "gbar_SK_E2", "SK_E2", 0.0441)
-                    
-                
-            if domain in ['apic']:
-                self.set_param(seg, "gbar_SK_E2", "SK_E2", 0.0012)
-                    
-                
-            
-            if domain in ['apic', 'soma']:
-                self.set_param(seg, "gbar_K_Pst", "K_Pst", 0.0)
-                    
-                
-            if domain in ['soma']:
-                self.set_param(seg, "gbar_K_Pst", "K_Pst", 0.00223)
-                    
-                
-            
-            if domain in ['apic', 'soma']:
                 self.set_param(seg, "gbar_CaHVA", "CaHVA", 0.0)
                     
                 
@@ -403,21 +400,20 @@ class Cell():
                     
                 
             
-            if domain in ['apic', 'soma']:
-                self.set_param(seg, "gbar_Nap_Et2", "Nap_Et2", 0.0)
+            if domain in ['apic', 'soma', 'dend_31']:
+                self.set_param(seg, "gbar_Ih", "Ih", 0.0)
                     
                 
             if domain in ['soma']:
-                self.set_param(seg, "gbar_Nap_Et2", "Nap_Et2", 0.00172)
+                self.set_param(seg, "gbar_Ih", "Ih", 0.0002)
                     
                 
-            
-            if domain in ['apic', 'soma']:
-                self.set_param(seg, "gbar_K_Tst", "K_Tst", 0.0)
+            if domain in ['dend_31']:
+                self.set_param(seg, "gbar_Ih", "Ih", 0.0002)
                     
                 
-            if domain in ['soma']:
-                self.set_param(seg, "gbar_K_Tst", "K_Tst", 0.0812)
+            if domain in ['apic']:
+                self.set_param(seg, "gbar_Ih", "Ih", exponential(distance, **{'vertical_shift': -0.000174, 'scale_factor': 0.0004, 'growth_rate': 0.0028, 'horizontal_shift': -0.398}))
                     
                 
             
