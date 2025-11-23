@@ -118,39 +118,39 @@ class Cell():
         
         for sec in self.dend:
             
-            sec.insert('KCa')
-            sec.insert('Na')
-            sec.insert('CaHVA')
-            sec.insert('Ka')
-            sec.insert('Kv')
-            sec.insert('Km')
-            sec.insert('CaLVA')
-            sec.insert('Leak')
             sec.insert('CaDyn')
+            sec.insert('CaHVA')
+            sec.insert('CaLVA')
+            sec.insert('KCa')
+            sec.insert('Ka')
+            sec.insert('Km')
+            sec.insert('Kv')
+            sec.insert('Leak')
+            sec.insert('Na')
         
         for sec in self.soma:
             
-            sec.insert('KCa')
-            sec.insert('Na')
-            sec.insert('CaHVA')
-            sec.insert('Ka')
-            sec.insert('Kv')
-            sec.insert('Km')
-            sec.insert('CaLVA')
-            sec.insert('Leak')
             sec.insert('CaDyn')
+            sec.insert('CaHVA')
+            sec.insert('CaLVA')
+            sec.insert('KCa')
+            sec.insert('Ka')
+            sec.insert('Km')
+            sec.insert('Kv')
+            sec.insert('Leak')
+            sec.insert('Na')
         
         for sec in self.dend_80:
             
-            sec.insert('KCa')
-            sec.insert('Na')
-            sec.insert('CaHVA')
-            sec.insert('Ka')
-            sec.insert('Kv')
-            sec.insert('Km')
-            sec.insert('CaLVA')
-            sec.insert('Leak')
             sec.insert('CaDyn')
+            sec.insert('CaHVA')
+            sec.insert('CaLVA')
+            sec.insert('KCa')
+            sec.insert('Ka')
+            sec.insert('Km')
+            sec.insert('Kv')
+            sec.insert('Leak')
+            sec.insert('Na')
         
 
     ### Parameter distribution methods ###
@@ -324,7 +324,7 @@ class Cell():
                     
                 
             if domain in ['dend_80']:
-                self.set_param(seg, "gbar_CaLVA", "CaLVA", step(distance, **{'max_value': 2.636343789121152e-05, 'min_value': 1.3051058754242005e-05, 'start': 42.47171650476064, 'end': 212.35858252380322}))
+                self.set_param(seg, "gbar_CaLVA", "CaLVA", polyval([-4.9577591017548084e-20, 1.1831704547486388e-16, -1.0949157415043703e-13, 4.91583935780707e-11, -1.0765865406507897e-08, 9.427534917154298e-07, 4.3803559822139125e-06], distance))
                     
                 
             

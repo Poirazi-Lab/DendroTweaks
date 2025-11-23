@@ -114,15 +114,15 @@ class Cell():
         
         for sec in self.apic:
             
-            sec.insert('Leak')
             sec.insert('CaDyn')
-            sec.insert('Ih')
-            sec.insert('SKv3_1')
-            sec.insert('NaTa_t')
             sec.insert('CaHVA')
-            sec.insert('Im')
             sec.insert('CaLVAst')
+            sec.insert('Ih')
+            sec.insert('Im')
+            sec.insert('Leak')
+            sec.insert('NaTa_t')
             sec.insert('SK_E2')
+            sec.insert('SKv3_1')
         
         for sec in self.axon:
             
@@ -130,17 +130,17 @@ class Cell():
         
         for sec in self.soma:
             
-            sec.insert('Leak')
             sec.insert('CaDyn')
-            sec.insert('Ih')
-            sec.insert('SKv3_1')
-            sec.insert('K_Tst')
-            sec.insert('Nap_Et2')
-            sec.insert('NaTa_t')
-            sec.insert('K_Pst')
             sec.insert('CaHVA')
             sec.insert('CaLVAst')
+            sec.insert('Ih')
+            sec.insert('K_Pst')
+            sec.insert('K_Tst')
+            sec.insert('Leak')
+            sec.insert('NaTa_t')
+            sec.insert('Nap_Et2')
             sec.insert('SK_E2')
+            sec.insert('SKv3_1')
         
         for sec in self.dend_31:
             

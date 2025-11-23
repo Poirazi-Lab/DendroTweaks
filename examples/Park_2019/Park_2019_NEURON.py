@@ -115,14 +115,14 @@ class Cell():
         for sec in self.apic:
             
             sec.insert('CaDyn')
-            sec.insert('KCa')
-            sec.insert('Kv')
-            sec.insert('Leak')
             sec.insert('CaHVA')
-            sec.insert('Na')
             sec.insert('CaLVA')
+            sec.insert('KCa')
             sec.insert('Ka')
             sec.insert('Km')
+            sec.insert('Kv')
+            sec.insert('Leak')
+            sec.insert('Na')
         
         for sec in self.axon:
             
@@ -131,26 +131,26 @@ class Cell():
         for sec in self.dend:
             
             sec.insert('CaDyn')
-            sec.insert('KCa')
-            sec.insert('Kv')
-            sec.insert('Leak')
             sec.insert('CaHVA')
-            sec.insert('Na')
             sec.insert('CaLVA')
+            sec.insert('KCa')
             sec.insert('Ka')
             sec.insert('Km')
+            sec.insert('Kv')
+            sec.insert('Leak')
+            sec.insert('Na')
         
         for sec in self.soma:
             
             sec.insert('CaDyn')
-            sec.insert('KCa')
-            sec.insert('Kv')
-            sec.insert('Leak')
             sec.insert('CaHVA')
-            sec.insert('Na')
             sec.insert('CaLVA')
+            sec.insert('KCa')
             sec.insert('Ka')
             sec.insert('Km')
+            sec.insert('Kv')
+            sec.insert('Leak')
+            sec.insert('Na')
         
 
     ### Parameter distribution methods ###

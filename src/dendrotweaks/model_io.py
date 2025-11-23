@@ -123,7 +123,7 @@ class IOMixin():
         self._initialize_domains_to_mechs()
 
         d_lambda = self.d_lambda
-        self.set_segmentation(d_lambda=d_lambda)        
+        self.set_segmentation(d_lambda=d_lambda)
               
 
     def create_and_reference_sections_in_simulator(self):
@@ -853,7 +853,7 @@ class IOMixin():
             'param_dict': params,
             'groups_dict': self.groups,
             'params_to_mechs': self.params_to_mechs,
-            'domains_to_mechs': self.domains_to_mechs,
+            'domains_to_mechs': {domain: sorted(list(mechs)) for domain, mechs in self.domains_to_mechs.items()},
             'iclamps': self.iclamps,
             'recordings': self.simulator.recordings,
             'params_to_valid_domains': params_to_valid_domains,
