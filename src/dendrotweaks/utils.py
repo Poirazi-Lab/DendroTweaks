@@ -12,7 +12,6 @@ import zipfile
 import urllib.request
 import matplotlib.pyplot as plt
 
-
 DOMAINS_TO_GROUPS = {
     'soma': 'somatic',
     'axon': 'axonal',
@@ -163,10 +162,12 @@ def download_example_data(path_to_destination, include_templates=True, include_m
     if not os.path.exists(path_to_destination):
         os.makedirs(path_to_destination)
 
-    repo_url = "https://github.com/Poirazi-Lab/DendroTweaks/archive/refs/heads/main.zip"
+    from dendrotweaks import __version__
+    tag = f"v{__version__}"
+    repo_url = f"https://github.com/Poirazi-Lab/DendroTweaks/archive/refs/tags/{tag}.zip"
     zip_path = os.path.join(path_to_destination, "dendrotweaks_repo.zip")
 
-    print(f"Downloading data from {repo_url}...")
+    print(f"Downloading data for v{__version__} from {repo_url}...")
     urllib.request.urlretrieve(repo_url, zip_path)
 
     print(f"Extracting relevant folders to {path_to_destination}...")
@@ -175,18 +176,18 @@ def download_example_data(path_to_destination, include_templates=True, include_m
             target_path = None
 
             # === Always extract examples/ folder ===
-            if member.startswith("DendroTweaks-main/examples/"):
-                rel_path = os.path.relpath(member, "DendroTweaks-main/examples")
+            if member.startswith(f"DendroTweaks-{__version__}/examples/"):
+                rel_path = os.path.relpath(member, f"DendroTweaks-{__version__}/examples")
                 target_path = os.path.join(path_to_destination, rel_path)
 
             # === Optionally extract Templates/ folder ===
-            elif include_templates and member.startswith("DendroTweaks-main/src/dendrotweaks/biophys/default_templates/"):
-                rel_path = os.path.relpath(member, "DendroTweaks-main/src/dendrotweaks/biophys/default_templates")
+            elif include_templates and member.startswith(f"DendroTweaks-{__version__}/src/dendrotweaks/biophys/default_templates/"):
+                rel_path = os.path.relpath(member, f"DendroTweaks-{__version__}/src/dendrotweaks/biophys/default_templates")
                 target_path = os.path.join(path_to_destination, "Templates", rel_path)
 
             # === Optionally extract Default/ folder ===
-            elif include_modfiles and member.startswith("DendroTweaks-main/src/dendrotweaks/biophys/default_mod/"):
-                rel_path = os.path.relpath(member, "DendroTweaks-main/src/dendrotweaks/biophys/default_mod")
+            elif include_modfiles and member.startswith(f"DendroTweaks-{__version__}/src/dendrotweaks/biophys/default_mod/"):
+                rel_path = os.path.relpath(member, f"DendroTweaks-{__version__}/src/dendrotweaks/biophys/default_mod")
                 target_path = os.path.join(path_to_destination, "Default", rel_path)
 
             if target_path:
