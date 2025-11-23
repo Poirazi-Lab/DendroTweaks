@@ -7,6 +7,7 @@ This set of tutorials is designed to provide a more in-depth look at the feature
    :maxdepth: 1
 
    tutorials/tutorial_swc
+   tutorials/Morphology
    tutorials/tutorial_referencing
    tutorials/tutorial_reduction
    tutorials/Reduction

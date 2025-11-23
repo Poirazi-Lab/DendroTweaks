@@ -10,13 +10,10 @@ class Domain:
     ----------
     name : str
         The name of the domain.
-    sections : List[Section], optional
-        A list of sections in the domain.
-
-    Attributes
-    ----------
-    name : str
-        The name of the domain.
+    type_idx : int
+        The type index of the domain.
+    color : str
+        The color of the domain.
     """
 
     def __init__(self, name, type_idx, color) -> None:
