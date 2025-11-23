@@ -109,7 +109,6 @@ def _split_to_sections(point_tree: PointTree) -> List[Section]:
         section.parent = section.points[0].parent._section if section.points[0].parent else None
         section.parent_idx = section.parent.idx if section.parent else -1
 
-
     if point_tree.soma_notation == '3PS':
         sections = _merge_soma(sections, point_tree)
 
@@ -125,33 +124,44 @@ def _merge_soma(sections: List[Section], point_tree: PointTree):
     true_soma.idx = 0
     true_soma.parent_idx = -1
 
+    # Find false soma sections
     false_somas = [sec for sec in sections 
         if sec.domain_name == 'soma' and sec is not true_soma]
     if len(false_somas) != 2:
         print(false_somas)
         raise ValueError('Soma must have exactly 2 children of domain soma.')
 
+    # Reassign points from false somas to true soma
     for i, sec in enumerate(false_somas):
-        sections.remove(sec)
         if len(sec.points) != 1:
-            raise ValueError('Soma children must have exactly 1 point.')
+            raise ValueError('False somas must have exactly 1 point.')
         for pt in sec.points:
             pt._section = true_soma
 
+    # Sort points in true soma according to the 3PS convention
     true_soma.points = [
         false_somas[0].points[0], 
         true_soma.points[0], 
         false_somas[1].points[0]
     ]
 
-    for sec in sections:
-        if sec is true_soma:
-            continue
-        sec.idx -= 2
-        sec.parent_idx = sec.points[0].parent._section.idx
-        
+    # Rebuild section list without false somas
+    kept_sections = [s for s in sections if s not in false_somas]
+    kept_sections.sort(key=lambda s: s.idx)
 
-    return sections
+    # Create mapping from old to new indices
+    old_to_new = {sec.idx: i for i, sec in enumerate(kept_sections)}
+
+    # Update indices
+    for sec in kept_sections:
+        sec.idx = old_to_new[sec.idx]
+
+    # Update parent indices
+    for sec in kept_sections:
+        if sec is not true_soma:
+            sec.parent_idx = sec.points[0].parent._section.idx
+        
+    return kept_sections
 
 
 def create_segment_tree(sec_tree):

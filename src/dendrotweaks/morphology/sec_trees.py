@@ -871,26 +871,8 @@ class SectionTree(Tree):
 
         return pd.DataFrame(data)
 
+
     # SORTING METHODS
-
-    def _sort_children(self):
-        """
-        Iterate through all nodes in the tree and sort their children based on
-        the number of bifurcations (nodes with more than one child) in each child's
-        subtree. Nodes with fewer bifurcations in their subtrees are placed earlier in the list
-        of the node's children, ensuring that the shortest paths are traversed first.
-
-        Returns
-        -------
-            None
-        """
-        for node in self._nodes:
-            node.children = sorted(
-                node.children, 
-                key=lambda x: (x.type_idx, sum(1 for n in x.subtree if len(n.children) > 1)),
-                reverse=False
-            )
-
 
     def sort(self, **kwargs):
         """
