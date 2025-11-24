@@ -1,0 +1,845 @@
+{
+    "metadata": {
+        "name": "Hay_2011"
+    },
+    "d_lambda": 0.1,
+    "domains": {
+        "axon": [
+            "Leak"
+        ],
+        "soma": [
+            "CaDyn",
+            "CaHVA",
+            "CaLVAst",
+            "Ih",
+            "Im",
+            "K_Pst",
+            "K_Tst",
+            "Leak",
+            "NaTa_t",
+            "Nap_Et2",
+            "SK_E2",
+            "SKv3_1"
+        ],
+        "reduced_80": [
+            "CaDyn",
+            "CaHVA",
+            "CaLVAst",
+            "Ih",
+            "Im",
+            "K_Pst",
+            "K_Tst",
+            "Leak",
+            "NaTa_t",
+            "Nap_Et2",
+            "SK_E2",
+            "SKv3_1"
+        ],
+        "reduced_81": [
+            "Ih",
+            "Leak"
+        ],
+        "reduced_82": [
+            "Ih",
+            "Leak"
+        ],
+        "reduced_83": [
+            "Ih",
+            "Leak"
+        ],
+        "reduced_84": [
+            "Ih",
+            "Leak"
+        ],
+        "reduced_85": [
+            "Ih",
+            "Leak"
+        ],
+        "reduced_86": [
+            "Ih",
+            "Leak"
+        ],
+        "reduced_87": [
+            "Ih",
+            "Leak"
+        ],
+        "reduced_88": [
+            "Ih",
+            "Leak"
+        ]
+    },
+    "groups": [
+        {
+            "name": "all",
+            "domains": [
+                "axon",
+                "soma",
+                "reduced_80",
+                "reduced_81",
+                "reduced_82",
+                "reduced_83",
+                "reduced_84",
+                "reduced_85",
+                "reduced_86",
+                "reduced_87",
+                "reduced_88"
+            ]
+        },
+        {
+            "name": "axonal",
+            "domains": [
+                "axon"
+            ]
+        },
+        {
+            "name": "somatic",
+            "domains": [
+                "soma"
+            ]
+        },
+        {
+            "name": "reduced_80",
+            "domains": [
+                "reduced_80"
+            ]
+        },
+        {
+            "name": "reduced_81",
+            "domains": [
+                "reduced_81"
+            ]
+        },
+        {
+            "name": "reduced_82",
+            "domains": [
+                "reduced_82"
+            ]
+        },
+        {
+            "name": "reduced_83",
+            "domains": [
+                "reduced_83"
+            ]
+        },
+        {
+            "name": "reduced_84",
+            "domains": [
+                "reduced_84"
+            ]
+        },
+        {
+            "name": "reduced_85",
+            "domains": [
+                "reduced_85"
+            ]
+        },
+        {
+            "name": "reduced_86",
+            "domains": [
+                "reduced_86"
+            ]
+        },
+        {
+            "name": "reduced_87",
+            "domains": [
+                "reduced_87"
+            ]
+        },
+        {
+            "name": "reduced_88",
+            "domains": [
+                "reduced_88"
+            ]
+        }
+    ],
+    "params": {
+        "cm": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 1
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 1
+                }
+            },
+            "axonal": {
+                "function": "constant",
+                "parameters": {
+                    "value": 1
+                }
+            },
+            "reduced_80": {
+                "function": "constant",
+                "parameters": {
+                    "value": 2.0
+                }
+            },
+            "reduced_81": {
+                "function": "constant",
+                "parameters": {
+                    "value": 2.0
+                }
+            },
+            "reduced_82": {
+                "function": "constant",
+                "parameters": {
+                    "value": 2.0
+                }
+            },
+            "reduced_83": {
+                "function": "constant",
+                "parameters": {
+                    "value": 2.0
+                }
+            },
+            "reduced_84": {
+                "function": "constant",
+                "parameters": {
+                    "value": 2.0
+                }
+            },
+            "reduced_85": {
+                "function": "constant",
+                "parameters": {
+                    "value": 2.0
+                }
+            },
+            "reduced_86": {
+                "function": "constant",
+                "parameters": {
+                    "value": 2.0
+                }
+            },
+            "reduced_87": {
+                "function": "constant",
+                "parameters": {
+                    "value": 2.0
+                }
+            },
+            "reduced_88": {
+                "function": "constant",
+                "parameters": {
+                    "value": 2.0
+                }
+            }
+        },
+        "Ra": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 100
+                }
+            },
+            "reduced_80": {
+                "function": "constant",
+                "parameters": {
+                    "value": 100.0
+                }
+            },
+            "reduced_81": {
+                "function": "constant",
+                "parameters": {
+                    "value": 100.0
+                }
+            },
+            "reduced_82": {
+                "function": "constant",
+                "parameters": {
+                    "value": 100.0
+                }
+            },
+            "reduced_83": {
+                "function": "constant",
+                "parameters": {
+                    "value": 100.0
+                }
+            },
+            "reduced_84": {
+                "function": "constant",
+                "parameters": {
+                    "value": 100.0
+                }
+            },
+            "reduced_85": {
+                "function": "constant",
+                "parameters": {
+                    "value": 100.0
+                }
+            },
+            "reduced_86": {
+                "function": "constant",
+                "parameters": {
+                    "value": 100.0
+                }
+            },
+            "reduced_87": {
+                "function": "constant",
+                "parameters": {
+                    "value": 100.0
+                }
+            },
+            "reduced_88": {
+                "function": "constant",
+                "parameters": {
+                    "value": 100.0
+                }
+            }
+        },
+        "gbar_Leak": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 3.38e-05
+                }
+            },
+            "axonal": {
+                "function": "constant",
+                "parameters": {
+                    "value": 3.25e-05
+                }
+            },
+            "reduced_80": {
+                "function": "constant",
+                "parameters": {
+                    "value": 5.89e-05
+                }
+            },
+            "reduced_81": {
+                "function": "constant",
+                "parameters": {
+                    "value": 4.67e-05
+                }
+            },
+            "reduced_82": {
+                "function": "constant",
+                "parameters": {
+                    "value": 4.67e-05
+                }
+            },
+            "reduced_83": {
+                "function": "constant",
+                "parameters": {
+                    "value": 4.67e-05
+                }
+            },
+            "reduced_84": {
+                "function": "constant",
+                "parameters": {
+                    "value": 4.67e-05
+                }
+            },
+            "reduced_85": {
+                "function": "constant",
+                "parameters": {
+                    "value": 4.67e-05
+                }
+            },
+            "reduced_86": {
+                "function": "constant",
+                "parameters": {
+                    "value": 4.67e-05
+                }
+            },
+            "reduced_87": {
+                "function": "constant",
+                "parameters": {
+                    "value": 4.67e-05
+                }
+            },
+            "reduced_88": {
+                "function": "constant",
+                "parameters": {
+                    "value": 4.67e-05
+                }
+            }
+        },
+        "e_Leak": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": -90
+                }
+            },
+            "reduced_80": {
+                "function": "constant",
+                "parameters": {
+                    "value": -90.0
+                }
+            },
+            "reduced_81": {
+                "function": "constant",
+                "parameters": {
+                    "value": -90.0
+                }
+            },
+            "reduced_82": {
+                "function": "constant",
+                "parameters": {
+                    "value": -90.0
+                }
+            },
+            "reduced_83": {
+                "function": "constant",
+                "parameters": {
+                    "value": -90.0
+                }
+            },
+            "reduced_84": {
+                "function": "constant",
+                "parameters": {
+                    "value": -90.0
+                }
+            },
+            "reduced_85": {
+                "function": "constant",
+                "parameters": {
+                    "value": -90.0
+                }
+            },
+            "reduced_86": {
+                "function": "constant",
+                "parameters": {
+                    "value": -90.0
+                }
+            },
+            "reduced_87": {
+                "function": "constant",
+                "parameters": {
+                    "value": -90.0
+                }
+            },
+            "reduced_88": {
+                "function": "constant",
+                "parameters": {
+                    "value": -90.0
+                }
+            }
+        },
+        "depth_CaDyn": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.1
+                }
+            },
+            "reduced_80": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.1
+                }
+            }
+        },
+        "taur_CaDyn": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 80
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 460
+                }
+            },
+            "reduced_80": {
+                "function": "constant",
+                "parameters": {
+                    "value": 122.0
+                }
+            }
+        },
+        "cainf_CaDyn": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0001
+                }
+            },
+            "reduced_80": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0001
+                }
+            }
+        },
+        "gamma_CaDyn": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.05
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.000501
+                }
+            },
+            "reduced_80": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.000509
+                }
+            }
+        },
+        "kt_CaDyn": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0
+                }
+            },
+            "reduced_80": {
+                "function": "constant",
+                "parameters": {
+                    "value": -0.0
+                }
+            }
+        },
+        "kd_CaDyn": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0
+                }
+            },
+            "reduced_80": {
+                "function": "constant",
+                "parameters": {
+                    "value": -0.0
+                }
+            }
+        },
+        "gbar_Im": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0
+                }
+            },
+            "reduced_80": {
+                "function": "constant",
+                "parameters": {
+                    "value": 6.75e-05
+                }
+            }
+        },
+        "ek": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": -85
+                }
+            },
+            "reduced_80": {
+                "function": "constant",
+                "parameters": {
+                    "value": -85.0
+                }
+            }
+        },
+        "gbar_NaTa_t": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 2.04
+                }
+            },
+            "reduced_80": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0213
+                }
+            }
+        },
+        "ena": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 50
+                }
+            },
+            "reduced_80": {
+                "function": "constant",
+                "parameters": {
+                    "value": 50.0
+                }
+            }
+        },
+        "gbar_CaLVAst": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.00343
+                }
+            },
+            "reduced_80": {
+                "function": "polynomial",
+                "parameters": {
+                    "coeffs": [
+                        2.492163915815131e-31,
+                        -3.0423635906687177e-27,
+                        1.585887850651827e-23,
+                        -4.602734817459094e-20,
+                        8.130693695804977e-17,
+                        -8.978470330168918e-14,
+                        6.134689484121412e-11,
+                        -2.486473186375684e-08,
+                        5.523074019108369e-06,
+                        -0.0005791208336783611,
+                        0.02015657327984743
+                    ]
+                }
+            }
+        },
+        "eca": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 132
+                }
+            },
+            "reduced_80": {
+                "function": "constant",
+                "parameters": {
+                    "value": 132.219761875
+                }
+            }
+        },
+        "gbar_Ih": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0002
+                }
+            },
+            "reduced_80": {
+                "function": "polynomial",
+                "parameters": {
+                    "coeffs": [
+                        -6.619381127795304e-32,
+                        8.10637562269738e-28,
+                        -4.2121148511429716e-24,
+                        1.2100519770419485e-20,
+                        -2.1009966919824955e-17,
+                        2.268046982433373e-14,
+                        -1.5138526183211346e-11,
+                        6.042408099652759e-09,
+                        -1.3399484046626554e-06,
+                        0.00014377946149710284,
+                        -0.0047125056291892455
+                    ]
+                }
+            },
+            "reduced_81": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0002
+                }
+            },
+            "reduced_82": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0002
+                }
+            },
+            "reduced_83": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0002
+                }
+            },
+            "reduced_84": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0002
+                }
+            },
+            "reduced_85": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0002
+                }
+            },
+            "reduced_86": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0002
+                }
+            },
+            "reduced_87": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0002
+                }
+            },
+            "reduced_88": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0002
+                }
+            }
+        },
+        "gbar_SKv3_1": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.693
+                }
+            },
+            "reduced_80": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.000261
+                }
+            }
+        },
+        "gbar_SK_E2": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0441
+                }
+            },
+            "reduced_80": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0012
+                }
+            }
+        },
+        "gbar_K_Pst": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.00223
+                }
+            },
+            "reduced_80": {
+                "function": "constant",
+                "parameters": {
+                    "value": -0.0
+                }
+            }
+        },
+        "gbar_CaHVA": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.000992
+                }
+            },
+            "reduced_80": {
+                "function": "polynomial",
+                "parameters": {
+                    "coeffs": [
+                        6.724117517148262e-33,
+                        -8.208613479927747e-29,
+                        4.278890408905027e-25,
+                        -1.241865738303256e-21,
+                        2.1937457468020227e-18,
+                        -2.4224847025978347e-15,
+                        1.6552030450594974e-12,
+                        -6.708763337085576e-10,
+                        1.490182829657369e-07,
+                        -1.5625282581002004e-05,
+                        0.0005942998624066152
+                    ]
+                }
+            }
+        },
+        "gbar_Nap_Et2": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.00172
+                }
+            },
+            "reduced_80": {
+                "function": "constant",
+                "parameters": {
+                    "value": -0.0
+                }
+            }
+        },
+        "gbar_K_Tst": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0812
+                }
+            },
+            "reduced_80": {
+                "function": "constant",
+                "parameters": {
+                    "value": -0.0
+                }
+            }
+        }
+    }
+}
