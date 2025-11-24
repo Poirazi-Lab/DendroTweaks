@@ -688,7 +688,7 @@ class IOMixin():
             self._add_population(pop)
 
 
-    def load_stimuli(self, file_name):
+    def load_stimuli(self, file_name, load_legacy=False):
         """
         Load the stimuli from a JSON file.
 
@@ -697,16 +697,31 @@ class IOMixin():
         file_name : str
             The name of the file to read from.
         """
-        try:
-            self._load_stimuli(file_name)
-        except FileNotFoundError as e:
+        if not load_legacy:
+            try:
+                self._load_stimuli(file_name)
+            except Exception as e:
+                raise RuntimeError(
+                    f"An error occurred while loading stimuli '{file_name}': {e}\n"
+                    "If these stimuli were saved using the legacy format (v0.4.6 or earlier), "
+                    f"please call load_stimuli('{file_name}', load_legacy=True) to attempt automatic conversion."
+                )
+        else:
             warnings.warn(
-                f"Stimuli configuration for '{file_name}' not found in the current format.\nAttempting to load using the legacy v0.4.6 format. "
-                "\n(Note: Support for the legacy stimuli format is deprecated and will be removed in future releases.)"
+                f"Attempting to load using the legacy v0.4.6 format. "
+                "\n(Support for the legacy stimuli format is deprecated and will be removed in future releases.)"
             )
-            self._load_legacy_stimuli(file_name)
-        except Exception as e:
-            raise RuntimeError(f"An error occurred while loading stimuli '{file_name}': {e}")
+            from dendrotweaks.stimuli.legacy_io import convert_legacy_stimuli
+            convert_legacy_stimuli(
+                path_manager=self.path_manager, 
+                protocol_name=file_name,
+                morphology_name=self.morphology_name,
+                d_lambda=self.d_lambda
+                )
+            try:
+                self._load_stimuli(file_name)
+            except Exception as e:
+                raise RuntimeError(f"An error occurred while loading legacy stimuli '{file_name}': {e}\n")
 
 
     def _clear_and_setup_simulation(self, data):
@@ -750,83 +765,6 @@ class IOMixin():
 
         if os.path.exists(path_to_recordings_csv):
             self._load_recordings(path_to_recordings_csv)
-
-    # -----------------------------------------------------------------------
-    # LEGACY IMPORT
-    # -----------------------------------------------------------------------
-
-    def _load_legacy_stimuli(self, file_name):
-        """
-        Load the stimuli from a legacy JSON and CSV file format.
-
-        Parameters
-        ----------
-        file_name : str
-            The name of the file to read from.
-        """
-        
-        path_to_json = self.path_manager.get_abs_path(f'stimuli/{file_name}.json')
-        path_to_stimuli_csv = self.path_manager.get_abs_path(f'stimuli/{file_name}.csv')
-
-        with open(path_to_json, 'r') as f:
-            data = json.load(f)
-
-        df_stimuli = pd.read_csv(path_to_stimuli_csv)
-
-        self.simulator.from_dict(data['simulation'])
-
-        # Clear all stimuli and recordings
-        self.remove_all_stimuli()
-        self.remove_all_recordings()
-
-        # IClamps -----------------------------------------------------------
-
-        df_iclamps = df_stimuli[df_stimuli['type'] == 'iclamp'].reset_index(drop=True, inplace=False)
-
-        for row in df_iclamps.itertuples(index=False):
-            self.add_iclamp(
-            self.sec_tree.sections[row.sec_idx], 
-            row.loc,
-            data['stimuli']['iclamps'][row.idx]['amp'],
-            data['stimuli']['iclamps'][row.idx]['delay'],
-            data['stimuli']['iclamps'][row.idx]['dur']
-            )
-
-        # Populations -------------------------------------------------------
-
-        syn_types = ['AMPA', 'NMDA', 'AMPA_NMDA', 'GABAa']
-
-        for syn_type in syn_types:
-
-            df_syn = df_stimuli[df_stimuli['type'] == syn_type]
-    
-            for i, pop_data in enumerate(data['stimuli']['populations'][syn_type]):
-
-                df_pop = df_syn[df_syn['idx'] == i]
-
-                segments = [self.sec_tree.sections[sec_idx](loc) 
-                            for sec_idx, loc in zip(df_pop['sec_idx'], df_pop['loc'])]
-                
-                pop = Population(name=f"{syn_type}_{i}",
-                                segments=segments,
-                                N=pop_data['N'], 
-                                syn_type=syn_type)
-                
-                syn_locs = [(self.sec_tree.sections[sec_idx], loc) for sec_idx, loc in zip(df_pop['sec_idx'].tolist(), df_pop['loc'].tolist())]
-                
-                pop.allocate_synapses(syn_locs=syn_locs)
-                pop.update_kinetic_params(**pop_data['kinetic_params'])
-                pop.update_input_params(**pop_data['input_params'])
-                self._add_population(pop)
-
-        # Recordings ---------------------------------------------------------
-
-        df_recs = df_stimuli[df_stimuli['type'] == 'rec'].reset_index(drop=True, inplace=False)
-        for row in df_recs.itertuples(index=False):
-            var = data['stimuli']['recordings'][row.idx]['var']
-            self.add_recording(
-            self.sec_tree.sections[row.sec_idx], row.loc, var
-            )
 
 
     # ========================================================================
