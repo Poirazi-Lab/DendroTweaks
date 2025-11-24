@@ -155,7 +155,7 @@ class SWCReader():
             if t in domain_map:
                 continue
             domain_map[t] = f'custom_{t}'
-            color_map[t] = '#17BECF'
+            color_map[f'custom_{t}'] = '#17BECF'
         
         return domain_map, color_map
 

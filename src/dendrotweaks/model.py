@@ -1182,7 +1182,7 @@ class Model(IOMixin, SimulationMixin):
         
         # Create new domain
         reduced_domains = [domain_name for domain_name in self.domains if domain_name.startswith('reduced')]
-        new_reduced_domain_name = f'reduced_{len(reduced_domains)}'
+        new_reduced_domain_name = f'reduced_8{len(reduced_domains)}'
         new_reduced_domain_type_idx = int(f'8{len(reduced_domains)}')
         group_name = new_reduced_domain_name
 
