@@ -1,6 +1,31 @@
 Changelog
 =============
 
+Version 0.5.0
+--------------
+
+  Key Updates:
+
+  - Updated the project license and added SPDX identifiers. See README and LICENSE for details.
+  - Revised the tree-sorting algorithm to achieve deterministic indexing based solely on topology. Removed :code:`_sort_children` from :code:`SectionTree` and :code:`PointTree`; both now use the inherited :code:`Tree` sorting. Sorting is based only on subtree bifurcation counts; domain information is no longer used.
+  - Added support for user-defined domain names and colors. Added a header to SWC files mapping types to names and colors. Refactored domain methods into clearer steps (add, update, extend).
+  - Added per-synapse seeds to spike-generation functions to enable reproducible simulations.
+  - Flattened :code:`model.population` by removing sorting by synapse type. Replaced auto-generated names such as :code:`AMPA_0` with user-defined population names.
+  - Reorganized how simulation stimuli are stored and referenced. Each protocol now has its own subfolder with a :file:`config.json` plus three CSV files (:file:`recordings.csv`, :file:`iclamps.csv`, and :file:`synapses.csv`). Added automatic handling of legacy stimuli formats.
+
+  Minor Updates:
+
+  - Points now require :code:`domain_name` and :code:`domain_color`; sections and segments derive these from their first point. When domain attributes are updated, changes propagate to their points (e.g., :code:`domain.color` updates :code:`point.domain_color` for each point in the domain).
+  - Moved domain creation to a dedicated factory function :code:`create_domains`; domains now belong to :code:`Model`, not :code:`SectionTree`.
+  - Renamed :code:`domain_idx` to :code:`idx_within_domain` in :code:`Section`.
+  - Ensured deterministic ordering of synapses within populations (sorted by section index and location).
+  - Fixed "phantom synapses" via a new :code:`_clear_syn()` method that fully removes NEURON instances.
+  - Added a power distribution function for channel distribution models.
+  - Replaced MSE with :code:`max_error` as the metric for distribution fitting. Enforced :code:`low_val < high_val` for step distributions.
+  - :code:`download_example_data` now fetches version-specific examples instead of always using the latest.
+  - Enhanced :code:`PathManager` to support the updated stimuli directory structure.
+
+
 Version 0.4.6
 --------------
 
