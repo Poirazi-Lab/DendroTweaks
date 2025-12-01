@@ -187,9 +187,7 @@ def _build_metadata(model_name):
     """Create metadata dictionary for new format."""
     return {
         'name': model_name,
-        'author': os.getlogin(),
         'software': f'dendrotweaks v{__version__}',
-        'platform': os.uname().sysname,
         'comments': 'Converted from legacy format by DendroTweaks.',
     }
 
