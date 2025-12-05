@@ -21,7 +21,6 @@ DOMAINS_TO_GROUPS = {
 
 DOMAINS_TO_NEURON = {
     'soma': 'soma',
-    'perisomatic': 'dend_11',
     'axon': 'axon',
     'apic': 'apic',
     'dend': 'dend',
@@ -29,8 +28,8 @@ DOMAINS_TO_NEURON = {
     'trunk': 'dend_41',
     'tuft': 'dend_42',
     'oblique': 'dend_43',
-    'custom': 'dend_5',
-    'reduced': 'dend_8',
+    'custom': 'dend_',
+    'reduced': 'dend_',
     'undefined': 'dend_0',
 }
 
