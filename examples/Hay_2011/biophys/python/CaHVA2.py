@@ -6,12 +6,12 @@ import sys
 from dendrotweaks.biophys.mechanisms import IonChannel
 import numpy as np
 
-class CaHVA(IonChannel):
+class CaHVA2(IonChannel):
     """
     
     """
 
-    def __init__(self, name="CaHVA"):
+    def __init__(self, name="CaHVA2"):
         super().__init__(name=name)
         self.params = {
             "gbar": 0.0

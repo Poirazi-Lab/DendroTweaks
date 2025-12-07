@@ -6,7 +6,7 @@
     "domains": {
         "apic": [
             "CaDyn",
-            "CaHVA",
+            "CaHVA2",
             "CaLVAst",
             "Ih",
             "Im",
@@ -23,7 +23,7 @@
         ],
         "soma": [
             "CaDyn",
-            "CaHVA",
+            "CaHVA2",
             "CaLVAst",
             "Ih",
             "Im",
@@ -37,7 +37,7 @@
         ],
         "reduced_80": [
             "CaDyn",
-            "CaHVA",
+            "CaHVA2",
             "CaLVAst",
             "Ih",
             "Im",
@@ -51,7 +51,7 @@
         ],
         "reduced_81": [
             "CaDyn",
-            "CaHVA",
+            "CaHVA2",
             "CaLVAst",
             "Ih",
             "Im",
@@ -65,7 +65,7 @@
         ],
         "reduced_82": [
             "CaDyn",
-            "CaHVA",
+            "CaHVA2",
             "CaLVAst",
             "Ih",
             "Im",
@@ -79,7 +79,7 @@
         ],
         "reduced_83": [
             "CaDyn",
-            "CaHVA",
+            "CaHVA2",
             "CaLVAst",
             "Ih",
             "Im",
@@ -93,7 +93,7 @@
         ],
         "reduced_84": [
             "CaDyn",
-            "CaHVA",
+            "CaHVA2",
             "CaLVAst",
             "Ih",
             "Im",
@@ -107,7 +107,7 @@
         ],
         "reduced_85": [
             "CaDyn",
-            "CaHVA",
+            "CaHVA2",
             "CaLVAst",
             "Ih",
             "Im",
@@ -121,7 +121,7 @@
         ],
         "reduced_86": [
             "CaDyn",
-            "CaHVA",
+            "CaHVA2",
             "CaLVAst",
             "Ih",
             "Im",
@@ -135,7 +135,7 @@
         ],
         "reduced_87": [
             "CaDyn",
-            "CaHVA",
+            "CaHVA2",
             "CaLVAst",
             "Ih",
             "Im",
@@ -149,7 +149,7 @@
         ],
         "reduced_88": [
             "CaDyn",
-            "CaHVA",
+            "CaHVA2",
             "CaLVAst",
             "Ih",
             "Im",
@@ -163,7 +163,7 @@
         ],
         "reduced_89": [
             "CaDyn",
-            "CaHVA",
+            "CaHVA2",
             "CaLVAst",
             "Ih",
             "Im",
@@ -177,7 +177,7 @@
         ],
         "reduced_810": [
             "CaDyn",
-            "CaHVA",
+            "CaHVA2",
             "CaLVAst",
             "Ih",
             "Im",
@@ -191,7 +191,7 @@
         ],
         "reduced_811": [
             "CaDyn",
-            "CaHVA",
+            "CaHVA2",
             "CaLVAst",
             "Ih",
             "Im",
@@ -2476,7 +2476,7 @@
                 }
             }
         },
-        "gbar_CaHVA": {
+        "gbar_CaHVA2": {
             "all": {
                 "function": "constant",
                 "parameters": {

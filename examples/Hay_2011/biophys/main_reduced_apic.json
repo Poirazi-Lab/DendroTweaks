@@ -11,7 +11,7 @@
         ],
         "soma": [
             "CaDyn",
-            "CaHVA",
+            "CaHVA2",
             "CaLVAst",
             "Ih",
             "K_Pst",
@@ -28,7 +28,7 @@
         ],
         "reduced_80": [
             "CaDyn",
-            "CaHVA",
+            "CaHVA2",
             "CaLVAst",
             "Ih",
             "Im",
@@ -262,6 +262,43 @@
                 }
             }
         },
+        "gbar_CaHVA2": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.000992
+                }
+            },
+            "reduced_80": {
+                "function": "step",
+                "parameters": {
+                    "max_value": 0.0005256176470588235,
+                    "min_value": 6.594607879924954e-05,
+                    "start": 700.513816512395,
+                    "end": 955.2461134259933
+                }
+            }
+        },
+        "eca": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 132
+                }
+            },
+            "reduced_80": {
+                "function": "constant",
+                "parameters": {
+                    "value": 127.5895106176
+                }
+            }
+        },
         "gbar_K_Tst": {
             "all": {
                 "function": "constant",
@@ -361,20 +398,6 @@
                 }
             }
         },
-        "eca": {
-            "all": {
-                "function": "constant",
-                "parameters": {
-                    "value": 132
-                }
-            },
-            "reduced_80": {
-                "function": "constant",
-                "parameters": {
-                    "value": 127.5895106176
-                }
-            }
-        },
         "gbar_Nap_Et2": {
             "all": {
                 "function": "constant",
@@ -440,29 +463,6 @@
                 "function": "constant",
                 "parameters": {
                     "value": 0.000261
-                }
-            }
-        },
-        "gbar_CaHVA": {
-            "all": {
-                "function": "constant",
-                "parameters": {
-                    "value": 0.0
-                }
-            },
-            "somatic": {
-                "function": "constant",
-                "parameters": {
-                    "value": 0.000992
-                }
-            },
-            "reduced_80": {
-                "function": "step",
-                "parameters": {
-                    "max_value": 0.0005256176470588235,
-                    "min_value": 6.594607879924954e-05,
-                    "start": 700.513816512395,
-                    "end": 955.2461134259933
                 }
             }
         },

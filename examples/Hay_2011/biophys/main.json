@@ -8,7 +8,7 @@
     "domains": {
         "apic": [
             "CaDyn",
-            "CaHVA",
+            "CaHVA2",
             "CaLVAst",
             "Ih",
             "Im",
@@ -22,7 +22,7 @@
         ],
         "soma": [
             "CaDyn",
-            "CaHVA",
+            "CaHVA2",
             "CaLVAst",
             "Ih",
             "K_Pst",
@@ -226,6 +226,37 @@
                 }
             }
         },
+        "gbar_CaHVA2": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.0
+                }
+            },
+            "somatic": {
+                "function": "constant",
+                "parameters": {
+                    "value": 0.000992
+                }
+            },
+            "apical": {
+                "function": "step",
+                "parameters": {
+                    "max_value": 0.000555,
+                    "min_value": 5.550000000000001e-05,
+                    "start": 685,
+                    "end": 885
+                }
+            }
+        },
+        "eca": {
+            "all": {
+                "function": "constant",
+                "parameters": {
+                    "value": 132
+                }
+            }
+        },
         "gbar_K_Tst": {
             "all": {
                 "function": "constant",
@@ -319,14 +350,6 @@
                 }
             }
         },
-        "eca": {
-            "all": {
-                "function": "constant",
-                "parameters": {
-                    "value": 132
-                }
-            }
-        },
         "gbar_Nap_Et2": {
             "all": {
                 "function": "constant",
@@ -386,29 +409,6 @@
                 "function": "constant",
                 "parameters": {
                     "value": 0.000261
-                }
-            }
-        },
-        "gbar_CaHVA": {
-            "all": {
-                "function": "constant",
-                "parameters": {
-                    "value": 0.0
-                }
-            },
-            "somatic": {
-                "function": "constant",
-                "parameters": {
-                    "value": 0.000992
-                }
-            },
-            "apical": {
-                "function": "step",
-                "parameters": {
-                    "max_value": 0.000555,
-                    "min_value": 5.550000000000001e-05,
-                    "start": 685,
-                    "end": 885
                 }
             }
         },

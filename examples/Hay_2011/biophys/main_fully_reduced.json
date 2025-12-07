@@ -9,7 +9,7 @@
         ],
         "soma": [
             "CaDyn",
-            "CaHVA",
+            "CaHVA2",
             "CaLVAst",
             "Ih",
             "Im",
@@ -23,7 +23,7 @@
         ],
         "reduced_80": [
             "CaDyn",
-            "CaHVA",
+            "CaHVA2",
             "CaLVAst",
             "Ih",
             "Im",
@@ -769,7 +769,7 @@
                 }
             }
         },
-        "gbar_CaHVA": {
+        "gbar_CaHVA2": {
             "all": {
                 "function": "constant",
                 "parameters": {

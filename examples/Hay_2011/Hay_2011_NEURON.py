@@ -115,7 +115,7 @@ class Cell():
         for sec in self.apic:
             
             sec.insert('CaDyn')
-            sec.insert('CaHVA')
+            sec.insert('CaHVA2')
             sec.insert('CaLVAst')
             sec.insert('Ih')
             sec.insert('Im')
@@ -131,7 +131,7 @@ class Cell():
         for sec in self.soma:
             
             sec.insert('CaDyn')
-            sec.insert('CaHVA')
+            sec.insert('CaHVA2')
             sec.insert('CaLVAst')
             sec.insert('Ih')
             sec.insert('K_Pst')
@@ -284,6 +284,24 @@ class Cell():
                     
                 
             
+            if domain in ['apic', 'soma']:
+                self.set_param(seg, "gbar_CaHVA2", "CaHVA2", 0.0)
+                    
+                
+            if domain in ['soma']:
+                self.set_param(seg, "gbar_CaHVA2", "CaHVA2", 0.000992)
+                    
+                
+            if domain in ['apic']:
+                self.set_param(seg, "gbar_CaHVA2", "CaHVA2", step(distance, **{'max_value': 0.000555, 'min_value': 5.550000000000001e-05, 'start': 685, 'end': 885}))
+                    
+                
+            
+            if domain in ['apic', 'axon', 'soma', 'dend_31']:
+                self.set_param(seg, "eca", "Independent", 132)
+                    
+                
+            
             if domain in ['soma']:
                 self.set_param(seg, "gbar_K_Tst", "K_Tst", 0.0)
                     
@@ -342,11 +360,6 @@ class Cell():
                     
                 
             
-            if domain in ['apic', 'axon', 'soma', 'dend_31']:
-                self.set_param(seg, "eca", "Independent", 132)
-                    
-                
-            
             if domain in ['soma']:
                 self.set_param(seg, "gbar_Nap_Et2", "Nap_Et2", 0.0)
                     
@@ -384,19 +397,6 @@ class Cell():
                 
             if domain in ['apic']:
                 self.set_param(seg, "gbar_SKv3_1", "SKv3_1", 0.000261)
-                    
-                
-            
-            if domain in ['apic', 'soma']:
-                self.set_param(seg, "gbar_CaHVA", "CaHVA", 0.0)
-                    
-                
-            if domain in ['soma']:
-                self.set_param(seg, "gbar_CaHVA", "CaHVA", 0.000992)
-                    
-                
-            if domain in ['apic']:
-                self.set_param(seg, "gbar_CaHVA", "CaHVA", step(distance, **{'max_value': 0.000555, 'min_value': 5.550000000000001e-05, 'start': 685, 'end': 885}))
                     
                 
             
