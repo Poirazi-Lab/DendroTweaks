@@ -112,14 +112,19 @@ class {{ class_name }}(Channel):
             {%- endif %}
         {% endfor -%}
         gbar = params["gbar_{{class_name}}"]
-        # E = params["E_{{ ion }}"]
-        E = {{ E_ion }}
+        {% if independent_var_name == 'cai' -%}
+        cai = states["CaCon_i"]
+        {% endif -%}
+        E = params.get("E_{{ ion }}", {{ E_ion }})
         {{ procedure_calls}}
         g = self.tadj * gbar *{% for state, power in state_vars.items()%} {{state}}**{{power['power']}} {% if not loop.last %}*{% endif %}{% endfor %}
         return g * (v - E)
 
     def init_state(self, states, v, params, delta_t):
         {{ procedure_calls}}
+        {% if independent_var_name == 'cai' -%}
+        cai = states["CaCon_i"]
+        {% endif -%}
         return {
             {% for state in state_vars.keys() -%}
             "{{ state }}_{{class_name}}": {{state}}Inf 

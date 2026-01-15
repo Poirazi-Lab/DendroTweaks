@@ -44,6 +44,7 @@ FUNCTION rateconst2(v (mV), r (/mV/ms), v12 (mV), q (mV)) (/ms) {
 }
 
 PARAMETER {
+	v       (mV) : intentionally misplaced assigned variable
 	gbar    = 0.0    (S/cm2)
 	Rma     = 0.182  (/mV/ms) : opening max rate
 	Rmb     = 0.14   (/mV/ms) : closing max rate
@@ -64,7 +65,7 @@ PARAMETER {
 }
 
 ASSIGNED {
-	v       (mV)
+	:v       (mV)
 	i 	    (mA/cm2)
 	ina     (mA/cm2)
 	gna     (S/cm2)
@@ -81,7 +82,7 @@ STATE { m h }
 
 BREAKPOINT {
     SOLVE states METHOD cnexp
-    gna = tadj * gbar * pow(m, 3) * h
+    gna = tadj * gbar * m^3 * h
 	i = gna * (v - ena)
 	ina = i
 }

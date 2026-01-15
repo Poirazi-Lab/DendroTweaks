@@ -269,7 +269,8 @@ class MODFileParser():
         if isinstance(expression, dict):
             for operator, operands in expression.items():
                 if operator == 'pow' and operands[0] == state_var:
-                    # Found a power operation on the target variable
+                    power = int(operands[1])
+                elif operator == '^' and operands[0] == state_var:
                     power = int(operands[1])
                 else:
                     # Continue traversing the dictionary

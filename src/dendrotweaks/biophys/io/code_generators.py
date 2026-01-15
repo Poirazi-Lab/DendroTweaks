@@ -240,12 +240,18 @@ class PythonCodeGenerator(CodeGenerator):
 
         return conditional_code
     
-    def _generate_procedure_calls(self, ast):
+    def _generate_procedure_calls(self, ast, default_params=True):
+        """
+        Generate procedure call statements from AST procedures.
+        Used only for Jaxley-compatible code generation.
+        """
         
         for procedure in ast.procedures:
 
             name = procedure.signature['name']
             params = [param['name'] for param in procedure.signature.get('params', [])]
+            if params == [] and default_params:
+                params = ['v']
             state_vars = list(ast.state_vars.keys())
 
             procedure_call_template = """{%- for state_var in state_vars -%}

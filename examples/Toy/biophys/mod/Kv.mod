@@ -57,12 +57,12 @@ BREAKPOINT {
 } 
 
 DERIVATIVE  states {   
-        rates(v)
+        rates()
         n' =  (ninf - n)/ntau
 }
 
 INITIAL { 
-	rates(v)
+	rates()
 	n = ninf
 }
 
@@ -71,7 +71,7 @@ FUNCTION rateconst(v (mV), r (/mV/ms), th (mV), q (mV)) (/ms) {
 	rateconst = r * (v - th) / (1 - exp(-(v - th)/q))
 }
 
-PROCEDURE rates(v (mV)) {
+PROCEDURE rates() {
 
 	LOCAL alpn, betn
 

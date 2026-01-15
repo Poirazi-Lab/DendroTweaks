@@ -24,7 +24,7 @@ class K_Tst(IonChannel):
             "h": 0.0
             }
         self._state_powers = {
-            "m": {'power': 1},
+            "m": {'power': 4},
             "h": {'power': 1}
             }
         self.ion = "k"

@@ -164,6 +164,7 @@ class MODFileReader():
                             for block_name, block_content in self.blocks.items()])
             print(message)
         self.find_unmatched_content()
+        self._move_assigned_to_parameters()
         return self.blocks
 
     def _get_block_regex(self, block_name: str) -> List[str]:
@@ -213,3 +214,47 @@ class MODFileReader():
             if unmatched: print(f"Unmatched content:\n{unmatched}")
             else: print("No unmatched content.")
         self._unmatched = unmatched
+
+
+    def _move_assigned_to_parameters(self) -> None:
+        """
+        Move misplaced assigned variables from PARAMETER blocks
+        to the ASSIGNED block.
+        """
+        parameter_blocks = self.blocks.get("PARAMETER", [])
+        assigned_blocks = self.blocks.get("ASSIGNED", [])
+
+        if not parameter_blocks or not assigned_blocks:
+            return
+
+        def extract_block_content(name: str, block: str) -> list[str] | None:
+            match = re.search(rf"{name}\s*\{{([\s\S]*?)\}}", block)
+            if not match:
+                return None
+            content = match.group(1)
+            lines = [line for line in content.splitlines() if line.strip()]
+            return lines
+
+        assigned_lines = extract_block_content("ASSIGNED", assigned_blocks[0])
+        if assigned_lines is None:
+            return
+
+        for i, block in enumerate(parameter_blocks):
+            lines = extract_block_content("PARAMETER", block)
+            if lines is None:
+                continue
+
+            keep, move = [], []
+            for line in lines:
+                if "=" in line:
+                    keep.append(line)
+                else:
+                    move.append(line)
+
+            if not move:
+                continue
+
+            self.blocks["PARAMETER"][i] = "\n".join(["PARAMETER {", *keep, "}"])
+            assigned_lines = move + assigned_lines
+
+        self.blocks["ASSIGNED"][0] = "\n".join(["ASSIGNED {", *assigned_lines, "}"])
