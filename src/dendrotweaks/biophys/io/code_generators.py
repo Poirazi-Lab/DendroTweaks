@@ -138,7 +138,7 @@ class PythonCodeGenerator(CodeGenerator):
             signature_str = self._generate_signature(procedure.signature, 
                                                      is_method=True,
                                                      extra_params=['celsius'],
-                                                     default_params=True)
+                                                     default_params=[ast.independent_var_name])
 
             # Generate the body
             body_str = self._generate_body(procedure.statements)
@@ -164,7 +164,7 @@ class PythonCodeGenerator(CodeGenerator):
         
         return procedures
 
-    def _generate_signature(self, signature, is_method=True, extra_params=None, default_params=False):
+    def _generate_signature(self, signature, is_method=True, extra_params=None, default_params=None):
         """
         Generate the signature string for a function using a Jinja2 template.
         The function AST representation is used to retrieve the function name
@@ -184,9 +184,10 @@ class PythonCodeGenerator(CodeGenerator):
         template = Template(signature_template)
         name = signature['name']
         params = [param['name'] for param in signature.get('params', [])]
+        default_params = default_params or []
         if params == [] and default_params:
-            print(f"Warning: Procedure {name} has no parameters! Expected 'v' or 'cai'. Defaulting to 'v'.")
-            params = ['v']
+            print(f"Warning: Procedure {name} has no parameters! Expected 'v' or 'cai'. Defaulting to '{default_params[0]}'.")
+            params = default_params
         if is_method:
             params = ['self'] + params
 
@@ -240,7 +241,7 @@ class PythonCodeGenerator(CodeGenerator):
 
         return conditional_code
     
-    def _generate_procedure_calls(self, ast, default_params=True):
+    def _generate_procedure_calls(self, ast):
         """
         Generate procedure call statements from AST procedures.
         Used only for Jaxley-compatible code generation.
@@ -250,8 +251,8 @@ class PythonCodeGenerator(CodeGenerator):
 
             name = procedure.signature['name']
             params = [param['name'] for param in procedure.signature.get('params', [])]
-            if params == [] and default_params:
-                params = ['v']
+            if params == []:
+                params = [ast.independent_var_name]
             state_vars = list(ast.state_vars.keys())
 
             procedure_call_template = """{%- for state_var in state_vars -%}

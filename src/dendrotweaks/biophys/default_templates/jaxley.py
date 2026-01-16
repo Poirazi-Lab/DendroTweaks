@@ -94,6 +94,9 @@ class {{ class_name }}(Channel):
             {%- if not loop.last %}
             {%- endif %}
         {% endfor -%}
+        {% if independent_var_name == 'cai' -%}
+        cai = states["CaCon_i"]
+        {% endif -%}
         {{- procedure_calls}}
         {% for state in state_vars.keys() %}new_{{state}} = exponential_euler({{state}}, dt, {{state}}Inf, {{state}}Tau){% if not loop.last %}
         {% endif %}{% endfor %}
@@ -121,10 +124,10 @@ class {{ class_name }}(Channel):
         return g * (v - E)
 
     def init_state(self, states, v, params, delta_t):
-        {{ procedure_calls}}
         {% if independent_var_name == 'cai' -%}
         cai = states["CaCon_i"]
         {% endif -%}
+        {{ procedure_calls}}
         return {
             {% for state in state_vars.keys() -%}
             "{{ state }}_{{class_name}}": {{state}}Inf 
