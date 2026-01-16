@@ -1,6 +1,19 @@
 Changelog
 =============
 
+Version 0.5.1
+--------------
+
+  This release includes several minor bug fixes and improvements to MOD file parsing and conversion.
+  It addresses issues `#6 <https://github.com/Poirazi-Lab/DendroTweaks/issues/6>`_ and `#7 <https://github.com/Poirazi-Lab/DendroTweaks/issues/7>`_.
+
+  Minor Updates:
+
+  - Fixed an issue where the power operator (:code:`^`) was not recognized when parsing MOD files.
+  - Added a heuristic to the MOD file reader that moves misplaced assigned variables from PARAMETER to ASSIGNED blocks (e.g., :code:`v (mV)` commonly found in PARAMETER blocks).
+  - Updated the Jaxley template to properly access calcium concentration for Ca-dependent channels.
+  - Modified code generators to fall back to default parameters in procedure calls, primarily for Jaxley-compatible code generation (e.g., :code:`compute_kinetic_variables(v)` instead of :code:`compute_kinetic_variables()`).
+
 Version 0.5.0
 --------------
 

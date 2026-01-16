@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2025 Poirazi Lab <dendrotweaks@dendrites.gr>
 # SPDX-License-Identifier: MPL-2.0
 
-__version__ = "0.5.0"
+__version__ = "0.5.1"
 
 from dendrotweaks.model import Model
 from dendrotweaks.simulators import NeuronSimulator
