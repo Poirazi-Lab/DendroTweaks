@@ -108,13 +108,25 @@ The trees are then stored in the :code:`model` object for further processing.
 .. code-block:: python
     
     >>> model.sec_tree
-    Tree [••0, ••1, ••2, ••3, ••4, ••5, ••6, ...]
+    SectionTree(root=NeuronSection(idx=0), num_nodes=52)
 
 .. code-block:: python
 
     >>> from dendrotweaks.morphology import validate_tree
     >>> validate_tree(model.sec_tree)
-    Tree validation passed successfully
+    Checking for unique node ids...
+    Checking for unique root node...
+    Checking for duplicate children...
+    Checking tree connectivity...
+    Checking for loops...
+    Checking for bifurcations with more than 2 children...
+    Checking that all points in a section belong to the same domain...
+    Checking that all sections have a non-zero length...
+    Checking that all sections (except soma) have 0 or 2 children...
+    Checking that the root section has domain soma...
+    Checking that points in the point tree match those in the sections...
+    Checking if the tree is sorted...
+    ***Validation complete.***
 
 Note that validation of a section tree involves validation of 
 the corresponding SWC and segment trees as well.
@@ -134,6 +146,7 @@ Besides automatic validation, we can visualize the tree using the :code:`plot` m
 
     *Figure 2: Visualizing the section tree (sections are annotated with their indexes)*
 
+Alternatively, we can print the topology of the tree in a textual format.
 
 .. code-block:: python
 
@@ -173,19 +186,27 @@ We will select a section from the section tree and explore its properties.
     (11, 10)
 
 The section's parent and children are references to the parent and children sections, respectively.
-The root of the tree is the only section without a parent (None).
+Each section (except the root) has exactly one parent.
+The root of the tree is the only section without a parent (set to None).
 
 .. code-block:: python
 
-    >>> sec.parent, sec.children
-    (••10, [••12, ••13])
+    >>> sec.parent
+    NeuronSection(idx=10)
+
+The children of the section are stored in a list.
+
+.. code-block:: python
+    
+    >>> sec.children
+    [NeuronSection(idx=12), NeuronSection(idx=13)]
 
 The subtree of a section is a list of sections that contains the section itself and all its descendants.
 
 .. code-block:: python
 
     >>> sec.subtree
-    [••11, ••13, ••12]
+    [NeuronSection(idx=11), NeuronSection(idx=12), NeuronSection(idx=13)]
 
 .. note::
 
@@ -197,11 +218,18 @@ Section geometry
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Besides the topological properties, the section has a geometry that is represented by the points that define it.
+Each section contains a list of points that belong to it.
 
 .. code-block:: python
 
     >>> sec.points
-    [•427, •428, •429, •430, ...]
+    [Point(idx=427),
+    Point(idx=428),
+    Point(idx=429),
+    Point(idx=430),
+    Point(idx=431),
+    Point(idx=432),
+    ...]
 
 Each point is a node in the corresponding point tree that has 
 additional properties such as coordinates and radii.
@@ -209,8 +237,8 @@ additional properties such as coordinates and radii.
 .. code-block:: python
 
     >>> pt = sec.points[0]
-    >>> pt.domain, pt.x, pt.y, pt.z, pt.r
-    ('apic', 9.074, 36.225, 4.2, 0.365)
+    >>> pt.idx, pt.domain_name, pt.x, pt.y, pt.z, pt.r
+    (427, 'apic', 9.07382626, 36.22544755, 4.19975422, 0.365)
 
 We can calculate the (cumulative) euclidean distances between the points of the section.
 
@@ -255,7 +283,7 @@ distribute biophysical properties along the morphology.
 To calculate the distance only within a given domain 
 (e.g., for an oblique dendrite up to the place it meets the trunk, 
 instead of all the way to the soma),
-we can pass the :code:`within_domain` parameter as True.
+we can pass the :code:`within_domain` parameter as :code:`True`.
 
 Section segmentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -276,7 +304,7 @@ into segments.
 .. code-block:: python
 
     >>> sec.segments
-    [•51]
+    [NeuronSegment(idx=31)]
 
 As in NEURON, sections are callable objects that return 
 the segment which center is closest to the given normalized distance.
@@ -285,9 +313,9 @@ the segment which center is closest to the given normalized distance.
 
     >>> seg = sec(0.5)
     >>> seg.idx, seg.x
-    (51, 0.5)
+    (31, 0.5)
 
-The segment object has the following properties:
+Each segment also has a reference to the corresponding segment object in NEURON.
 
 .. code-block:: python
 

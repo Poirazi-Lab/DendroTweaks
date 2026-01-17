@@ -36,20 +36,27 @@ To learn more about the toolbox, you can read our publication in eLife.
 
 .. admonition:: Citation 
 
-   Roman Makarov, Spyridon Chavlis, Panayiota Poirazi (2024) DendroTweaks: An interactive approach for unraveling dendritic dynamics eLife 13:RP103324 https://doi.org/10.7554/eLife.103324.1
+   Roman Makarov, Spyridon Chavlis, Panayiota Poirazi (2025) DendroTweaks, an interactive approach for unraveling dendritic dynamics eLife 13:RP103324 https://doi.org/10.7554/eLife.103324.3
 
 If you find DendroTweaks helpful for building your models, please consider citing our work.
 
 .. code-block:: bibtex
 
-   @article{Makarov2024,
-         title={DendroTweaks: An interactive approach for unraveling dendritic dynamics},
-         author={Makarov, Roman and Chavlis, Spyridon and Poirazi, Panayiota},
-         journal={eLife},
-         volume={13},
-         pages={RP103324},
-         year={2024},
-         doi={10.7554/eLife.103324.1}
+   @article {Makarov2025,
+      article_type = {journal},
+      title = {DendroTweaks, an interactive approach for unraveling dendritic dynamics},
+      author = {Makarov, Roman and Chavlis, Spyridon and Poirazi, Panayiota},
+      volume = 13,
+      year = 2025,
+      month = {dec},
+      pub_date = {2025-12-23},
+      pages = {RP103324},
+      citation = {eLife 2025;13:RP103324},
+      doi = {10.7554/eLife.103324},
+      url = {https://doi.org/10.7554/eLife.103324},
+      journal = {eLife},
+      issn = {2050-084X},
+      publisher = {eLife Sciences Publications, Ltd},
    }
 
 

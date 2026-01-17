@@ -8,7 +8,7 @@ The GUI can be accessed through a web browser by navigating to the
 following URL: https://dendrotweaks.dendrites.gr
 
 .. figure:: _static/gui.png
-    :width: 80%
+    :width: 100%
     :align: center
     :figclass: align-center
 

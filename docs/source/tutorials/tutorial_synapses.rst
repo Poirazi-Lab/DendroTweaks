@@ -20,7 +20,8 @@ a random segment.
 
     >>> segments = model.get_segments(group_names=['apical'])
     >>> model.add_population(
-    ...    segments, 
+    ...    name='excitatory',
+    ...    segments=segments, 
     ...    N=50, 
     ...    syn_type='AMPA'
     ... )
@@ -31,43 +32,43 @@ We can now access the populations through the :code:`populations` attribute.
 .. code-block:: python
 
     >>> model.populations
-    {'AMPA': {'AMPA_0': <Population(AMPA_0, N=50)>},
-     'NMDA': {},
-     'AMPA_NMDA': {},
-     'GABAa': {}
-    }
+    {'excitatory': <Population(excitatory, N=50)>}
 
 We can access the population properties for a given population though :code:`kinetic_params` and :code:`input_params`.
 
 .. code-block:: python
 
-    >>> model.poulations['AMPA']['AMPA_0'].kinetic_params
+    >>> model.populations['excitatory'].kinetic_params
     {'gmax': 0.001, 'tau_rise': 0.1, 'tau_decay': 2.5, 'e': 0}
 
 
 .. code-block:: python
 
-    >>> model.poulations['AMPA']['AMPA_0'].input_params
-    {'rate': 1, 'noise': 1, 'start': 100, 'end': 200, 'weight': 1, 'delay': 0}
+    >>> model.populations['excitatory'].input_params
+    {'rate': 1, 'noise': 0, 'start': 100, 'end': 200, 'weight': 1, 'delay': 0, 'seed': None}
 
 
 We can access individual synapses through the :code:`synapses` attribute.
 
 .. code-block:: python
 
-    >>> model.populations['AMPA']['AMPA_0'].synapses
+    >>> model.populations['excitatory'].synapses
     {
-        (Section(idx=50), 0.853): [<Synapse(Section(idx=50)(0.853))>],
-        (Section(idx=10), 0.03): [<Synapse(Section(idx=10)(0.030))>],
-        (Section(idx=17), 0.819): [<Synapse(Section(idx=17)(0.819))>],
-        (Section(idx=23), 0.455): [<Synapse(Section(idx=23)(0.455))>],
-        (Section(idx=21), 0.444): [<Synapse(Section(idx=21)(0.444))>],
-        (Section(idx=45), 0.986): [<Synapse(Section(idx=45)(0.986))>],
+        (NeuronSection(idx=9), 0.018): [<Synapse(NeuronSection(idx=9)(0.018))>],
+        (NeuronSection(idx=9), 0.361): [<Synapse(NeuronSection(idx=9)(0.361))>],
+        (NeuronSection(idx=9), 0.535): [<Synapse(NeuronSection(idx=9)(0.535))>],
+        (NeuronSection(idx=9), 0.545): [<Synapse(NeuronSection(idx=9)(0.545))>],
         ...
     }
 
 We allocate the synapses to the sections of the postsynaptic neuron uniformly.
 A synapse is assigned a random section (:code:`syn.sec`) and location (:code:`syn.loc`) within the section.
+
+.. code-block:: python
+
+    >>> syn = list(model.populations['excitatory'].synapses.values())[0][0]
+    >>> syn.sec, syn.loc
+    (NeuronSection(idx=9), 0.018)
 
 Each synapse has the following references to the NEURON objects:
 
@@ -75,6 +76,10 @@ Each synapse has the following references to the NEURON objects:
 * :code:`_ref_stim` - Reference to the stimulus object (NetStim)
 * :code:`_ref_con` - Reference to the connection object (NetCon)
 
+.. code-block:: python
+
+    >>> syn._ref_syn, syn._ref_stim, syn._ref_con
+    (AMPA[0], [VecStim[0], Vector[115]], NetCon[0])
 
 Setting Activation Properties
 ------------------------------------------
@@ -89,9 +94,23 @@ such as the rate, noise, start time, and end time.
     ...        rate=30, # Hz
     ...        noise=1, # ms between 0 and 1
     ...        start=100, # ms
-    ...        end=900 # ms
-    ...        weight=1 # (1)
+    ...        end=900, # ms
+    ...        weight=1, # (1)
+    ...        seed=42 # random seed
     ...    )
+
+The :code:`seed` parameter controls the random number generator used to create the
+activation (spike) times for the presynaptic neurons in a virtual population. 
+When you provide an integer seed, the procedure that draws the spike trains (Poisson or other
+stochastic processes controlled by the population input parameters) will be
+deterministic.
+
+.. warning::
+    The seed only affects activation timing, not where synapses are placed on the
+    postsynaptic morphology. Therefore, it ensures reproducibility of simulations only when reloading 
+    an exported stimulation protocol, where both synapse placement and activation times remain identical.
+    A placement seed will be introduced in future releases.
+
 
 Setting Kinetic Properties
 ------------------------------------------

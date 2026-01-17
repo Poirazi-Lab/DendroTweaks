@@ -3,10 +3,14 @@ Choosing a Simulator
 
 .. warning::
 
-    Compatibility with simulators other than NEURON is currently under development.
+    Full compatibility with simulators other than NEURON is currently under development.
 
-DendroTweaks acts as a layer on top of a simulator to provide a high-level interface, additional functionality, and enable connection with the GUI.
-The following simulatord are currently supported:
+DendroTweaks provides a high-level, simulator-agnostic model representation 
+and performs all model construction steps (e.g., building morphologies from SWC files), 
+whereas the actual numerical simulation is delegated to an external simulator.
+To achieve this, DendroTweaks automatically instantiates corresponding sections and segments within the selected simulator.
+
+The following simulators are currently supported:
 
 - `NEURON <https://neuron.yale.edu/neuron/>`_
 
@@ -22,18 +26,21 @@ Planned support for the following simulators:
 Creating and Referencing Sections in a Simulator
 ------------------------------------------------
 
-Once we have created an instance of a :code:`Model` and a :code:`SectionTree`, we can reference the sections in the simulator. The following code snippet demonstrates how to reference the sections in NEURON.
+Once we have created an instance of a :code:`SectionTree`, we can reference the sections in the simulator. 
 
 .. code-block:: python
 
-    >>> model.reference_sections(simulator='NEURON')
-    Created 52 sections in NEURON. Use section._ref to access the NEURON section.
+    >>> for sec in sec_tree.sections:
+            sec.create_and_reference()
+
+This step is normally performed automatically when using a :code:`Model` instance inside 
+the :code:`load_morphology` method. You would need to do it manually only if you are working directly with a :code:`SectionTree`.
 
 Now each DendroTweaks :term:`Section` is associated with a simulator-specific section. The user can access the simulator-specific section using the :code:`_ref` attribute.
 
 .. code-block:: python
 
-    >>> soma = model.get_sections(lambda sec: sec.domain == 'soma')[0]
+    >>> soma = model.get_sections(lambda sec: sec.domain_name == 'soma')[0]
     >>> soma._ref
     <nrn.Section at 0x7f8b3b3b3b50>
 

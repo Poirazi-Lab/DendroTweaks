@@ -38,10 +38,16 @@ DendroTweaks organizes these components in a structured directory:
             |       ├── Kv.py
             |       └── Nav.py
             └── stimuli/ 
-                ├── stim1.csv 
-                ├── stim1.json
-                ├── stim2.csv
-                └── stim2.json
+                ├── protocol1/
+                │   ├── config.json
+                │   ├── recordings.csv
+                │   ├── iclamps.csv
+                │   └── synapses.csv
+                └── protocol2/
+                    ├── config.json
+                    ├── recordings.csv
+                    ├── iclamps.csv
+                    └── synapses.csv
 
 Each model folder inside the :code:`data` directory contains the following components:
 
@@ -49,7 +55,7 @@ Each model folder inside the :code:`data` directory contains the following compo
 - :code:`biophys/`: JSON files defining the distribution and properties of ion channels and other membrane mechanisms
 - :code:`mod/`: NMODL mechanism files (MOD) that implement specific ion channel kinetics and other biophysical processes
 - :code:`python/`: Python classes automatically generated from MOD files
-- :code:`stimuli/`: the parameters (JSON) and spatial distribution (CSV) of inputs to the model and the corresponding recordings
+- :code:`stimuli/`: the stimulation protocols, each in its own subfolder with JSON and CSV files defining stimuli and recordings
 
 Biophysical Configuration Format
 ----------------------------------
@@ -306,101 +312,91 @@ To learn more about segment groups and parameter distributions, refer to the
 Stimulation and Recording Format
 ----------------------------------
 
-The stimulation protocol consists of two complementary files: a CSV file defining spatial locations and a JSON file defining temporal patterns and simulation parameters.
+Each stimulation protocol has its own subfolder with a :code:`config.json` file and three CSV files 
+(:code:`recordings.csv`, :code:`iclamps.csv`, and :code:`synapses.csv`).
 
-CSV Format - Spatial Distribution
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+CSV Format - Locations and Properties
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The CSV file specifies the exact locations of stimuli and recordings on the neuronal morphology. 
+The CSV file specifies the exact locations of stimuli and recordings on the neuronal morphology
+and their properties.
 
-It contains the following columns:
+All three CSV files share the same format for specifying locations on the morphology.
 
-- **type**: Type of stimulus or recording (e.g., iclamp, AMPA, NMDA, GABAa, rec)
-- **idx**: Index identifier for grouping multiple instances of the same type
+The :code:`recordings.csv` file contains the following columns:
+
 - **sec_idx**: Section index in the morphology
 - **loc**: Location along the section (0.0 = start, 1.0 = end)
+- **var**: Variable to record (e.g., v for voltage, cai for intracellular calcium concentration)
 
-Here is an example of a CSV file:
+The :code:`iclamps.csv` file contains the following columns:
 
-.. table:: Example Data
-    :widths: 25 25 25 25
+- **sec_idx**: Section index in the morphology
+- **loc**: Location along the section (0.0 = start, 1.0 = end)
+- **amp**: Amplitude of the current clamp (in nA)
+- **delay**: Delay before the current clamp starts (in ms)
+- **dur**: Duration of the current clamp (in ms)
 
-    ========== ========== ========== ==========================================================
-    type       idx        sec_idx    loc
-    ========== ========== ========== ==========================================================
-    rec        0          0          0.5
-    rec        1          20         0.5
-    iclamp     0          0          0.5
-    AMPA       0          13         0.863
-    AMPA       0          17         0.732
-    ========== ========== ========== ==========================================================
+The :code:`synapses.csv` file contains the following columns:
 
-The first two rows define two recordings, one at the soma center and another at a dendritic location.
-The third row defines a current clamp at the soma center.
-The last two rows define two AMPA synapses from the same population of "virtual" presynaptic neurons at specific dendritic locations.
+- **sec_idx**: Section index in the morphology
+- **loc**: Location along the section (0.0 = start, 1.0 = end)
+- **pop_idx**: Index of the presynaptic population (this links to the population defined in the JSON file)
 
-JSON Format - Temporal Patterns and Parameters
+
+JSON Format - Simulation Parameters and Populations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The JSON file defines simulation parameters, temporal patterns, and synaptic properties:
+The JSON file defines simulation parameters and properties of the virtual presynaptic populations.
 
 *Simulation parameters:*
 
 .. code-block:: json
 
     "simulation": {
+        "d_lambda": 0.1,
         "temperature": 37,
         "v_init": -79,
         "dt": 0.025,
         "duration": 1000
     }
 
-*Recording specification:*
-
-.. code-block:: json
-
-    "recordings": [
-        {
-            "name": "rec_0",
-            "var": "v"
-        }
-    ]
 
 *Synaptic population definition:*
 
 .. code-block:: json
 
     "populations": {
-        "AMPA": [
-            {
-                "name": "AMPA_0",
-                "syn_type": "AMPA", 
-                "N": 50,
-                "input_params": {
-                    "rate": 30,
-                    "start": 100,
-                    "end": 800,
-                    "weight": 1
-                },
-                "kinetic_params": {
-                    "gmax": 0.001,
-                    "tau_rise": 0.1,
-                    "tau_decay": 2.5,
-                    "e": 0
-                }
+        "excitatory": {
+            "idx": 0,
+            "name": "excitatory",
+            "syn_type": "AMPA", 
+            "N": 50,
+            "input_params": {
+                "rate": 10,
+                "noise": 1,
+                "start": 100,
+                "end": 800,
+                "weight": 1,
+                "delay": 0,
+                "seed": 42
+            },
+            "kinetic_params": {
+                "gmax": 0.001,
+                "tau_rise": 0.1,
+                "tau_decay": 2.5,
+                "e": 0
             }
-        ]
+        }
     }
 
-This example defines a population of 50 AMPA synapses firing at 30 Hz between 100-800 ms, 
+This example defines a population of 50 AMPA synapses firing at 10 Hz between 100-800 ms, 
 with specific kinetic properties for synaptic transmission.
 
 **Key Components of the JSON Structure:**
 
 - :code:`metadata`: General information about the stimulus protocol
 - :code:`simulation`: Global simulation parameters (temperature, timestep, duration)
-- :code:`recordings`: Voltage and current recordings from specific locations
-- :code:`iclamps`: Current clamp stimulations
 - :code:`populations`: Synaptic input populations organized by neurotransmitter type
 
 Each population contains:
