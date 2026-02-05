@@ -123,6 +123,17 @@ class Synapse():
                                  delay,
                                  weight)
 
+    def xyz(self):
+        """
+        Returns the 3D coordinates of the synapse location.
+
+        Returns
+        -------
+        tuple
+            The (x, y, z) coordinates of the synapse location.
+        """
+        return self.sec.get_location_coordinates(self.loc)
+
 
 def create_spike_times(rate=1, noise=1, duration=300, delay=0, seed=None):
     """

@@ -183,6 +183,59 @@ class Section(Node):
         return [pt.z for pt in self.points]
 
 
+    def get_location_coordinates(self, loc):
+        """
+        Get point at a normalized location along the section.
+
+        Parameters
+        ----------
+        loc : float
+            The normalized location along the section (0 = start, 1 = end).
+        Returns
+        -------
+        tuple
+            The (x, y, z) coordinates of the point at the given location.
+        """
+        # Validate input
+        if loc < 0 or loc > 1:
+            raise ValueError(f"Location must be between 0 and 1, got {loc}")
+        
+        # Get cumulative distances and normalize
+        cumulative_distances = self.distances
+        total_length = self.length
+        normalized_distances = cumulative_distances / total_length
+        
+        # Handle edge cases
+        if loc == 0:
+            pt = self.points[0]
+            return pt.x, pt.y, pt.z
+        if loc == 1:
+            pt = self.points[-1]
+            return pt.x, pt.y, pt.z
+        
+        # Find which segment contains the target location
+        segment_idx = np.searchsorted(normalized_distances, loc) - 1
+        
+        # Calculate position within that segment
+        segment_start_norm = normalized_distances[segment_idx]
+        segment_end_norm = normalized_distances[segment_idx + 1]
+        
+        # Local parameter t within the segment (0 to 1)
+        t = (loc - segment_start_norm) / (segment_end_norm - segment_start_norm)
+        
+        # Get start and end points of the segment
+        start_point = self.points[segment_idx]
+        end_point = self.points[segment_idx + 1]
+        
+        # Linear interpolation for each coordinate
+        x = start_point.x + t * (end_point.x - start_point.x)
+        y = start_point.y + t * (end_point.y - start_point.y)
+        z = start_point.z + t * (end_point.z - start_point.z)
+        
+        # Return new Point object
+        return (x, y, z)
+
+
     @property
     def seg_centers(self):
         """
