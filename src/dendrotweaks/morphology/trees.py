@@ -9,6 +9,11 @@ import pandas as pd
 from dendrotweaks.utils import timeit
 from typing import Union
 
+
+# ========================================================================
+# NODE
+# ========================================================================
+
 class Node():
     """
     Represents a node in a tree.
@@ -22,11 +27,6 @@ class Node():
         The index of the node.
     parent_idx : Union[int, str]
         The index of the parent node.
-
-    Examples:
-        >>> node = Node(0, -1)
-        >>> node
-        •0
     """
 
     def __init__(self, idx: Union[int, str], parent_idx: Union[int, str]) -> None:
@@ -56,7 +56,6 @@ class Node():
         self._parent = parent
         self.parent_idx = parent.idx if parent else -1
 
-
     @property
     def topological_type(self) -> str:
         """The topological type of the node based on the number of children.
@@ -66,19 +65,6 @@ class Node():
         """
         types = {0: 'termination', 1: 'continuation'}
         return types.get(len(self.children), 'bifurcation')
-
-    # @property
-    # def subtree(self) -> list:
-    #     """
-    #     Gets the subtree of the node (including the node itself).
-
-    #     Returns:
-    #         list: A list of nodes in the subtree.
-    #     """
-    #     subtree = [self]
-    #     for child in self.children:
-    #         subtree += child.subtree
-    #     return subtree
 
     @property
     def subtree(self) -> list:
@@ -121,7 +107,6 @@ class Node():
             node = node.parent
         return depth
 
-
     @property
     def siblings(self):
         """
@@ -144,6 +129,108 @@ class Node():
         """
         return [self.parent] + self.children
 
+    def _iter_to_root(self):
+        """Iterate from this node up to the root."""
+        node = self
+        while node:
+            yield node
+            node = node.parent
+
+    @property
+    def ancestors(self):
+        """Get all ancestors of this node up to the root."""
+        return list(self._iter_to_root())
+
+
+    def path_to_ancestor(self, ancestor=None, include_self=True, include_ancestor=True):
+        """Get the path from this node to a given ancestor node.
+
+        Parameters
+        ----------
+        ancestor : Node, optional
+            The ancestor node to get the path to. If None, the path to the root is returned.
+        include_self : bool, optional
+            Whether to include this node in the path. Defaults to True.
+        include_ancestor : bool, optional
+            Whether to include the ancestor node in the path. Defaults to True.
+        Returns
+        -------
+        list
+            A list of nodes representing the path from this node to the ancestor node.
+        """
+        path = []
+        for node in self._iter_to_root():
+            path.append(node)
+            if node is ancestor:
+                break
+        else:
+            # Loop completed without break and ancestor not found
+            if ancestor is not None:
+                raise ValueError(f'{ancestor} is not an ancestor of {self}')
+        
+        if not include_self and path:
+            path = path[1:]
+        if not include_ancestor and path:
+            path = path[:-1]
+        
+        return path
+
+
+    def find_common_ancestor(self, other):
+        """Find the common ancestor between this node and another node."""
+        if self is other:
+            return self
+        
+        ancestors = set(self._iter_to_root())
+        
+        for node in other._iter_to_root():
+            if node in ancestors:
+                return node
+        
+        raise ValueError('No common ancestor found.')
+
+
+    def path(self, other, include_self=True, include_other=True, include_ancestor=True):
+        """
+        Get the path between this node and another node.
+
+        Parameters
+        ----------
+        other : Node
+            The other node to get the path to.
+        include_self : bool
+            Whether to include this node in the path.
+        include_other : bool
+            Whether to include the other node in the path.
+        include_ancestor : bool
+            Whether to include the lowest common ancestor (LCA) in the path.
+            Only relevant when self and other are in parallel subtrees, ignored otherwise.
+        Returns
+        -------
+        list
+            A list of nodes representing the path from this node to the other node.
+        """
+
+        if self is other:
+            return [self] if (include_self and include_other) else []
+
+        common_ancestor = self.find_common_ancestor(other)
+
+        if common_ancestor is self:
+            include_ancestor = include_self
+        elif common_ancestor is other:
+            include_ancestor = include_other
+
+        path_from_self = self.path_to_ancestor(common_ancestor, 
+                                               include_self=include_self, 
+                                               include_ancestor=include_ancestor)
+        path_from_other = other.path_to_ancestor(common_ancestor, 
+                                                 include_self=include_other, 
+                                                 include_ancestor=False)
+
+        return path_from_self + path_from_other[::-1]
+
+
     def connect_to_parent(self, parent):
         """
         Attach the node to a parent node.
@@ -164,6 +251,7 @@ class Node():
             parent.children.append(self)
         # parent.childrensorted(parent.children + [node], key=lambda x: x.idx)
 
+
     def disconnect_from_parent(self):
         """
         Detach the node from its parent.
@@ -176,6 +264,12 @@ class Node():
         if self.parent:
             self.parent.children.remove(self)
             self.parent = None
+
+
+
+# ========================================================================
+# TREE
+# ========================================================================
 
 class Tree:
     """
