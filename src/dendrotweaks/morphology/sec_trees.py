@@ -278,7 +278,7 @@ class Section(Node):
         return np.mean(self.xs), np.mean(self.ys), np.mean(self.zs)
 
 
-    @property
+    @cached_property
     def length(self):
         """
         The length of the section calculated as the sum of the distances between the points.
@@ -294,6 +294,14 @@ class Section(Node):
         areas = [np.pi * (r1 + r2) * np.sqrt((r1 - r2)**2 + h**2) for r1, r2, h in zip(self.radii[:-1], self.radii[1:], np.diff(self.distances))]
         return sum(areas)
 
+
+    def _invalidate_geometry_cache(self):
+        """Call after modifying the geometry of the section to invalidate cached properties."""
+        self.__dict__.pop('length', None)
+
+    def _invalidate_topology_cache(self):
+        """Call after modifying the geometry of the section to invalidate cached properties."""
+        self.__dict__.pop('path_distance_to_root', None)
 
     # MECHANISM METHODS
 
@@ -340,8 +348,9 @@ class Section(Node):
         seg_values = [seg.get_param_value(param_name) for seg in self.segments]
         return round(np.mean(seg_values), 16)
 
+
     @cached_property
-    def path_distance_to_root(self) -> float:
+    def _legacy_path_distance_to_root(self) -> float:
         """
         Calculate the total distance from the section start to the root.
 
@@ -362,8 +371,23 @@ class Section(Node):
             
         return distance
 
+
     @cached_property
-    def path_distance_within_domain(self) -> float:
+    def path_distance_to_root(self) -> float:
+        """
+        Calculate the total distance from the section start to the root.
+
+        Returns
+        -------
+        float
+            The distance from the section start to the root.
+        """
+        path = self.path_to_ancestor(include_self=False, include_ancestor=False)
+        return sum(sec.length for sec in path)
+
+
+    @cached_property
+    def _legacy_path_distance_within_domain(self) -> float:
         """
         Calculate the distance from the section start to the root within the same domain.
 
@@ -386,7 +410,33 @@ class Section(Node):
             
         return distance
 
-    def path_distance(self, relative_position: float = 0, within_domain: bool = False) -> float:
+
+    @property
+    def domain_root(self):
+        """
+        Get the root section of the current domain.
+        
+        The domain root is the shallowest (closest to tree root) section 
+        that still belongs to this domain.
+
+        Returns
+        -------
+        Section
+            The root section of the current domain.
+        
+        Raises
+        ------
+        ValueError
+            If the section has no parent (is the tree root).
+        """
+        for sec in self._iter_to_root():
+            if sec.parent is None or sec.parent.domain_name != self.domain_name:
+                return sec
+        
+        raise RuntimeError('Unexpected: reached end of tree without finding domain root')
+
+
+    def _legacy_path_distance(self, relative_position: float = 0, within_domain: bool = False) -> float:
         """
         Get the distance from the section to the root at a given relative position.
 
@@ -409,8 +459,67 @@ class Section(Node):
             # relative_position = abs(relative_position - 0.5)
             return 0
 
-        base_distance = self.path_distance_within_domain if within_domain else self.path_distance_to_root
+        base_distance = self._legacy_path_distance_within_domain if within_domain else self._legacy_path_distance_to_root
         return base_distance + relative_position * self.length
+
+
+    def path_distance(self, 
+                      other=None, 
+                      relative_position: float = 0,
+                      relative_position_other: float = None) -> float:
+        """
+        Calculate the path distance between positions on two sections.
+        
+        Parameters
+        ----------
+        other : Section, optional
+            The other section. If None, calculates distance to root.
+        relative_position : float
+            Position along self (0 = start, 1 = end). Default 0.
+        relative_position_other : float, optional
+            Position along other (0 = start, 1 = end). Default None.
+        
+        Returns
+        -------
+        float
+            The path distance between the two positions.
+        """
+        if not (0 <= relative_position <= 1):
+            raise ValueError(f'relative_position must be in [0, 1], got {relative_position}')
+        if relative_position_other is not None and not (0 <= relative_position_other <= 1):
+            raise ValueError(f'relative_position_other must be in [0, 1], got {relative_position_other}')
+
+        if other is None:
+            path_length = self.path_distance_to_root
+            path_length += relative_position * self.length
+            return path_length
+        
+        if self is other:
+            return abs(relative_position_other - relative_position) * self.length
+        
+        # Get path between sections (excluding both endpoints and common ancestor)
+        path = self.path(other, 
+                        include_self=False,
+                        include_other=False,
+                        include_ancestor=False)
+        
+        path_length = sum(sec.length for sec in path)
+        
+        # Add contribution from self
+        path_length += relative_position * self.length
+        
+        # Add contribution from other
+        # If other is an ancestor, we traverse "backwards" so flip the position
+        if other in self.ancestors:
+            if relative_position_other is None:
+                relative_position_other = 1
+            path_length += (1 - relative_position_other) * other.length
+        else:
+            if relative_position_other is None:
+                relative_position_other = 0
+            path_length += relative_position_other * other.length
+        
+        return path_length
 
     
     def disconnect_from_parent(self):

@@ -83,31 +83,33 @@ class Point(Node):
         return 0
 
 
-    def path_distance(self, within_domain=False, ancestor=None):
+    def path_distance(self, other=None):
         """
-        Compute the distance from this node to an ancestor node.
+        Calculate the path distance from this node to another node or to the root.
         
-        Args:
-            within_domain (bool): If True, stops when domain changes.
-            ancestor (Node, optional): If provided, stops at this specific ancestor.
-            
-        Returns:
-            float: The accumulated distance.
+        Parameters
+        ----------
+        other : Point, optional
+            The other node to calculate the path distance to. 
+            If None, calculates the distance to the root, by default None.
         """
-        distance = 0
-        node = self
+        if self is other:
+            return 0
+
+        if other is None:
+            path = self.path_to_ancestor(include_self=True, 
+                                         include_ancestor=False)
+            path_length = sum(pt.distance_to_parent for pt in path)
+            return path_length
+
+        path = self.path(other, 
+                         include_self=True, 
+                         include_other=True,
+                         include_ancestor=False)
+
+        path_length = sum(pt.distance_to_parent for pt in path)
         
-        while node.parent:
-            if ancestor and node.parent == ancestor:
-                break  # Stop if we reach the specified ancestor
-
-            if within_domain and node.parent.domain_name != node.domain_name:
-                break  # Stop if domain changes
-            
-            distance += node.distance_to_parent
-            node = node.parent
-
-        return distance
+        return path_length
 
 
     def copy(self):

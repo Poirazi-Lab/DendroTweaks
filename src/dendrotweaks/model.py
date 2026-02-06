@@ -869,7 +869,7 @@ class Model(IOMixin, SimulationMixin):
                 raise NotImplementedError("Inheritance of Ra is not implemented.")
             else:
                 for seg in filtered_segments:
-                    value = distribution(seg._section.path_distance(0.5))
+                    value = distribution(seg._section.path_distance(relative_position=0.5))
                     seg._section._ref.Ra = value
 
 

@@ -71,8 +71,14 @@ class Segment(Node):
 
     
     def path_distance(self, within_domain=False):
-        return self._section.path_distance(self.x, 
-            within_domain=within_domain)
+        if within_domain:
+            return self._section.path_distance(
+                other=self._section.domain_root.parent,
+                relative_position=self.x
+            )
+        return self._section.path_distance(
+            relative_position=self.x
+        )
 
 
     @property
