@@ -106,3 +106,26 @@ def update_histogram(model, param_name, segments, **kwargs):
     hist, edges = np.histogram(values, **kwargs)
     return hist, edges
 
+def calculate_pairwise_synaptic_distances(synapses):
+    """
+    Calculates the pairwise distances between synapses based on their locations on the morphology.
+    Parameters
+    ----------
+    synapses : list[Synapse]
+        A list of Synapse objects.
+    Returns
+    -------
+    np.ndarray
+        A 2D array of shape (N, N) where N is the number of synapses, containing the pairwise distances.
+    """
+    pairwise_distances_matrix = np.zeros((len(synapses), len(synapses)))
+    for i, syn1 in enumerate(synapses):
+        for j, syn2 in enumerate(synapses):
+            if syn1 != syn2:
+                dist = syn1.sec.path_distance(
+                    other=syn2.sec,
+                    relative_position=syn1.loc,
+                    relative_position_other=syn2.loc
+                )
+                pairwise_distances_matrix[i, j] = dist
+    return pairwise_distances_matrix
