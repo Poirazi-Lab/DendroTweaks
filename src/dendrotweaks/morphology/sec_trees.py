@@ -465,7 +465,7 @@ class Section(Node):
 
     def path_distance(self, 
                       other=None, 
-                      relative_position: float = 0,
+                      relative_position: float = None,
                       relative_position_other: float = None) -> float:
         """
         Calculate the path distance between positions on two sections.
@@ -474,27 +474,34 @@ class Section(Node):
         ----------
         other : Section, optional
             The other section. If None, calculates distance to root.
-        relative_position : float
-            Position along self (0 = start, 1 = end). Default 0.
+        relative_position : float, optional
+            Position along self (0 = start, 1 = end). Default None (context-dependent).
         relative_position_other : float, optional
-            Position along other (0 = start, 1 = end). Default None.
+            Position along other (0 = start, 1 = end). Default None (context-dependent).
         
         Returns
         -------
         float
             The path distance between the two positions.
         """
-        if not (0 <= relative_position <= 1):
+        if relative_position is not None and not (0 <= relative_position <= 1):
             raise ValueError(f'relative_position must be in [0, 1], got {relative_position}')
         if relative_position_other is not None and not (0 <= relative_position_other <= 1):
             raise ValueError(f'relative_position_other must be in [0, 1], got {relative_position_other}')
 
+        # Calculate distance to root if other is not provided
         if other is None:
+            if relative_position is None:
+                relative_position = 0
             path_length = self.path_distance_to_root
             path_length += relative_position * self.length
             return path_length
         
         if self is other:
+            if relative_position is None:
+                relative_position = 0
+            if relative_position_other is None:
+                relative_position_other = 0
             return abs(relative_position_other - relative_position) * self.length
         
         # Get path between sections (excluding both endpoints and common ancestor)
@@ -506,15 +513,25 @@ class Section(Node):
         path_length = sum(sec.length for sec in path)
         
         # Add contribution from self
-        path_length += relative_position * self.length
+        if self in other.ancestors:
+            # If self is an ancestor of other, traverse backwards from self
+            if relative_position is None:
+                relative_position = 1
+            path_length += (1 - relative_position) * self.length
+        else:
+            # Normal case: traverse forwards from self
+            if relative_position is None:
+                relative_position = 0
+            path_length += relative_position * self.length
         
         # Add contribution from other
-        # If other is an ancestor, we traverse "backwards" so flip the position
         if other in self.ancestors:
+            # If other is an ancestor of self, traverse backwards from other
             if relative_position_other is None:
                 relative_position_other = 1
             path_length += (1 - relative_position_other) * other.length
         else:
+            # Normal case: traverse forwards from other
             if relative_position_other is None:
                 relative_position_other = 0
             path_length += relative_position_other * other.length
