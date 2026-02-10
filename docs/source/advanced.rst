@@ -8,9 +8,11 @@ This set of tutorials is designed to provide a more in-depth look at the feature
 
    tutorials/tutorial_swc
    tutorials/Morphology
+   tutorials/Morphology_topology
    tutorials/tutorial_referencing
    tutorials/tutorial_reduction
    tutorials/Reduction
+   tutorials/Synaptic_clusters
    tutorials/Network
    tutorials/tutorial_mod
    tutorials/tutorial_standardization
