@@ -1101,6 +1101,12 @@ class SectionTree(Tree):
         self.sort()
 
 
+    def reposition_subtree(self, section, new_parent_section, origin=None):
+        raise NotImplementedError(
+            'Repositioning subtrees of a SectionTree is not implemented yet. Use this method on the PointTree before (!) creating the SectionTree.'
+            )
+
+
     def remove_zero_length_sections(self):
         """
         Remove sections with zero length.
