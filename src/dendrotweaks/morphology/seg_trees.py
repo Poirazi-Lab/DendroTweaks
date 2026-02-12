@@ -104,8 +104,10 @@ class Segment(Node):
         value : float
             The value to set the parameter to.
         """
-        if hasattr(self._ref, param_name):
+        try: # Using EAFP
             setattr(self._ref, param_name, value)
+        except AttributeError:
+            pass
 
 
     def get_param_value(self, param_name):
