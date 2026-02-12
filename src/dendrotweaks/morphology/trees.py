@@ -8,7 +8,7 @@ import pandas as pd
 
 from dendrotweaks.utils import timeit
 from typing import Union
-
+from functools import cached_property
 
 # ========================================================================
 # NODE
@@ -55,6 +55,19 @@ class Node():
     def parent(self, parent):
         self._parent = parent
         self.parent_idx = parent.idx if parent else -1
+        # Invalidate is_root cache when parent changes
+        if 'is_root' in self.__dict__:
+            del self.__dict__['is_root']
+
+    @cached_property
+    def is_root(self) -> bool:
+        """
+        Check if the node is the root of the tree.
+
+        Returns:
+            bool: True if the node is the root, False otherwise.
+        """
+        return self.parent is None
 
     @property
     def topological_type(self) -> str:
@@ -115,7 +128,7 @@ class Node():
         Returns:
             list: A list of nodes that share the same parent as the node.
         """
-        if self.parent is None:
+        if self.is_root:
             return []
         return [child for child in self.parent.children if child is not self]
 
@@ -513,7 +526,7 @@ class Tree:
         ValueError
             If the tree is not sorted.
         """
-        if node.parent is None:
+        if node.is_root:
             raise ValueError('Cannot remove the root node.')
         parent = node.parent
         children = node.children[:]
@@ -613,7 +626,7 @@ class Tree:
         -----
         Treats differently the children of the root node.
         """
-        if node.parent is None:
+        if node.is_root:
             raise ValueError('Cannot reposition the root node.')
         origin = origin or node.parent
         self.remove_subtree(node)

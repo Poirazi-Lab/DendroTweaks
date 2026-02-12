@@ -430,7 +430,7 @@ class Section(Node):
             If the section has no parent (is the tree root).
         """
         for sec in self._iter_to_root():
-            if sec.parent is None or sec.parent.domain_name != self.domain_name:
+            if sec.is_root or sec.parent.domain_name != self.domain_name:
                 return sec
         
         raise RuntimeError('Unexpected: reached end of tree without finding domain root')
@@ -493,6 +493,8 @@ class Section(Node):
         if other is None:
             if relative_position is None:
                 relative_position = 0
+            if self.is_root:
+                return self.length * abs(relative_position - 0.5)
             path_length = self.path_distance_to_root
             path_length += relative_position * self.length
             return path_length
@@ -569,14 +571,14 @@ class Section(Node):
         # In NEURON
         if self._ref:
             if self.parent is not None:
-                if self.parent.parent is None: # if parent is soma
+                if self.parent.is_root: # if parent is soma
                     self._ref.connect(self.parent._ref(0.5))
                 else:
                     self._ref.connect(self.parent._ref(1))
                 
         # In PointTree
         if self.parent is not None:
-            if self.parent.parent is None: # if parent is soma
+            if self.parent.is_root: # if parent is soma
                 parent_sec = self.parent
                 parent_pt = parent_sec.points[1] if len(parent_sec.points) > 1 else parent_sec.points[0]
                 self.points[0].connect_to_parent(parent_pt) # attach to the middle of the parent
@@ -924,7 +926,7 @@ class NeuronSection(Section):
         self._nseg = self._ref.nseg
         if self.parent is not None:
             # TODO: Attaching basal to soma 0
-            if self.parent.parent is None: # if parent is soma
+            if self.parent.is_root: # if parent is soma
                 self._ref.connect(self.parent._ref(0.5))
             else:
                 self._ref.connect(self.parent._ref(1))
@@ -1036,7 +1038,7 @@ class SectionTree(Tree):
         }
 
         for sec in self.sections:
-            points = sec.points if sec.parent is None or sec.parent.parent is None else sec.points[1:]
+            points = sec.points if sec.is_root or sec.parent.is_root else sec.points[1:]
             for pt in points:
                 data['idx'].append(pt.idx)
                 data['domain'].append(pt.domain_name)
@@ -1249,7 +1251,7 @@ class SectionTree(Tree):
             fig, ax = plt.subplots(figsize=(8, 3))
 
         for sec in self.sections:
-            if not show_soma and sec.parent is None:
+            if not show_soma and sec.is_root:
                 continue
             color = sec.domain_color
             if highlight and sec.idx in highlight:
