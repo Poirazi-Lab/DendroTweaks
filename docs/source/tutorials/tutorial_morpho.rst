@@ -277,13 +277,24 @@ distribute biophysical properties along the morphology.
 
 .. code-block:: python
 
-    >>> sec.path_distance(0, within_domain=False)
-    40.787
+    >>> sec.path_distance()
+    40.5
 
-To calculate the distance only within a given domain 
-(e.g., for an oblique dendrite up to the place it meets the trunk, 
-instead of all the way to the soma),
-we can pass the :code:`within_domain` parameter as :code:`True`.
+The method takes several optional parameters (:code:`relative_position`, :code:`other`, :code:`relative_position_other`) 
+that allow us to calculate the distance between any two locations 
+in the morphology. 
+By default, the distance is calculated from the beginning of the section 
+to the middle of the root section of the tree (when 3PS notation is used). 
+To calculate the distance from a specific location on the section, we can pass the 
+:code:`relative_position` parameter as a value between 0 and 1.
+
+.. code-block:: python 
+    
+    >>> sec.path_distance(relative_position=0.5)
+    45.5
+
+
+For more details on working with tree paths, refer to the corresponding :doc:`tutorial</tutorials/Morphology_paths_and_subtrees>`.
 
 Section segmentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

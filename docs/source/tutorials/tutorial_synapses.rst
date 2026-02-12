@@ -61,12 +61,16 @@ We can access individual synapses through the :code:`synapses` attribute.
         ...
     }
 
+Alternatively, we can access the synapses through 
+the :code:`flat_synapses` attribute of the population, 
+which is a flattened list of all synapses in the population.
+
 We allocate the synapses to the sections of the postsynaptic neuron uniformly.
 A synapse is assigned a random section (:code:`syn.sec`) and location (:code:`syn.loc`) within the section.
 
 .. code-block:: python
 
-    >>> syn = list(model.populations['excitatory'].synapses.values())[0][0]
+    >>> syn = model.populations['excitatory'].flat_synapses[0]
     >>> syn.sec, syn.loc
     (NeuronSection(idx=9), 0.018)
 
@@ -92,7 +96,7 @@ such as the rate, noise, start time, and end time.
     >>> model.update_population_input_params(
     ...        pop_name='AMPA_0',
     ...        rate=30, # Hz
-    ...        noise=1, # ms between 0 and 1
+    ...        noise=1, # (1) between 0 and 1
     ...        start=100, # ms
     ...        end=900, # ms
     ...        weight=1, # (1)

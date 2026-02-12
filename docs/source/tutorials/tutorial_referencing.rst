@@ -21,7 +21,7 @@ Planned support for the following simulators:
 .. tip::
 
     While support for Jaxley is an ongoing effort, you can already automatically create Jaxley-compatible ion channel classes from MOD files using DendroTweaks.
-    Learn more about creating ion channels in :doc:`this tutorial</tutorials/tutorial_mod>`.
+    For more information about the Jaxley-compatible classes, refer to the corresponding :doc:`tutorial</tutorials/convert_to_jaxley>`.
 
 Creating and Referencing Sections in a Simulator
 ------------------------------------------------

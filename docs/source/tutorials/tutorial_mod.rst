@@ -149,6 +149,8 @@ However, we can also generate `Jaxley <https://jaxleyverse.github.io/jaxley>`_ -
   >>> generator.write('path/to/output.py')
   Written to path/to/output.py
 
+For more information about the Jaxley-compatible classes, refer to the corresponding :doc:`tutorial</tutorials/convert_to_jaxley>`.
+
 Loading MOD files
 ------------------------------------------
 
