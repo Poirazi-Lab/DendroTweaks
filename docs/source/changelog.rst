@@ -1,6 +1,25 @@
 Changelog
 =============
 
+Version 0.5.2
+--------------
+
+  Key Updates:
+
+  - Added tree path methods for retrieving ordered node sequences in tree graphs. These methods enable path distance calculations between any two nodes by returning the path length. See the :doc:`tutorial</tutorials/Morphology_paths_and_subtrees>` for details.
+  - Refactored path distance calculations in :code:`Section`, :code:`Point`, and :code:`Segment` to use the new tree path methods.
+  - Updated dependency versions: :code:`neuron >= 9.0.1`; removed :code:`numpy < 2.0.0` constraint.
+
+  Minor Updates:
+
+  - Added :code:`pairwise_synaptic_distances()` function to the morphometric analysis module. This function uses the new path methods to calculate pairwise distances between synapses, which can be used for analyses such as synaptic clustering.
+  - Added :code:`Section.get_location_coordinates()` method returning 3D coordinates at a normalized position along a section. Added :code:`Synapse.xyz` property derived from this, that enables synapse visualization on morphology plots.
+  - Added :code:`Node.is_root` cached property (with cache invalidation on parent changes). Replaces :code:`node.parent is None` checks for more explicit root identification.
+  - Added :code:`Section.domain_root` property: traverses toward the root and returns the shallowest ancestor still belonging to the same domain. Replaces the :code:`within_domain` parameter pattern.
+  - Updated default parameters in the code generator to use the independent variable from the AST.
+  - Removed :code:`hasattr` checks in parameter setter (replaced with EAFP-style :code:`setattr`).
+  
+
 Version 0.5.1
 --------------
 

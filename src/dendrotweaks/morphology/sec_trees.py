@@ -858,7 +858,7 @@ class NeuronSection(Section):
         return self._ref.Ra
 
 
-    def has_mechanism(mech_name):
+    def has_mechanism(self, mech_name):
         """
         Check if the section has a mechanism inserted.
 
