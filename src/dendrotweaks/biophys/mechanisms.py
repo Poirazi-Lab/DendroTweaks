@@ -5,7 +5,9 @@ from typing import Dict
 import numpy as np
 import matplotlib.pyplot as plt
 
-
+# Monkey-patch np.product removed in NumPy 2.0, required by symfit
+if not hasattr(np, 'product'):
+    np.product = np.prod
 
 class Mechanism():
     """
